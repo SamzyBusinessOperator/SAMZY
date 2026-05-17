@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5",
         max_tokens: 1024,
         system: "You are Samzy AI, a smart business advisor for independent supermarket owners. Give short, specific, actionable advice based on the store data provided. Store data: " + JSON.stringify(storeData),
         messages: [{ role: "user", content: question }],
