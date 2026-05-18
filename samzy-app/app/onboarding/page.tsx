@@ -47,6 +47,7 @@ export default function Onboarding() {
       num_staff: parseInt(form.num_staff) || null,
       store_size: form.store_size,
     }).eq("owner_email", ownerEmail);
+    await supabase.from("stores").update({ onboarding_complete: true }).eq("owner_email", ownerEmail);
     setSaving(false);
     setStep(4);
   }
