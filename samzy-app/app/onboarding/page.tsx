@@ -39,7 +39,7 @@ export default function Onboarding() {
       city: form.city, country: form.country, pos_system: form.pos_system,
       num_staff: parseInt(form.num_staff) || null, store_size: form.store_size,
       onboarding_complete: true,
-    }).eq("owner_email", ownerEmail);
+    }).ilike("owner_email", ownerEmail);
     setSaving(false);
     setStep(4);
   }

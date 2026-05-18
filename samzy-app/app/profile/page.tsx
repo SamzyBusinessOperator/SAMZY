@@ -24,7 +24,7 @@ export default function Profile() {
       if (!session) { window.location.href = "/login"; return; }
       const email = session.user.email || "";
       setOwnerEmail(email);
-      supabase.from("stores").select("*").eq("owner_email", email).single().then(({ data }) => {
+      supabase.from("stores").select("*").ilike("owner_email", email).single().then(({ data }) => {
         if (data) setForm({ name: data.name || "", phone: data.phone || "", address: data.address || "", city: data.city || "", country: data.country || "", pos_system: data.pos_system || "", num_staff: data.num_staff || "", store_size: data.store_size || "" });
         setLoading(false);
       });
@@ -38,7 +38,7 @@ export default function Profile() {
       name: form.name, phone: form.phone, address: form.address, city: form.city,
       country: form.country, pos_system: form.pos_system,
       num_staff: parseInt(form.num_staff as string) || null, store_size: form.store_size,
-    }).eq("owner_email", ownerEmail);
+    }).ilike("owner_email", ownerEmail);
     setSaving(false);
     setMessage(error ? "Error saving. Try again." : "Profile saved successfully!");
     setTimeout(() => setMessage(""), 3000);
