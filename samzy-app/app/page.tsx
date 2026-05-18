@@ -72,10 +72,11 @@ export default function Home() {
   }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
-
   useEffect(() => {
-   setStoreName(user.user_metadata?.store_name || user.email || "My Store");
-setDbStatus("connected");
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        setStoreName(session.user.user_metadata?.store_name || session.user.email || "My Store");
+        setDbStatus("connected");
       }
     });
   }, []);
