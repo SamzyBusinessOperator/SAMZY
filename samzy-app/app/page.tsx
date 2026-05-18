@@ -83,6 +83,7 @@ export default function Home() {
         });
       }
     });
+  }, []);
 
   async function askAdvisor() {
     if (!question.trim()) return;
