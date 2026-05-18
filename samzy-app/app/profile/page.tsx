@@ -125,7 +125,7 @@ export default function Profile() {
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>POS SYSTEM</label>
               <select value={form.pos_system} onChange={e => update("pos_system", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", background: "#fff", boxSizing: "border-box" }}>
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", boxSizing: "border-box" }}>
                 <option value="">Select POS system</option>
                 <option value="WebRest">WebRest</option>
                 <option value="ZSRest">ZSRest</option>
@@ -143,7 +143,7 @@ export default function Profile() {
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>STORE SIZE</label>
               <select value={form.store_size} onChange={e => update("store_size", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", background: "#fff", boxSizing: "border-box" }}>
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", background: "#fff", color: "#1e293b", boxSizing: "border-box" }}>
                 <option value="">Select store size</option>
                 <option value="small">Small (under 200m²)</option>
                 <option value="medium">Medium (200–500m²)</option>
