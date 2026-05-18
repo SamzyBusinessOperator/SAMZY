@@ -113,17 +113,17 @@ export default function Home() {
 
   return (
     <div style={{ display: "flex", height: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif", overflow: "hidden" }}>
-      <aside style={{ background: BLACK, display: "flex", flexDirection: "column", width: sidebarOpen ? 240 : 72, transition: "width 0.25s cubic-bezier(0.4,0,0.2,1)", flexShrink: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: sidebarOpen ? "28px 24px 20px" : "28px 20px 20px", borderBottom: "1px solid #1a1a1a" }}>
+      <aside style={{ background: CARD_BG, display: "flex", flexDirection: "column", width: sidebarOpen ? 240 : 72, transition: "width 0.25s cubic-bezier(0.4,0,0.2,1)", flexShrink: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: sidebarOpen ? "28px 24px 20px" : "28px 20px 20px", borderBottom: "1px solid " + BORDER }}>
           {sidebarOpen ? (
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 30, height: 30, background: ORANGE, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🛒</div>
-              <span style={{ color: "#fff", fontWeight: 700, fontSize: 17, letterSpacing: -0.3 }}>Samzy</span>
+              <span style={{ color: BLACK, fontWeight: 700, fontSize: 17, letterSpacing: -0.3 }}>Samzy</span>
             </div>
           ) : (
             <div style={{ width: 30, height: 30, background: ORANGE, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🛒</div>
           )}
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "#1a1a1a", border: "none", color: "#666", cursor: "pointer", fontSize: 11, padding: "6px 8px", borderRadius: 6 }}>
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: WARM_BG, border: "none", color: MUTED, cursor: "pointer", fontSize: 11, padding: "6px 8px", borderRadius: 6 }}>
             {sidebarOpen ? "◀" : "▶"}
           </button>
         </div>
@@ -132,7 +132,7 @@ export default function Home() {
             <button key={item.id} onClick={() => item.id === "profile" ? window.location.href = "/profile" : setActiveNav(item.id)} style={{
               display: "flex", alignItems: "center", gap: 12, padding: sidebarOpen ? "11px 12px" : "11px",
               borderRadius: 10, background: activeNav === item.id ? "#1a1a1a" : "none", border: "none",
-              color: activeNav === item.id ? "#fff" : "#666", cursor: "pointer", fontSize: 13.5,
+              color: activeNav === item.id ? "#fff" : MUTED, cursor: "pointer", fontSize: 13.5,
               textAlign: "left", width: "100%", transition: "all 0.15s",
               borderLeft: activeNav === item.id ? "3px solid " + ORANGE : "3px solid transparent",
             }}>
@@ -142,7 +142,7 @@ export default function Home() {
           ))}
         </nav>
         {sidebarOpen && (
-          <div style={{ padding: "16px", borderTop: "1px solid #1a1a1a" }}>
+          <div style={{ padding: "16px", borderTop: "1px solid " + BORDER }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <div style={{ width: 8, height: 8, borderRadius: "50%", background: dbStatus === "connected" ? "#22c55e" : "#f59e0b" }} />
               <span style={{ fontSize: 11, color: "#555" }}>{dbStatus === "connected" ? "Live" : "Connecting..."}</span>
