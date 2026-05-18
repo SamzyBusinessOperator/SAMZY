@@ -60,6 +60,8 @@ export default function Home() {
   }, []);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dbStatus, setDbStatus] = useState("connecting");
+  const [storeName, setStoreName] = useState("Your Store");
+  const [userEmail, setUserEmail] = useState("");
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<{q: string, a: string}[]>([]);
@@ -72,10 +74,15 @@ export default function Home() {
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
 
   useEffect(() => {
-    supabase.from("stores").select("*").then(({ error }) => {
-      setDbStatus(error ? "error" : "connected");
+   supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUserEmail(user.email || "");
+        supabase.from("stores").select("*").eq("owner_email", user.email).single().then(({ data, error }) => {
+          if (data) setStoreName(data.name);
+          setDbStatus(error ? "error" : "connected");
+        });
+      }
     });
-  }, []);
 
   async function askAdvisor() {
     if (!question.trim()) return;
@@ -122,7 +129,7 @@ export default function Home() {
               <div style={{ width: 7, height: 7, borderRadius: "50%", background: dbStatus === "connected" ? "#22c55e" : "#f59e0b" }} />
               <span style={{ fontSize: 11, color: "#94a3b8" }}>{dbStatus === "connected" ? "Live" : "Connecting..."}</span>
             </div>
-            <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>Green Basket Market</div>
+            <div style={{ fontSize: 12, color: "#64748b", marginTop: 4 }}>{storeName}</div>
           </div>
         )}
       </aside>
