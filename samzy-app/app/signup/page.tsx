@@ -42,7 +42,7 @@ export default function Signup() {
           <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
           <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>Welcome to Samzy!</h2>
           <p style={{ color: "#64748b", fontSize: 14, marginTop: 8 }}>Check your email to confirm your account, then sign in.</p>
-          <a href="/login" style={{ display: "block", marginTop: 24, padding: "13px", borderRadius: 8, background: "#3b82f6", color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Go to Sign In</a>
+          <a href="/onboarding" style={{ display: "block", marginTop: 24, padding: "13px", borderRadius: 8, background: "#3b82f6", color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Start Your Setup →</a>
         </div>
       </div>
     );
