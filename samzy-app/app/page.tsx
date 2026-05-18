@@ -74,14 +74,8 @@ export default function Home() {
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
 
   useEffect(() => {
-   supabase.auth.getSession().then(({ data: { session } }) => {
-      const user = session?.user;
-      if (user) {
-        setUserEmail(user.email || "");
-        supabase.from("stores").select("*").eq("owner_email", user.email).single().then(({ data, error }) => {
-          if (data) setStoreName(data.name);
-          setDbStatus(error ? "error" : "connected");
-        });
+   setStoreName(user.user_metadata?.store_name || user.email || "My Store");
+setDbStatus("connected");
       }
     });
   }, []);
