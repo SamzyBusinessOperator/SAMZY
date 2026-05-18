@@ -78,7 +78,7 @@ export default function Home() {
       if (session?.user) {
         setStoreName(session.user.user_metadata?.store_name || session.user.email || "My Store");
         setDbStatus("connected");
-        setTimeout(() => { supabase.from("stores").select("city").eq("owner_email", session.user.email || "").single().then(({ data }) => { if (data?.onboarding_complete === false) window.location.href = "/onboarding"; }); }, 500);
+        setTimeout(() => { supabase.from("stores").select("city, onboarding_complete").eq("owner_email", session.user.email || "").single().then(({ data }) => { if (data?.onboarding_complete === false) window.location.href = "/onboarding"; }); }, 500);
       }
     });
   }, []);
