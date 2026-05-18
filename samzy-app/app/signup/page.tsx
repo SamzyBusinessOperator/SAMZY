@@ -2,6 +2,12 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+const ORANGE = "#FC7800";
+const BLACK = "#0f0f0f";
+const WARM_BG = "#FAFAF8";
+const BORDER = "#F0EEEB";
+const MUTED = "#6B6B6B";
+
 export default function Signup() {
   const [storeName, setStoreName] = useState("");
   const [email, setEmail] = useState("");
@@ -11,19 +17,12 @@ export default function Signup() {
   const [success, setSuccess] = useState(false);
 
   async function handleSignup() {
-    if (!storeName || !email || !password) {
-      setError("Please fill in all fields.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      return;
-    }
+    if (!storeName || !email || !password) { setError("Please fill in all fields."); return; }
+    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     setLoading(true);
     setError("");
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
+    const { error } = await supabase.auth.signUp({
+      email, password,
       options: { data: { store_name: storeName } },
     });
     if (error) {
@@ -35,50 +34,63 @@ export default function Signup() {
     setLoading(false);
   }
 
-  if (success) {
-    return (
-      <div style={{ minHeight: "100vh", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
-        <div style={{ background: "#1e293b", borderRadius: 16, padding: 40, width: 380, textAlign: "center" }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>🎉</div>
-          <h2 style={{ color: "#fff", fontSize: 20, fontWeight: 700 }}>Welcome to Samzy!</h2>
-          <p style={{ color: "#64748b", fontSize: 14, marginTop: 8 }}>Check your email to confirm your account, then sign in.</p>
-          <a href="/onboarding" style={{ display: "block", marginTop: 24, padding: "13px", borderRadius: 8, background: "#3b82f6", color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>Start Your Setup →</a>
-        </div>
+  const inputStyle = {
+    width: "100%", padding: "13px 16px", borderRadius: 10,
+    border: "1px solid " + BORDER, fontSize: 15, outline: "none",
+    color: BLACK, background: WARM_BG, boxSizing: "border-box" as const,
+    fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+  };
+
+  if (success) return (
+    <div style={{ minHeight: "100vh", background: WARM_BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
+      <div style={{ textAlign: "center", maxWidth: 400, padding: 24 }}>
+        <div style={{ width: 64, height: 64, background: ORANGE, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 24px" }}>🎉</div>
+        <h2 style={{ fontSize: 24, fontWeight: 700, color: BLACK, margin: "0 0 12px", letterSpacing: -0.5 }}>Welcome to Samzy!</h2>
+        <p style={{ color: MUTED, fontSize: 15, marginBottom: 32, lineHeight: 1.6 }}>Your account is ready. Click below to set up your store.</p>
+        <a href="/onboarding" style={{ display: "block", padding: "14px", borderRadius: 10, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
+          Start Your Setup →
+        </a>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
-      <div style={{ background: "#1e293b", borderRadius: 16, padding: 40, width: 380, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>🛒</div>
-          <h1 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: 0 }}>Create your store</h1>
-          <p style={{ color: "#64748b", fontSize: 14, marginTop: 6 }}>Get started with Samzy for free</p>
+    <div style={{ minHeight: "100vh", background: WARM_BG, display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
+      <div style={{ padding: "20px 40px", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ width: 28, height: 28, background: ORANGE, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🛒</div>
+        <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
+      </div>
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ width: "100%", maxWidth: 400 }}>
+          <div style={{ marginBottom: 36 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: BLACK, margin: 0, letterSpacing: -0.5 }}>Create your store</h1>
+            <p style={{ color: MUTED, fontSize: 15, marginTop: 8 }}>Get started with Samzy in minutes</p>
+          </div>
+          {error && (
+            <div style={{ background: "#fef2f2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14, borderLeft: "3px solid #dc2626" }}>
+              {error}
+            </div>
+          )}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Store Name</label>
+            <input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="e.g. Mercado Central" style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Email</label>
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@example.com" style={inputStyle} />
+          </div>
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Password</label>
+            <input value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSignup()} type="password" placeholder="Min. 6 characters" style={inputStyle} />
+          </div>
+          <button onClick={handleSignup} disabled={loading} style={{ width: "100%", padding: "14px", borderRadius: 10, background: loading ? MUTED : ORANGE, border: "none", color: "#fff", fontWeight: 700, fontSize: 15, cursor: loading ? "not-allowed" : "pointer", letterSpacing: -0.2 }}>
+            {loading ? "Creating account..." : "Create Account →"}
+          </button>
+          <p style={{ textAlign: "center", color: MUTED, fontSize: 14, marginTop: 24 }}>
+            Already have an account?{" "}
+            <a href="/login" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Sign in</a>
+          </p>
         </div>
-        {error && <div style={{ background: "#fef2f2", color: "#ef4444", padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>STORE NAME</label>
-          <input value={storeName} onChange={e => setStoreName(e.target.value)} type="text" placeholder="e.g. Green Basket Market"
-            style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-        </div>
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>EMAIL</label>
-          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@example.com"
-            style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-        </div>
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>PASSWORD</label>
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Min. 6 characters"
-            style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-        </div>
-        <button onClick={handleSignup} disabled={loading}
-          style={{ width: "100%", padding: "13px", borderRadius: 8, background: "#22c55e", border: "none", color: "#fff", fontWeight: 700, fontSize: 15, cursor: loading ? "not-allowed" : "pointer" }}>
-          {loading ? "Creating account..." : "Create Account"}
-        </button>
-        <p style={{ textAlign: "center", color: "#64748b", fontSize: 13, marginTop: 20 }}>
-          Already have an account? <a href="/login" style={{ color: "#3b82f6", textDecoration: "none" }}>Sign in</a>
-        </p>
       </div>
     </div>
   );

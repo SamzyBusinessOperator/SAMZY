@@ -2,6 +2,12 @@
 import { useState } from "react";
 import { supabase } from "../../lib/supabase";
 
+const ORANGE = "#FC7800";
+const BLACK = "#0f0f0f";
+const WARM_BG = "#FAFAF8";
+const BORDER = "#F0EEEB";
+const MUTED = "#6B6B6B";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -20,32 +26,61 @@ export default function Login() {
     setLoading(false);
   }
 
+  const inputStyle = {
+    width: "100%", padding: "13px 16px", borderRadius: 10,
+    border: "1px solid " + BORDER, fontSize: 15, outline: "none",
+    color: BLACK, background: WARM_BG, boxSizing: "border-box" as const,
+    fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+  };
+
   return (
-    <div style={{ minHeight: "100vh", background: "#0f172a", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "Georgia, serif" }}>
-      <div style={{ background: "#1e293b", borderRadius: 16, padding: 40, width: 380, boxShadow: "0 4px 24px rgba(0,0,0,0.3)" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>🛒</div>
-          <h1 style={{ color: "#fff", fontSize: 24, fontWeight: 700, margin: 0 }}>Samzy</h1>
-          <p style={{ color: "#64748b", fontSize: 14, marginTop: 6 }}>Sign in to your store</p>
+    <div style={{ minHeight: "100vh", background: WARM_BG, display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
+      
+      {/* Top bar */}
+      <div style={{ padding: "20px 40px", display: "flex", alignItems: "center", gap: 10 }}>
+        <div style={{ width: 28, height: 28, background: ORANGE, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🛒</div>
+        <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
+      </div>
+
+      {/* Center */}
+      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ width: "100%", maxWidth: 400 }}>
+          
+          <div style={{ marginBottom: 36 }}>
+            <h1 style={{ fontSize: 28, fontWeight: 700, color: BLACK, margin: 0, letterSpacing: -0.5 }}>Welcome back</h1>
+            <p style={{ color: MUTED, fontSize: 15, marginTop: 8 }}>Sign in to your store dashboard</p>
+          </div>
+
+          {error && (
+            <div style={{ background: "#fef2f2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14, borderLeft: "3px solid #dc2626" }}>
+              {error}
+            </div>
+          )}
+
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Email</label>
+            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@example.com" style={inputStyle} />
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Password</label>
+            <input value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleLogin()} type="password" placeholder="••••••••" style={inputStyle} />
+          </div>
+
+          <button onClick={handleLogin} disabled={loading} style={{
+            width: "100%", padding: "14px", borderRadius: 10,
+            background: loading ? MUTED : ORANGE, border: "none",
+            color: "#fff", fontWeight: 700, fontSize: 15,
+            cursor: loading ? "not-allowed" : "pointer", letterSpacing: -0.2,
+          }}>
+            {loading ? "Signing in..." : "Sign In →"}
+          </button>
+
+          <p style={{ textAlign: "center", color: MUTED, fontSize: 14, marginTop: 24 }}>
+            No account?{" "}
+            <a href="/signup" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Create one</a>
+          </p>
         </div>
-        {error && <div style={{ background: "#fef2f2", color: "#ef4444", padding: "10px 14px", borderRadius: 8, fontSize: 13, marginBottom: 16 }}>{error}</div>}
-        <div style={{ marginBottom: 16 }}>
-          <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>EMAIL</label>
-          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@example.com"
-            style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-        </div>
-        <div style={{ marginBottom: 24 }}>
-          <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>PASSWORD</label>
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Min. 6 characters"
-            style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
-        </div>
-        <button onClick={handleLogin} disabled={loading}
-          style={{ width: "100%", padding: "13px", borderRadius: 8, background: "#3b82f6", border: "none", color: "#fff", fontWeight: 700, fontSize: 15, cursor: loading ? "not-allowed" : "pointer" }}>
-          {loading ? "Signing in..." : "Sign In"}
-        </button>
-        <p style={{ textAlign: "center", color: "#64748b", fontSize: 13, marginTop: 20 }}>
-          No account? <a href="/signup" style={{ color: "#3b82f6", textDecoration: "none" }}>Create one</a>
-        </p>
       </div>
     </div>
   );
