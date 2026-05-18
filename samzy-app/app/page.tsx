@@ -52,6 +52,12 @@ function insightColor(type: string) {
 
 export default function Home() {
   const [activeNav, setActiveNav] = useState("dashboard");
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) window.location.href = "/login";
+    });
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dbStatus, setDbStatus] = useState("connecting");
   const [question, setQuestion] = useState("");
