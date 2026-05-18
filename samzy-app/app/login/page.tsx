@@ -36,7 +36,7 @@ export default function Login() {
         </div>
         <div style={{ marginBottom: 24 }}>
           <label style={{ color: "#94a3b8", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>PASSWORD</label>
-          <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="••••••••"
+          <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Min. 6 characters"
             style={{ width: "100%", padding: "12px 14px", borderRadius: 8, border: "1px solid #334155", background: "#0f172a", color: "#fff", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
         </div>
         <button onClick={handleLogin} disabled={loading}
