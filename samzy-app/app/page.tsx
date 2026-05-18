@@ -74,7 +74,8 @@ export default function Home() {
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
 
   useEffect(() => {
-   supabase.auth.getUser().then(({ data: { user } }) => {
+   supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user;
       if (user) {
         setUserEmail(user.email || "");
         supabase.from("stores").select("*").eq("owner_email", user.email).single().then(({ data, error }) => {
