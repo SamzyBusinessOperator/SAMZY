@@ -9,6 +9,7 @@ const navItems = [
   { id: "suppliers", label: "Suppliers", icon: "🚚" },
   { id: "finances", label: "Finances", icon: "💰" },
   { id: "ai", label: "AI Advisor", icon: "✦" },
+  { id: "profile", label: "Profile", icon: "👤" },
 ];
 
 const mockData = {
@@ -110,7 +111,7 @@ export default function Home() {
         </div>
         <nav style={{ flex: 1, padding: "12px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
           {navItems.map((item) => (
-            <button key={item.id} onClick={() => setActiveNav(item.id)} style={{
+            <button key={item.id} onClick={() => item.id === "profile" ? window.location.href = "/profile" : setActiveNav(item.id)} style={{
               display: "flex", alignItems: "center", gap: 10, padding: "10px", borderRadius: 8,
               background: activeNav === item.id ? "#1e293b" : "none", border: "none",
               color: activeNav === item.id ? "#fff" : "#94a3b8", cursor: "pointer", fontSize: 13, textAlign: "left", width: "100%"
