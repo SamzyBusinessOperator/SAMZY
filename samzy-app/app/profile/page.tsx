@@ -94,27 +94,27 @@ export default function Profile() {
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>STORE NAME</label>
               <input value={form.name} onChange={e => update("name", e.target.value)}
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box", color: "#0f172a" }} />
             </div>
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>PHONE NUMBER</label>
               <input value={form.phone} onChange={e => update("phone", e.target.value)} placeholder="+351 000 000 000"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box", color: "#0f172a" }} />
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>ADDRESS</label>
               <input value={form.address} onChange={e => update("address", e.target.value)} placeholder="Street address"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box", color: "#0f172a" }} />
             </div>
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>CITY</label>
               <input value={form.city} onChange={e => update("city", e.target.value)} placeholder="Lisbon"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box", color: "#0f172a" }} />
             </div>
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>COUNTRY</label>
               <input value={form.country} onChange={e => update("country", e.target.value)} placeholder="Portugal"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box", color: "#0f172a" }} />
             </div>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function Profile() {
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>NUMBER OF STAFF</label>
               <input value={form.num_staff} onChange={e => update("num_staff", e.target.value)} type="number" placeholder="5"
-                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box" }} />
+                style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 14, outline: "none", boxSizing: "border-box", color: "#0f172a" }} />
             </div>
             <div>
               <label style={{ color: "#64748b", fontSize: 12, fontWeight: 600, display: "block", marginBottom: 6 }}>STORE SIZE</label>
