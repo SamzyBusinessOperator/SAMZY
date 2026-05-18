@@ -69,7 +69,7 @@ export default function Landing() {
 
       <section style={{ background: BLACK, padding: "60px 48px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
-          {[{ number: "2 min", label: "Average setup time" }, { number: "400+ euros", label: "Average monthly savings" }, { number: "100%", label: "Supermarket focused" }].map((stat, i) => (
+          {[{ number: "2 min", label: "Average setup time" }, { number: "5 min", label: "Daily time saved" }, { number: "100%", label: "Supermarket focused" }].map((stat, i) => (
             <div key={i} style={{ textAlign: "center", padding: "20px", borderRight: i < 2 ? "1px solid #1a1a1a" : "none" }}>
               <div style={{ fontSize: 36, fontWeight: 800, color: ORANGE, letterSpacing: -1, marginBottom: 8 }}>{stat.number}</div>
               <div style={{ fontSize: 14, color: "#666" }}>{stat.label}</div>
