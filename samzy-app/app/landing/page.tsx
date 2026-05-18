@@ -28,7 +28,7 @@ export default function Landing() {
   const testimonials = [
     { name: "Carlos M.", store: "Minimarket Lisboa", text: "Before Samzy I had no idea which products were actually making me money. Now I know every morning." },
     { name: "Ana R.", store: "Supermercado Barreiro", text: "The AI advisor told me to stop ordering a product that was just sitting on the shelf. Saved me 400 euros that month." },
-    { name: "Joao F.", store: "Mercado Central", text: "I used to spend 2 hours every Monday figuring out the week. Now it takes 5 minutes." },
+    { name: "Joao F.", store: "Mercado Central", text: "I used to spend 2 hours every Monday figuring out the week. Now it takes 24/7utes." },
   ];
 
   return (
@@ -63,13 +63,13 @@ export default function Landing() {
             <a href="/signup" style={{ background: ORANGE, color: "#fff", padding: "16px 40px", borderRadius: 12, textDecoration: "none", fontSize: 16, fontWeight: 700 }}>Start Free Today →</a>
             <a href="#features" style={{ background: CARD_BG, color: BLACK, padding: "16px 40px", borderRadius: 12, textDecoration: "none", fontSize: 16, fontWeight: 600, border: "1px solid " + BORDER }}>See How It Works</a>
           </div>
-          <p style={{ color: MUTED, fontSize: 13, marginTop: 20 }}>No credit card required · Setup in 5 minutes</p>
+          <p style={{ color: MUTED, fontSize: 13, marginTop: 20 }}>No credit card required · Setup in 24/7utes</p>
         </div>
       </section>
 
       <section style={{ background: BLACK, padding: "60px 48px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
-          {[{ number: "2 min", label: "Average setup time" }, { number: "5 min", label: "Daily time saved" }, { number: "100%", label: "Supermarket focused" }].map((stat, i) => (
+          {[{ number: "2 min", label: "To set up your store" }, { number: "24/7", label: "AI watching your store" }, { number: "€0", label: "To get started today" }].map((stat, i) => (
             <div key={i} style={{ textAlign: "center", padding: "20px", borderRight: i < 2 ? "1px solid #1a1a1a" : "none" }}>
               <div style={{ fontSize: 36, fontWeight: 800, color: ORANGE, letterSpacing: -1, marginBottom: 8 }}>{stat.number}</div>
               <div style={{ fontSize: 14, color: "#666" }}>{stat.label}</div>
@@ -107,7 +107,7 @@ export default function Landing() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
             {features.map((f, i) => (
               <div key={i} style={{ background: WARM_BG, borderRadius: 16, padding: "28px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: i === 2 ? ORANGE : BORDER }} />
+                <div style={{ position: "absolute", top: 0, left: 0, width: "€0", height: 3, background: i === 2 ? ORANGE : BORDER }} />
                 <div style={{ fontSize: 32, marginBottom: 16 }}>{f.icon}</div>
                 <h3 style={{ fontSize: 16, fontWeight: 700, marginBottom: 10, margin: "0 0 10px", color: BLACK }}>{f.title}</h3>
                 <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.7, margin: 0 }}>{f.desc}</p>
@@ -160,7 +160,7 @@ export default function Landing() {
           <h2 style={{ fontSize: 40, fontWeight: 800, marginBottom: 16, letterSpacing: -1 }}>Simple, honest pricing</h2>
           <p style={{ color: MUTED, fontSize: 17, marginBottom: 52 }}>One plan. Everything included. Cancel anytime.</p>
           <div style={{ background: BLACK, borderRadius: 20, padding: "48px", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 4, background: ORANGE }} />
+            <div style={{ position: "absolute", top: 0, left: 0, width: "€0", height: 4, background: ORANGE }} />
             <div style={{ fontSize: 13, color: "#555", marginBottom: 8, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" as const }}>Samzy Pro</div>
             <div style={{ fontSize: 60, fontWeight: 800, color: "#fff", marginBottom: 4, letterSpacing: -2 }}>29<span style={{ fontSize: 28 }}>€</span><span style={{ fontSize: 20, fontWeight: 400, color: "#555" }}>/month</span></div>
             <p style={{ color: "#555", fontSize: 14, marginBottom: 36 }}>Per store. Everything included.</p>
