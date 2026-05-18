@@ -7,6 +7,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [storeId, setStoreId] = useState("");
+  const [ownerEmail, setOwnerEmail] = useState("");
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -25,6 +26,7 @@ export default function Profile() {
       supabase.from("stores").select("*").eq("owner_email", email).single().then(({ data }) => {
         if (data) {
           setStoreId(data.id);
+          setOwnerEmail(email || "");
           setForm({
             name: data.name || "",
             phone: data.phone || "",
@@ -53,7 +55,7 @@ export default function Profile() {
       pos_system: form.pos_system,
       num_staff: parseInt(form.num_staff as string) || null,
       store_size: form.store_size,
-    }).eq("id", storeId);
+    }).eq("owner_email", ownerEmail);
     setSaving(false);
     setMessage(error ? "Error saving. Try again." : "Profile saved successfully!");
   }
