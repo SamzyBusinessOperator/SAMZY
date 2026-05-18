@@ -57,6 +57,11 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<{q: string, a: string}[]>([]);
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
 
@@ -125,7 +130,7 @@ export default function Home() {
               {activeNav === "dashboard" ? "Here's what's happening at your store today" : "Manage your " + activeNav}
             </p>
           </div>
-          <div style={{ background: "#f1f5f9", color: "#475569", padding: "6px 14px", borderRadius: 20, fontSize: 13 }}>Sunday, May 16, 2026</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}><div style={{ background: "#f1f5f9", color: "#475569", padding: "6px 14px", borderRadius: 20, fontSize: 13 }}>Sunday, May 16, 2026</div><button onClick={handleLogout} style={{ padding: "6px 14px", borderRadius: 20, background: "#fef2f2", border: "none", color: "#ef4444", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Sign Out</button></div>
         </header>
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 32px 32px" }}>
           {activeNav === "dashboard" && (
