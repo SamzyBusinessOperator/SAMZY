@@ -105,7 +105,7 @@ export default function Scanner() {
       if (!store) { setMessage("Store not found."); setSaving(false); return; }
 
       for (const item of scannedItems) {
-        const { data: existing } = await supabase.from("products").select("id, stock_quantity").eq("store_id", store.id).ilike("name", item.name).single();
+        const { data: existing } = await supabase.from("products").select("id, stock_quantity, price").eq("store_id", store.id).ilike("name", item.name).single();
         if (existing) {
           await supabase.from("products").update({ stock_quantity: existing.stock_quantity + item.quantity, price: item.price || existing.price }).eq("id", existing.id);
         } else {
