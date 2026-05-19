@@ -71,7 +71,7 @@ export default function Scanner() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { window.location.href = "/login"; return; }
 
-      const { data: store } = await supabase.from("stores").select("id").eq("owner_email", session.user.email).single();
+      const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", session.user.email || "").single();
       if (!store) { setMessage("Store not found."); setSaving(false); return; }
 
       for (const item of scannedItems) {
