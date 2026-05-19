@@ -33,10 +33,11 @@ export async function POST(req: NextRequest) {
       const email = session.customer_email;
       const customerId = session.customer as string;
       if (email) {
-        await supabase.from("stores").update({
+        const { error: updateError } = await supabase.from("stores").update({
           subscription_status: "active",
           stripe_customer_id: customerId,
         }).ilike("owner_email", email);
+        console.log("Webhook update:", updateError ? updateError.message : "success", "email:", email);
       }
       break;
     }
