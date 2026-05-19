@@ -29,11 +29,11 @@ export default function Pricing() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
-      const data = await res.json();
+      const data = await res.json(); console.log("Stripe response:", data);
       if (data.error) { setError(data.error); setLoading(false); return; }
       window.location.href = data.url;
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError("Something went wrong. Please try again."); alert("Error: " + err);
       setLoading(false);
     }
   }
