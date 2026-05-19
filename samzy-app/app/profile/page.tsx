@@ -23,7 +23,7 @@ export default function Profile() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { window.location.href = "/login"; return; }
+      if (!session) { setTimeout(() => { supabase.auth.getSession().then(({ data: { session: s } }) => { if (!s) window.location.href = "/login"; else window.location.reload(); }); }, 1000); return; }
       const email = session.user.email || "";
       setOwnerEmail(email);
       supabase.from("stores").select("*").ilike("owner_email", email).single().then(({ data }) => {
