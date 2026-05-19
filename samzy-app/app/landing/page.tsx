@@ -96,12 +96,12 @@ export default function Landing() {
       </section>
 
       {/* Stats */}
-      <section style={{ background: BLACK, padding: isMobile ? "40px 20px" : "60px 48px" }}>
+      <section style={{ background: ORANGE, padding: isMobile ? "40px 20px" : "60px 48px" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
           {[{ number: "2 min", label: "To set up your store" }, { number: "24/7", label: "AI watching your store" }, { number: "€0", label: "To get started today" }].map((stat, i) => (
-            <div key={i} style={{ textAlign: "center", padding: isMobile ? "16px 8px" : "20px", borderRight: i < 2 ? "1px solid #1a1a1a" : "none" }}>
-              <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: ORANGE, letterSpacing: -1, marginBottom: 6 }}>{stat.number}</div>
-              <div style={{ fontSize: isMobile ? 11 : 14, color: "#666" }}>{stat.label}</div>
+            <div key={i} style={{ textAlign: "center", padding: isMobile ? "16px 8px" : "20px", borderRight: i < 2 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
+              <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: "#fff", letterSpacing: -1, marginBottom: 6 }}>{stat.number}</div>
+              <div style={{ fontSize: isMobile ? 11 : 14, color: "#fff" }}>{stat.label}</div>
             </div>
           ))}
         </div>
