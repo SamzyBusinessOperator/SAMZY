@@ -153,15 +153,15 @@ export default function Landing() {
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
           <div style={{ fontSize: 32, color: ORANGE, marginBottom: 16, fontWeight: 700 }}>✦</div>
           <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, color: "#fff", marginBottom: 14, letterSpacing: -1 }}>Meet your AI Business Advisor</h2>
-          <p style={{ color: "#666", fontSize: isMobile ? 15 : 17, lineHeight: 1.7, marginBottom: 36 }}>Ask anything and get instant answers based on your real store data.</p>
+          <p style={{ color: BLACK, fontSize: isMobile ? 15 : 17, lineHeight: 1.7, marginBottom: 36 }}>Ask anything and get instant answers based on your real store data.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
             {[
               { q: "What should I reorder this week?", a: "Reorder Whole Milk 1L (4 left), Eggs 12pk (3 left), and White Bread (6 left). Order from Dairy Direct today." },
               { q: "Why are my sales low on Tuesdays?", a: "Tuesday sales are 22% below average. Try a promotion on near-expiry items from 3-5 PM." },
             ].map((item, i) => (
-              <div key={i} style={{ background: "#111", borderRadius: 12, padding: "16px 20px", border: "1px solid #1a1a1a" }}>
-                <p style={{ color: "#555", fontSize: 12, margin: "0 0 8px" }}>You: {item.q}</p>
-                <p style={{ color: "#e5e5e5", fontSize: 13, margin: 0, lineHeight: 1.6, borderLeft: "3px solid " + ORANGE, paddingLeft: 12 }}>✦ {item.a}</p>
+              <div key={i} style={{ background: "rgba(0,0,0,0.15)", borderRadius: 12, padding: "16px 20px", border: "1px solid #1a1a1a" }}>
+                <p style={{ color: BLACK, fontSize: 12, margin: "0 0 8px" }}>You: {item.q}</p>
+                <p style={{ color: "#fff", fontSize: 13, margin: 0, lineHeight: 1.6, borderLeft: "3px solid " + ORANGE, paddingLeft: 12 }}>✦ {item.a}</p>
               </div>
             ))}
           </div>
