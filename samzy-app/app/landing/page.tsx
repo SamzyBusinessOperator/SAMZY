@@ -192,21 +192,21 @@ export default function Landing() {
         <div style={{ maxWidth: 460, margin: "0 auto", textAlign: "center" }}>
           <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, marginBottom: 12, letterSpacing: -1 }}>Simple pricing</h2>
           <p style={{ color: MUTED, fontSize: isMobile ? 15 : 17, marginBottom: 40 }}>One plan. Everything included.</p>
-          <div style={{ background: BLACK, borderRadius: 18, padding: isMobile ? "32px 24px" : "48px", position: "relative", overflow: "hidden" }}>
+          <div style={{ background: "#fff", border: "2px solid " + ORANGE, borderRadius: 18, padding: isMobile ? "32px 24px" : "48px", position: "relative", overflow: "hidden" }}>
             <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 4, background: ORANGE }} />
-            <div style={{ fontSize: 12, color: "#555", marginBottom: 8, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" as const }}>Samzy Pro</div>
-            <div style={{ fontSize: isMobile ? 48 : 60, fontWeight: 800, color: "#fff", marginBottom: 4, letterSpacing: -2 }}>29<span style={{ fontSize: 24 }}>€</span><span style={{ fontSize: 18, fontWeight: 400, color: "#555" }}>/mo</span></div>
-            <p style={{ color: "#555", fontSize: 13, marginBottom: 28 }}>Per store. Everything included.</p>
+            <div style={{ fontSize: 12, color: BLACK, marginBottom: 8, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" as const }}>Samzy Pro</div>
+            <div style={{ fontSize: isMobile ? 48 : 60, fontWeight: 800, color: BLACK, marginBottom: 4, letterSpacing: -2 }}>29<span style={{ fontSize: 24 }}>€</span><span style={{ fontSize: 18, fontWeight: 400, color: "#555" }}>/mo</span></div>
+            <p style={{ color: MUTED, fontSize: 13, marginBottom: 28 }}>Per store. Everything included.</p>
             <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28, textAlign: "left" }}>
               {["Full dashboard", "AI Advisor powered by Claude", "Inventory alerts", "Staff management", "Supplier tracking", "Financial overview"].map((item, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                   <span style={{ color: ORANGE, fontWeight: 700 }}>✓</span>
-                  <span style={{ color: "#ccc", fontSize: 14 }}>{item}</span>
+                  <span style={{ color: BLACK, fontSize: 14 }}>{item}</span>
                 </div>
               ))}
             </div>
             <a href="/signup" style={{ display: "block", background: ORANGE, color: "#fff", padding: "15px", borderRadius: 10, textDecoration: "none", fontSize: 15, fontWeight: 700 }}>Start Free - 14 Day Trial</a>
-            <p style={{ color: "#444", fontSize: 12, marginTop: 12 }}>No credit card required</p>
+            <p style={{ color: MUTED, fontSize: 12, marginTop: 12 }}>No credit card required</p>
           </div>
         </div>
       </section>
