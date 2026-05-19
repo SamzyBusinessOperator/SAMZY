@@ -19,8 +19,7 @@ export async function POST(req: NextRequest) {
           quantity: 1,
         },
       ],
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://samzy-two.vercel.app"}/?subscribed=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://samzy-two.vercel.app"}/pricing`,
+success_url: `https://samzy-two.vercel.app/login?subscribed=true`,      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || "https://samzy-two.vercel.app"}/pricing`,
     });
 
     return NextResponse.json({ url: session.url });
