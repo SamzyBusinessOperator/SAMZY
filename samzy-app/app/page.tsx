@@ -83,6 +83,7 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<{ q: string; a: string }[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
   const isMobile = useIsMobile();
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
@@ -93,6 +94,9 @@ export default function Home() {
       setStoreName(session.user.user_metadata?.store_name || session.user.email || "My Store");
       setUserEmail(session.user.email || "");
       setDbStatus("connected");
+        supabase.from("stores").select("id").ilike("owner_email", session.user.email || "").single().then(({ data: store }) => {
+          if (store) supabase.from("products").select("*").eq("store_id", store.id).then(({ data }) => { if (data) setProducts(data); });
+        });
       setTimeout(() => {
         supabase.from("stores").select("city, onboarding_complete").eq("owner_email", session.user.email || "").single().then(({ data }) => {
           if (data?.onboarding_complete === false) window.location.href = "/onboarding";
@@ -305,16 +309,16 @@ export default function Home() {
               <h2 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: BLACK }}>Low Stock Alerts</h2>
               {isMobile ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {mockData.lowStock.map(item => (
+                  {products.filter(p => p.stock_quantity <= p.reorder_threshold).map(item => (
                     <div key={item.name} style={{ background: WARM_BG, borderRadius: 12, padding: "14px 16px", border: "1px solid " + BORDER }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
                         <span style={{ fontWeight: 600, fontSize: 14, color: BLACK }}>{item.name}</span>
                         <span style={{ background: "#fef2f2", color: "#dc2626", padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>Reorder</span>
                       </div>
                       <div style={{ display: "flex", gap: 16 }}>
-                        <span style={{ fontSize: 12, color: MUTED }}>{item.category}</span>
-                        <span style={{ fontSize: 12, color: "#dc2626", fontWeight: 700 }}>{item.stock} left</span>
-                        <span style={{ fontSize: 12, color: MUTED }}>Min: {item.threshold}</span>
+                        <span style={{ fontSize: 12, color: MUTED }}>{item.category || "General"}</span>
+                        <span style={{ fontSize: 12, color: "#dc2626", fontWeight: 700 }}>{item.stock_quantity} left</span>
+                        <span style={{ fontSize: 12, color: MUTED }}>Min: {item.reorder_threshold}</span>
                       </div>
                     </div>
                   ))}
@@ -322,12 +326,12 @@ export default function Home() {
               ) : (
                 <table style={{ width: "100%", borderCollapse: "collapse" }}>
                   <thead><tr>{["Product","Category","In Stock","Threshold","Status"].map(h => <th key={h} style={{ textAlign: "left", fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, padding: "8px 12px", borderBottom: "1px solid " + BORDER }}>{h}</th>)}</tr></thead>
-                  <tbody>{mockData.lowStock.map(item => (
+                  <tbody>{products.filter(p => p.stock_quantity <= p.reorder_threshold).map(item => (
                     <tr key={item.name} style={{ borderBottom: "1px solid " + BORDER }}>
                       <td style={{ padding: "14px 12px", fontSize: 14, fontWeight: 500, color: BLACK }}>{item.name}</td>
-                      <td style={{ padding: "14px 12px" }}><span style={{ background: WARM_BG, color: MUTED, padding: "3px 10px", borderRadius: 20, fontSize: 12 }}>{item.category}</span></td>
-                      <td style={{ padding: "14px 12px", fontSize: 14, fontWeight: 700, color: "#dc2626" }}>{item.stock}</td>
-                      <td style={{ padding: "14px 12px", fontSize: 14, color: MUTED }}>{item.threshold}</td>
+                      <td style={{ padding: "14px 12px" }}><span style={{ background: WARM_BG, color: MUTED, padding: "3px 10px", borderRadius: 20, fontSize: 12 }}>{item.category || "General"}</span></td>
+                      <td style={{ padding: "14px 12px", fontSize: 14, fontWeight: 700, color: "#dc2626" }}>{item.stock_quantity}</td>
+                      <td style={{ padding: "14px 12px", fontSize: 14, color: MUTED }}>{item.reorder_threshold}</td>
                       <td style={{ padding: "14px 12px" }}><span style={{ background: "#fef2f2", color: "#dc2626", padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>Reorder Now</span></td>
                     </tr>
                   ))}</tbody>
