@@ -184,8 +184,8 @@ export default function Onboarding() {
               <div style={{ width: 72, height: 72, background: ORANGE, borderRadius: 18, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 24px" }}>🚀</div>
               <h1 style={{ fontSize: 28, fontWeight: 700, color: BLACK, margin: "0 0 12px", letterSpacing: -0.5 }}>Samzy is ready!</h1>
               <p style={{ color: MUTED, fontSize: 15, marginBottom: 36, lineHeight: 1.6 }}>Your store is set up. Let's start managing and growing your business.</p>
-              <a href="/" style={{ display: "block", padding: "14px", borderRadius: 10, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
-                Go to My Dashboard →
+              <a href="/pricing" style={{ display: "block", padding: "14px", borderRadius: 10, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
+                Start Your Free Trial →
               </a>
             </div>
           )}
