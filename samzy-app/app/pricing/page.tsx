@@ -85,12 +85,12 @@ export default function Pricing() {
             ))}
           </div>
 
+          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="your@email.com" style={{ width: "100%", padding: "13px 16px", borderRadius: 10, border: "1px solid #F0EEEB", fontSize: 14, outline: "none", color: "#0f0f0f", background: "#FAFAF8", boxSizing: "border-box", marginBottom: 12, fontFamily: "inherit" }} />
           <button onClick={handleCheckout} disabled={loading} style={{
             width: "100%", padding: "16px", borderRadius: 12,
             background: loading ? MUTED : ORANGE, border: "none",
             color: "#fff", fontWeight: 700, fontSize: 16,
             cursor: loading ? "not-allowed" : "pointer", letterSpacing: -0.3,
-          <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="your@email.com" style={{ width: "100%", padding: "13px 16px", borderRadius: 10, border: "1px solid " + BORDER, fontSize: 14, outline: "none", color: BLACK, background: WARM_BG, boxSizing: "border-box" as const, marginBottom: 12, fontFamily: "inherit" }} />
           }}>
             {loading ? "Loading..." : "Start 14-Day Free Trial →"}
           </button>
