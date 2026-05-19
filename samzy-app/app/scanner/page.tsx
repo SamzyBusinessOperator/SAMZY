@@ -41,44 +41,14 @@ export default function Scanner() {
     setScanning(true);
     setScannedItems([]);
     try {
-      const base64 = imageData.split(",")[1];
-      const mediaType = imageData.split(";")[0].split(":")[1];
-
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/scanner", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": process.env.NEXT_PUBLIC_ANTHROPIC_KEY || "",
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-5",
-          max_tokens: 1024,
-          messages: [{
-            role: "user",
-            content: [
-              {
-                type: "image",
-                source: { type: "base64", media_type: mediaType, data: base64 }
-              },
-              {
-                type: "text",
-                text: `Analyze this receipt or delivery note and extract all products. 
-                Return ONLY a JSON array with no extra text, like this:
-                [{"name": "Product Name", "quantity": 10, "price": 2.50, "category": "Dairy"}]
-                Categories should be one of: Dairy, Bakery, Beverages, Produce, Meat, Pantry, Frozen, Cleaning, Other.
-                If price is not visible use 0. If quantity is not visible use 1.`
-              }
-            ]
-          }]
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageData }),
       });
-
-      const data = await response.json();
-      const text = data.content?.[0]?.text || "[]";
-      const clean = text.replace(/```json|```/g, "").trim();
-      const items = JSON.parse(clean);
-      setScannedItems(items);
+      const data = await res.json();
+      if (data.error) { setMessage("Could not scan: " + data.error); setScanning(false); return; }
+      setScannedItems(data.items);
       setStep("review");
     } catch (err) {
       setMessage("Could not scan receipt. Please try again with a clearer image.");
