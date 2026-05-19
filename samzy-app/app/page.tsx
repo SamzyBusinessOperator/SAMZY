@@ -90,7 +90,7 @@ export default function Home() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) { setTimeout(() => { supabase.auth.getSession().then(({ data: { session: s } }) => { if (!s) window.location.href = "/landing"; }); }, 1000); return; }
+      const params = new URLSearchParams(window.location.search); if (!session && !params.get("subscribed")) { window.location.href = "/landing"; return; }
       setStoreName(session.user.user_metadata?.store_name || session.user.email || "My Store");
       setUserEmail(session.user.email || "");
       setDbStatus("connected");
