@@ -149,17 +149,17 @@ export default function Landing() {
       </section>
 
       {/* AI Section */}
-      <section style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: BLACK }}>
+      <section style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: ORANGE }}>
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
           <div style={{ fontSize: 32, color: ORANGE, marginBottom: 16, fontWeight: 700 }}>✦</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, color: "#fff", marginBottom: 14, letterSpacing: -1 }}>Meet your AI Business Advisor</h2>
+          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, color: BLACK, marginBottom: 14, letterSpacing: -1 }}>Meet your AI Business Advisor</h2>
           <p style={{ color: BLACK, fontSize: isMobile ? 15 : 17, lineHeight: 1.7, marginBottom: 36 }}>Ask anything and get instant answers based on your real store data.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
             {[
               { q: "What should I reorder this week?", a: "Reorder Whole Milk 1L (4 left), Eggs 12pk (3 left), and White Bread (6 left). Order from Dairy Direct today." },
               { q: "Why are my sales low on Tuesdays?", a: "Tuesday sales are 22% below average. Try a promotion on near-expiry items from 3-5 PM." },
             ].map((item, i) => (
-              <div key={i} style={{ background: "rgba(0,0,0,0.15)", borderRadius: 12, padding: "16px 20px", border: "1px solid #1a1a1a" }}>
+              <div key={i} style={{ background: "rgba(0,0,0,0.2)", borderRadius: 12, padding: "16px 20px", border: "1px solid #1a1a1a" }}>
                 <p style={{ color: BLACK, fontSize: 12, margin: "0 0 8px" }}>You: {item.q}</p>
                 <p style={{ color: "#fff", fontSize: 13, margin: 0, lineHeight: 1.6, borderLeft: "3px solid " + ORANGE, paddingLeft: 12 }}>✦ {item.a}</p>
               </div>
@@ -213,7 +213,7 @@ export default function Landing() {
 
       {/* CTA */}
       <section style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: ORANGE, textAlign: "center" }}>
-        <h2 style={{ fontSize: isMobile ? 28 : 44, fontWeight: 800, color: "#fff", marginBottom: 14, letterSpacing: -1 }}>Ready to take control?</h2>
+        <h2 style={{ fontSize: isMobile ? 28 : 44, fontWeight: 800, color: BLACK, marginBottom: 14, letterSpacing: -1 }}>Ready to take control?</h2>
         <p style={{ color: "#fff", fontSize: isMobile ? 15 : 18, marginBottom: 32, opacity: 0.9 }}>Join supermarket owners already using Samzy.</p>
         <a href="/signup" style={{ background: "#fff", color: ORANGE, padding: isMobile ? "15px 32px" : "18px 52px", borderRadius: 12, textDecoration: "none", fontSize: isMobile ? 15 : 16, fontWeight: 800 }}>Get Started Free →</a>
       </section>
