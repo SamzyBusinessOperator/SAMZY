@@ -153,7 +153,7 @@ export default function Landing() {
         <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
           <div style={{ fontSize: 32, color: "#fff", marginBottom: 16, fontWeight: 700 }}>✦</div>
           <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, color: "#fff", marginBottom: 14, letterSpacing: -1 }}>Meet your AI Business Advisor</h2>
-          <p style={{ color: BLACK, fontSize: isMobile ? 15 : 17, lineHeight: 1.7, marginBottom: 36 }}>Ask anything and get instant answers based on your real store data.</p>
+          <p style={{ color: "#fff", fontSize: isMobile ? 15 : 17, lineHeight: 1.7, marginBottom: 36 }}>Ask anything and get instant answers based on your real store data.</p>
           <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
             {[
               { q: "What should I reorder this week?", a: "Reorder Whole Milk 1L (4 left), Eggs 12pk (3 left), and White Bread (6 left). Order from Dairy Direct today." },
