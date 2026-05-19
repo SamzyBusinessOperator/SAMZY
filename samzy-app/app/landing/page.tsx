@@ -213,7 +213,7 @@ export default function Landing() {
 
       {/* CTA */}
       <section style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: ORANGE, textAlign: "center" }}>
-        <h2 style={{ fontSize: isMobile ? 28 : 44, fontWeight: 800, color: BLACK, marginBottom: 14, letterSpacing: -1 }}>Ready to take control?</h2>
+        <h2 style={{ fontSize: isMobile ? 28 : 44, fontWeight: 800, color: "#fff", marginBottom: 14, letterSpacing: -1 }}>Ready to take control?</h2>
         <p style={{ color: "#fff", fontSize: isMobile ? 15 : 18, marginBottom: 32, opacity: 0.9 }}>Join supermarket owners already using Samzy.</p>
         <a href="/signup" style={{ background: "#fff", color: ORANGE, padding: isMobile ? "15px 32px" : "18px 52px", borderRadius: 12, textDecoration: "none", fontSize: isMobile ? 15 : 16, fontWeight: 800 }}>Get Started Free →</a>
       </section>
