@@ -91,6 +91,7 @@ export default function Home() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       const params = new URLSearchParams(window.location.search); if (!session && !params.get("subscribed")) { window.location.href = "/landing"; return; }
+      if (!session) return;
       setStoreName(session.user.user_metadata?.store_name || session.user.email || "My Store");
       setUserEmail(session.user.email || "");
       setDbStatus("connected");
