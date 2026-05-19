@@ -122,7 +122,7 @@ export default function Landing() {
               </div>
             ))}
           </div>
-          <div style={{ marginTop: 24, padding: "24px", background: BLACK, borderRadius: 14, textAlign: "center" }}>
+          <div style={{ marginTop: 24, padding: "24px", background: ORANGE, borderRadius: 14, textAlign: "center" }}>
             <p style={{ color: "#fff", fontSize: isMobile ? 15 : 18, fontWeight: 700, margin: 0 }}>Samzy solves all of this. In one app.</p>
           </div>
         </div>
