@@ -160,7 +160,7 @@ export default function Landing() {
               { q: "Why are my sales low on Tuesdays?", a: "Tuesday sales are 22% below average. Try a promotion on near-expiry items from 3-5 PM." },
             ].map((item, i) => (
               <div key={i} style={{ background: "rgba(255,255,255,0.15)", borderRadius: 12, padding: "16px 20px", border: "1px solid rgba(255,255,255,0.2)" }}>
-                <p style={{ color: BLACK, fontSize: 12, margin: "0 0 8px" }}>You: {item.q}</p>
+                <p style={{ color: "#fff", fontSize: 12, margin: "0 0 8px" }}>You: {item.q}</p>
                 <p style={{ color: "#fff", fontSize: 13, margin: 0, lineHeight: 1.6, borderLeft: "3px solid #fff", paddingLeft: 12 }}>✦ {item.a}</p>
               </div>
             ))}
