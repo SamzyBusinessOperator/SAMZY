@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -59,7 +60,7 @@ export default function Onboarding() {
       {/* Top bar */}
       <div style={{ padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ width: 28, height: 28, background: ORANGE, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🛒</div>
+          <Image src="/logo.png" alt="Samzy" width={32} height={32} />
           <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
         </div>
         {step < 4 && <span style={{ color: MUTED, fontSize: 13 }}>Step {step} of 3</span>}

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
 
@@ -96,7 +97,7 @@ export default function Profile() {
       <header style={{ background: BLACK, padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 28, height: 28, background: ORANGE, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🛒</div>
+            <Image src="/logo.png" alt="Samzy" width={32} height={32} />
             <span style={{ color: "#fff", fontWeight: 700, fontSize: 16 }}>Samzy</span>
           </div>
           <span style={{ color: "#333", fontSize: 13 }}>|</span>

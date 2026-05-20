@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const ORANGE = "#FC7800";
@@ -53,7 +54,7 @@ export default function Landing() {
       {/* Nav */}
       <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: isMobile ? "16px 20px" : "20px 48px", borderBottom: "1px solid " + BORDER, position: "sticky", top: 0, background: WARM_BG, zIndex: 100 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 28, height: 28, background: ORANGE, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🛒</div>
+          <Image src="/logo.png" alt="Samzy" width={32} height={32} />
           <span style={{ fontSize: 16, fontWeight: 800, color: BLACK }}>Samzy</span>
         </div>
         <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center" }}>

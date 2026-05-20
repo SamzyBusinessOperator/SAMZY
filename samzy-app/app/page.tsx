@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
@@ -185,7 +186,7 @@ export default function Home() {
       {isMobile && (
         <header style={{ background: CARD_BG, borderBottom: "1px solid " + BORDER, padding: "14px 16px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 28, height: 28, background: ORANGE, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🛒</div>
+            <Image src="/logo.png" alt="Samzy" width={32} height={32} />
             <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
