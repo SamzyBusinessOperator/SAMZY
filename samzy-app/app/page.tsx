@@ -134,6 +134,7 @@ export default function Home() {
       setStoreName(session.user.user_metadata?.store_name || session.user.email || "My Store");
       setUserEmail(session.user.email || "");
       setDbStatus("connected");
+      fetchStaff(session.user.email || "");
         supabase.from("stores").select("id").ilike("owner_email", session.user.email || "").single().then(({ data: store }) => {
           if (store) supabase.from("products").select("*").eq("store_id", store.id).then(({ data }) => { if (data) setProducts(data); });
         });
