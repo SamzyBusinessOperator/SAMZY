@@ -193,18 +193,17 @@ export default function Home() {
             <button onClick={handleLogout} style={{ background: LIGHT_ORANGE, border: "none", color: ORANGE, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 12px", borderRadius: 8 }}>Out</button>
           </div>
         </header>
-      {/* Trial Banner */}
-      {trialDaysLeft !== null && trialDaysLeft > 0 && (
-        <div style={{ background: trialDaysLeft <= 3 ? "#fef2f2" : "#fffbeb", borderBottom: "1px solid " + (trialDaysLeft <= 3 ? "#fecaca" : "#fde68a"), padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
-          <span style={{ fontSize: 13, color: trialDaysLeft <= 3 ? "#dc2626" : "#d97706", fontWeight: 600 }}>{trialDaysLeft <= 3 ? "⚠️" : "ℹ️"} {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} left in your free trial</span>
-          <a href="/pricing" style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: trialDaysLeft <= 3 ? "#dc2626" : ORANGE, padding: "6px 14px", borderRadius: 8, textDecoration: "none" }}>Upgrade Now →</a>
-        </div>
-      )}
-      )}
 
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Desktop header */}
+        {/* Trial Banner */}
+        {trialDaysLeft !== null && trialDaysLeft > 0 && (
+          <div style={{ background: trialDaysLeft <= 3 ? "#fef2f2" : "#fffbeb", borderBottom: "1px solid " + (trialDaysLeft <= 3 ? "#fecaca" : "#fde68a"), padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
+            <span style={{ fontSize: 13, color: trialDaysLeft <= 3 ? "#dc2626" : "#d97706", fontWeight: 600 }}>{trialDaysLeft <= 3 ? "⚠️" : "ℹ️"} {trialDaysLeft} day{trialDaysLeft === 1 ? "" : "s"} left in your free trial</span>
+            <a href="/pricing" style={{ fontSize: 12, fontWeight: 700, color: "#fff", background: trialDaysLeft <= 3 ? "#dc2626" : ORANGE, padding: "6px 14px", borderRadius: 8, textDecoration: "none" }}>Upgrade Now →</a>
+          </div>
+        )}
         {!isMobile && (
           <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: headerPad, flexShrink: 0 }}>
             <div>
