@@ -15,10 +15,12 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [consent, setConsent] = useState(false);
   const [success, setSuccess] = useState(false);
 
   async function handleSignup() {
     if (!storeName || !email || !password) { setError("Please fill in all fields."); return; }
+    if (!consent) { setError("Please agree to the Terms and Privacy Policy to continue."); return; }
     if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
     setLoading(true);
     setError("");
@@ -83,6 +85,15 @@ export default function Signup() {
           <div style={{ marginBottom: 28 }}>
             <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Password</label>
             <input value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSignup()} type="password" placeholder="Min. 6 characters" style={inputStyle} />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 20, padding: "14px 16px", background: "#fff", borderRadius: 10, border: "1px solid " + BORDER }}>
+            <input type="checkbox" id="consent" checked={consent} onChange={e => setConsent(e.target.checked)} style={{ marginTop: 2, accentColor: ORANGE, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
+            <label htmlFor="consent" style={{ fontSize: 13, color: MUTED, lineHeight: 1.6, cursor: "pointer" }}>
+              I agree to Samzy's{" "}
+              <a href="/terms" target="_blank" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Terms of Service</a>{" "}and{" "}
+              <a href="/privacy" target="_blank" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Privacy Policy</a>.
+              I understand my data will be processed as described.
+            </label>
           </div>
           <button onClick={handleSignup} disabled={loading} style={{ width: "100%", padding: "14px", borderRadius: 10, background: loading ? MUTED : ORANGE, border: "none", color: "#fff", fontWeight: 700, fontSize: 15, cursor: loading ? "not-allowed" : "pointer", letterSpacing: -0.2 }}>
             {loading ? "Creating account..." : "Create Account →"}
