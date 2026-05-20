@@ -222,7 +222,7 @@ export default function Landing() {
       {/* Footer */}
       <footer style={{ padding: isMobile ? "24px 20px" : "40px 48px", borderTop: "1px solid " + BORDER, background: WARM_BG, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: "center", gap: isMobile ? 12 : 0 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <div style={{ width: 24, height: 24, background: ORANGE, borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>🛒</div>
+          <Image src="/logo.png" alt="Samzy" width={24} height={24} />
           <span style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>Samzy</span>
         </div>
         <div style={{ color: MUTED, fontSize: 12 }}>2026 Samzy. Built for supermarket owners.</div>
