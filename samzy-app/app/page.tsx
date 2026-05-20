@@ -94,7 +94,7 @@ export default function Home() {
   const isMobile = useIsMobile();
   async function fetchStaff(email: string) {
     setStaffLoading(true);
-    const { data } = await supabase.from("staff").select("*").eq("store_email", email).order("created_at", { ascending: false });
+    const { data } = await supabase.from("staff").select("*").ilike("store_email", email).order("created_at", { ascending: false });
     setStaff(data || []);
     setStaffLoading(false);
   }
