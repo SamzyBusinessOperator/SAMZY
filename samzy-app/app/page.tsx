@@ -93,9 +93,16 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
   const isMobile = useIsMobile();
   async function fetchStaff(email: string) {
+    if (!email) return;
     setStaffLoading(true);
-    const { data } = await supabase.from("staff").select("*").ilike("store_email", email).order("created_at", { ascending: false });
-    setStaff(data || []);
+    try {
+      const { data, error } = await supabase.from("staff").select("*").ilike("store_email", email).order("created_at", { ascending: false });
+      if (error) { console.error("fetchStaff error:", error.message); }
+      else { console.log("fetchStaff success:", data?.length, "records for", email); }
+      setStaff(data || []);
+    } catch(e: any) {
+      console.error("fetchStaff exception:", e.message);
+    }
     setStaffLoading(false);
   }
   async function handleAddStaff() {
