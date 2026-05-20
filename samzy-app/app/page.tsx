@@ -102,7 +102,9 @@ export default function Home() {
     if (!staffForm.name || !staffForm.role || !staffForm.shift) return;
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
-    await supabase.from("staff").insert([{ ...staffForm, store_email: email }]);
+    const { error: insertError } = await supabase.from("staff").insert([{ ...staffForm, store_email: email }]);
+    console.log("Insert result:", insertError ? insertError.message : "success", "email:", email, "form:", staffForm);
+    if (insertError) { alert("Error: " + insertError.message); return; }
     setShowAddStaff(false);
     setStaffForm({ name: "", role: "", shift: "", status: "on", phone: "" });
     fetchStaff(email);
