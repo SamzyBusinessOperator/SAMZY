@@ -15,6 +15,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState("");
+  const [billingLoading, setBillingLoading] = useState(false);
   const [ownerEmail, setOwnerEmail] = useState("");
   const [form, setForm] = useState({
     name: "", phone: "", address: "", city: "", country: "",
@@ -62,6 +63,25 @@ export default function Profile() {
     setEditing(false);
   }
 
+  async function handleBillingPortal() {
+    setBillingLoading(true);
+    try {
+      const res = await fetch("/api/billing", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: ownerEmail }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        setMessage("Error: " + (data.error || "Could not open billing portal."));
+      }
+    } catch {
+      setMessage("Error: Could not connect to billing portal.");
+    }
+    setBillingLoading(false);
+  }
   function update(field: string, value: string) {
     setForm(prev => ({ ...prev, [field]: value }));
   }
@@ -217,6 +237,23 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* Billing */}
+        <div style={{ background: CARD_BG, borderRadius: 16, padding: "28px 32px", border: "1px solid " + BORDER, marginBottom: 28, position: "relative", overflow: "hidden" }}>
+          <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: ORANGE }} />
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div>
+              <h2 style={{ fontSize: 15, fontWeight: 700, color: BLACK, margin: "0 0 6px" }}>Billing & Subscription</h2>
+              <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>Manage your plan, update your card, or cancel anytime.</p>
+            </div>
+            <button onClick={handleBillingPortal} disabled={billingLoading} style={{
+              padding: "10px 22px", borderRadius: 10, background: billingLoading ? MUTED : BLACK,
+              border: "none", color: "#fff", fontWeight: 700, fontSize: 14,
+              cursor: billingLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" as const,
+            }}>
+              {billingLoading ? "Loading..." : "Manage Billing →"}
+            </button>
+          </div>
+        </div>
         {/* Action Buttons */}
         {editing && (
           <div style={{ display: "flex", gap: 12 }}>
