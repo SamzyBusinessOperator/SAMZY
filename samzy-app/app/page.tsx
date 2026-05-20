@@ -105,6 +105,8 @@ export default function Home() {
           if (data?.onboarding_complete === false) { window.location.href = "/onboarding"; return; }
           if (data?.subscription_status === "trial" && data?.trial_ends_at) { const days = Math.ceil((new Date(data.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); setTrialDaysLeft(days); }
           if (data?.subscription_status === "trial" && data?.trial_ends_at && new Date(data.trial_ends_at) < new Date()) { window.location.href = "/pricing?trial_expired=true"; }
+          if (data?.subscription_status === "cancelled") { window.location.href = "/pricing?cancelled=true"; }
+          if (data?.subscription_status === "past_due") { window.location.href = "/pricing?past_due=true"; }
         });
       }, 500);
     });

@@ -12,6 +12,13 @@ const MUTED = "#6B6B6B";
 
 export default function Pricing() {
   const [loading, setLoading] = useState(false);
+  const [banner, setBanner] = useState("");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("trial_expired")) setBanner("Your free trial has ended. Subscribe to continue using Samzy.");
+    if (params.get("cancelled")) setBanner("Your subscription has been cancelled. Resubscribe to regain access.");
+    if (params.get("past_due")) setBanner("Your last payment failed. Please update your billing details.");
+  }, []);
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
 
@@ -41,6 +48,12 @@ export default function Pricing() {
   }
 
   return (
+    <>
+    {banner && (
+      <div style={{ background: "#fef2f2", borderBottom: "3px solid #dc2626", padding: "14px 24px", textAlign: "center" as const, fontSize: 14, color: "#dc2626", fontWeight: 600, fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
+        ⚠️ {banner}
+      </div>
+    )}
     <div style={{ minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
 
       {/* Header */}
