@@ -65,7 +65,9 @@ export default function Landing() {
               <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 14 }}>Sign In</a>
             </>
           )}
-          {isMobile && <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign In</a>}
+          {isMobile && <a href="/terms" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Terms</a>
+          <a href="/privacy" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Privacy</a>
+          <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign In</a>}
           <a href="/signup" style={{ background: ORANGE, color: "#fff", padding: isMobile ? "9px 16px" : "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: isMobile ? 13 : 14, fontWeight: 700 }}>Get Started</a>
         </div>
       </nav>
@@ -227,6 +229,8 @@ export default function Landing() {
         </div>
         <div style={{ color: MUTED, fontSize: 12 }}>2026 Samzy. Built for supermarket owners.</div>
         <div style={{ display: "flex", gap: 20 }}>
+          <a href="/terms" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Terms</a>
+          <a href="/privacy" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Privacy</a>
           <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign In</a>
           <a href="/signup" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign Up</a>
         </div>
