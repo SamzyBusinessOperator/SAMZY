@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 const ORANGE = "#FC7800";
 const BLACK = "#0f0f0f";
 const MUTED = "#6B6B6B";
@@ -29,11 +30,7 @@ export default function CookieBanner() {
       border: "1px solid rgba(255,255,255,0.07)",
     }}>
       <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flex: 1, minWidth: 200 }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10, background: ORANGE,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 16, flexShrink: 0,
-        }}>🍪</div>
+        <Image src="/logo.png" alt="Samzy" width={36} height={36} style={{ flexShrink: 0 }} />
         <div>
           <p style={{ color: "#fff", fontSize: 14, margin: "0 0 4px", fontWeight: 700, fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
             We use cookies
