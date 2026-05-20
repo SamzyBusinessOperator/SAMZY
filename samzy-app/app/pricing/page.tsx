@@ -48,7 +48,7 @@ export default function Pricing() {
   }
 
   return (
-    <>
+    <div style={{ position: "relative" }}>
     {banner && (
       <div style={{ background: "#fef2f2", borderBottom: "3px solid #dc2626", padding: "14px 24px", textAlign: "center" as const, fontSize: 14, color: "#dc2626", fontWeight: 600, fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
         ⚠️ {banner}
@@ -123,6 +123,7 @@ export default function Pricing() {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 }
