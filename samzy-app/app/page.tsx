@@ -85,8 +85,43 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<{ q: string; a: string }[]>([]);
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [staff, setStaff] = useState<any[]>([]);
+  const [staffLoading, setStaffLoading] = useState(false);
+  const [showAddStaff, setShowAddStaff] = useState(false);
+  const [editingStaff, setEditingStaff] = useState<any>(null);
+  const [staffForm, setStaffForm] = useState({ name: "", role: "", shift: "", status: "on", phone: "" });
   const [products, setProducts] = useState<any[]>([]);
   const isMobile = useIsMobile();
+  async function fetchStaff(email: string) {
+    setStaffLoading(true);
+    const { data } = await supabase.from("staff").select("*").eq("store_email", email).order("created_at", { ascending: false });
+    setStaff(data || []);
+    setStaffLoading(false);
+  }
+  async function handleAddStaff() {
+    if (!staffForm.name || !staffForm.role || !staffForm.shift) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    await supabase.from("staff").insert([{ ...staffForm, store_email: email }]);
+    setShowAddStaff(false);
+    setStaffForm({ name: "", role: "", shift: "", status: "on", phone: "" });
+    fetchStaff(email);
+  }
+  async function handleEditStaff() {
+    if (!editingStaff) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    await supabase.from("staff").update({ name: staffForm.name, role: staffForm.role, shift: staffForm.shift, status: staffForm.status, phone: staffForm.phone }).eq("id", editingStaff.id);
+    setEditingStaff(null);
+    setStaffForm({ name: "", role: "", shift: "", status: "on", phone: "" });
+    fetchStaff(email);
+  }
+  async function handleDeleteStaff(id: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    await supabase.from("staff").delete().eq("id", id);
+    fetchStaff(email);
+  }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
 
@@ -357,19 +392,57 @@ export default function Home() {
           {/* STAFF */}
           {activeNav === "staff" && (
             <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: BLACK }}>Today's Staff</h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                {mockData.staff.map(s => (
-                  <div key={s.name} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, background: BLACK, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{s.name.split(" ").map((n: string) => n[0]).join("")}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
-                      <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{s.role} · {s.shift}</div>
-                    </div>
-                    <span style={{ background: s.status === "on" ? "#f0fdf4" : WARM_BG, color: s.status === "on" ? "#16a34a" : MUTED, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{s.status === "on" ? "On" : "Off"}</span>
-                  </div>
-                ))}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Staff ({staff.length})</h2>
+                <button onClick={() => { setShowAddStaff(true); setEditingStaff(null); setStaffForm({ name: "", role: "", shift: "", status: "on", phone: "" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Staff</button>
               </div>
+              {(showAddStaff || editingStaff) && (
+                <div style={{ background: WARM_BG, borderRadius: 12, padding: "20px", border: "1px solid " + BORDER, marginBottom: 20 }}>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: BLACK }}>{editingStaff ? "Edit Staff Member" : "Add New Staff Member"}</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+                    {[{ label: "Full Name", key: "name", placeholder: "Maria Santos" }, { label: "Role", key: "role", placeholder: "Cashier" }, { label: "Shift", key: "shift", placeholder: "08:00-16:00" }, { label: "Phone", key: "phone", placeholder: "+351 000 000 000" }].map(f => (
+                      <div key={f.key}>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: MUTED, display: "block", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>{f.label}</label>
+                        <input value={(staffForm as any)[f.key]} onChange={e => setStaffForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, outline: "none", boxSizing: "border-box" as const, fontFamily: "-apple-system, sans-serif" }} />
+                      </div>
+                    ))}
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: MUTED, display: "block", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Status</label>
+                      <select value={staffForm.status} onChange={e => setStaffForm(prev => ({ ...prev, status: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, outline: "none", background: "#fff", fontFamily: "-apple-system, sans-serif" }}>
+                        <option value="on">On Shift</option>
+                        <option value="off">Off Shift</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+                    <button onClick={() => { setShowAddStaff(false); setEditingStaff(null); }} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid " + BORDER, background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: MUTED }}>Cancel</button>
+                    <button onClick={editingStaff ? handleEditStaff : handleAddStaff} style={{ flex: 2, padding: "10px", borderRadius: 8, border: "none", background: ORANGE, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{editingStaff ? "Save Changes" : "Add Staff Member"}</button>
+                  </div>
+                </div>
+              )}
+              {staffLoading ? (
+                <p style={{ color: MUTED, fontSize: 14, textAlign: "center", padding: "24px 0" }}>Loading staff...</p>
+              ) : staff.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>👥</div>
+                  <p style={{ color: MUTED, fontSize: 14, margin: 0 }}>No staff added yet. Click Add Staff to get started.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {staff.map(s => (
+                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 10, background: BLACK, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{s.name.split(" ").map((n: string) => n[0]).join("")}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
+                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{s.role} · {s.shift}{s.phone ? " · " + s.phone : ""}</div>
+                      </div>
+                      <span style={{ background: s.status === "on" ? "#f0fdf4" : WARM_BG, color: s.status === "on" ? "#16a34a" : MUTED, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginRight: 8 }}>{s.status === "on" ? "On" : "Off"}</span>
+                      <button onClick={() => { setEditingStaff(s); setShowAddStaff(false); setStaffForm({ name: s.name, role: s.role, shift: s.shift, status: s.status, phone: s.phone || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
+                      <button onClick={() => handleDeleteStaff(s.id)} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
