@@ -65,9 +65,7 @@ export default function Landing() {
               <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 14 }}>Sign In</a>
             </>
           )}
-          {isMobile && <a href="/terms" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Terms</a>
-          <a href="/privacy" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Privacy</a>
-          <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign In</a>}
+          {isMobile && <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign In</a>}
           <a href="/signup" style={{ background: ORANGE, color: "#fff", padding: isMobile ? "9px 16px" : "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: isMobile ? 13 : 14, fontWeight: 700 }}>Get Started</a>
         </div>
       </nav>
