@@ -83,6 +83,7 @@ export default function Home() {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState<{ q: string; a: string }[]>([]);
+  const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const isMobile = useIsMobile();
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
@@ -99,8 +100,10 @@ export default function Home() {
           if (store) supabase.from("products").select("*").eq("store_id", store.id).then(({ data }) => { if (data) setProducts(data); });
         });
       setTimeout(() => {
-        supabase.from("stores").select("city, onboarding_complete").eq("owner_email", session.user.email || "").single().then(({ data }) => {
-          if (data?.onboarding_complete === false) window.location.href = "/onboarding";
+        supabase.from("stores").select("city, onboarding_complete, subscription_status, trial_ends_at").eq("owner_email", session.user.email || "").single().then(({ data }) => {
+          if (data?.onboarding_complete === false) { window.location.href = "/onboarding"; return; }
+          if (data?.subscription_status === "trial" && data?.trial_ends_at) { const days = Math.ceil((new Date(data.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); setTrialDaysLeft(days); }
+          if (data?.subscription_status === "trial" && data?.trial_ends_at && new Date(data.trial_ends_at) < new Date()) { window.location.href = "/pricing?trial_expired=true"; }
         });
       }, 500);
     });
