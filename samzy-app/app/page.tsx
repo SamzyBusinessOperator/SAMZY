@@ -145,11 +145,11 @@ export default function Home() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: sidebarOpen ? "28px 24px 20px" : "28px 20px 20px", borderBottom: "1px solid " + BORDER }}>
             {sidebarOpen ? (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <div style={{ width: 30, height: 30, background: ORANGE, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🛒</div>
+                <Image src="/logo.png" alt="Samzy" width={30} height={30} />
                 <span style={{ color: BLACK, fontWeight: 700, fontSize: 17 }}>Samzy</span>
               </div>
             ) : (
-              <div style={{ width: 30, height: 30, background: ORANGE, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>🛒</div>
+              <Image src="/logo.png" alt="Samzy" width={30} height={30} />
             )}
             <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: WARM_BG, border: "none", color: MUTED, cursor: "pointer", fontSize: 11, padding: "6px 8px", borderRadius: 6 }}>
               {sidebarOpen ? "◀" : "▶"}
