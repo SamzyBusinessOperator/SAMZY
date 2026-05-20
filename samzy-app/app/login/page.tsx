@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import { supabase } from "../../lib/supabase";
 
 const ORANGE = "#FC7800";
@@ -38,7 +39,7 @@ export default function Login() {
       
       {/* Top bar */}
       <div style={{ padding: "20px 40px", display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{ width: 28, height: 28, background: ORANGE, borderRadius: 7, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13 }}>🛒</div>
+        <Image src="/logo.png" alt="Samzy" width={32} height={32} />
         <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
       </div>
 
