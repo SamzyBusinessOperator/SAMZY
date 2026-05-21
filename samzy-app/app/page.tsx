@@ -205,6 +205,7 @@ export default function Home() {
   async function handleDeleteProduct(id: string) {
     setEditingProduct(null);
     setShowAddProduct(false);
+    if (!window.confirm("Delete this product?")) return;
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
