@@ -214,15 +214,8 @@ export default function Home() {
     const { id, type } = deleteModal;
     setDeleteModal(null);
     if (type === "product") {
-      const { error } = await supabase.from("products").delete().eq("id", id);
-      console.log("Delete result:", error ? error.message : "success", "id:", id);
-      const { data: { session } } = await supabase.auth.getSession();
-      const email = session?.user?.email || "";
-      const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
-      if (store) {
-        const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
-        if (data) setProducts(data);
-      }
+      await supabase.from("products").delete().eq("id", id);
+      setProducts(prev => prev.filter(p => String(p.id) !== String(id)));
     } else if (type === "staff") {
       const { data: { session } } = await supabase.auth.getSession();
       const email = session?.user?.email || "";
