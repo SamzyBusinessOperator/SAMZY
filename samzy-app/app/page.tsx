@@ -209,9 +209,10 @@ export default function Home() {
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
-    if (!store) return;
+    if (!store) { console.error("Store not found"); return; }
     const storeId = store.id;
-    await supabase.from("products").delete().eq("id", id);
+    const { error } = await supabase.from("products").delete().eq("id", id);
+    console.log("Delete result:", error ? error.message : "success", "id:", id);
     const { data } = await supabase.from("products").select("*").eq("store_id", storeId);
     if (data) setProducts(data);
   }
