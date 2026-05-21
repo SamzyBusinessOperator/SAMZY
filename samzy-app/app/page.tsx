@@ -208,8 +208,12 @@ export default function Home() {
     if (!window.confirm("Delete this product?")) return;
     const { error } = await supabase.from("products").delete().eq("id", id);
     console.log("Delete result:", error ? error.message : "success", "id:", id);
-    if (!error) {
-      setProducts(prev => prev.filter(p => p.id !== id));
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    if (store) {
+      const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+      if (data) setProducts(data);
     }
   }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
