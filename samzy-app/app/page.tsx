@@ -748,6 +748,19 @@ export default function Home() {
         </nav>
       )}
 
+    {deleteModal && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <div style={{ background: "#fff", borderRadius: 20, padding: "36px 32px", maxWidth: 400, width: "100%", textAlign: "center" as const, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
+            <div style={{ width: 56, height: 56, borderRadius: 14, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, margin: "0 auto 20px" }}>🗑️</div>
+            <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0f0f0f", margin: "0 0 10px" }}>Delete {deleteModal.type === "product" ? "Product" : deleteModal.type === "staff" ? "Staff Member" : "Supplier"}?</h2>
+            <p style={{ color: "#6B6B6B", fontSize: 14, margin: "0 0 28px", lineHeight: 1.6 }}>Are you sure you want to delete <strong>{deleteModal.name}</strong>? This cannot be undone.</p>
+            <div style={{ display: "flex", gap: 12 }}>
+              <button onClick={() => setDeleteModal(null)} style={{ flex: 1, padding: "12px", borderRadius: 10, border: "1px solid #F0EEEB", background: "#fff", fontSize: 14, fontWeight: 600, cursor: "pointer", color: "#6B6B6B" }}>Cancel</button>
+              <button onClick={confirmDelete} style={{ flex: 1, padding: "12px", borderRadius: 10, border: "none", background: "#dc2626", fontSize: 14, fontWeight: 700, cursor: "pointer", color: "#fff" }}>Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
