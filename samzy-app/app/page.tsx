@@ -92,6 +92,7 @@ export default function Home() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
   const [inventoryTab, setInventoryTab] = useState<"all" | "low">("all");
+  const [deleteModal, setDeleteModal] = useState<{ id: string; name: string; type: "product" | "staff" | "supplier" } | null>(null);
   const [suppliersLoading, setSuppliersLoading] = useState(false);
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<any>(null);
@@ -202,10 +203,36 @@ export default function Home() {
     const { data } = await supabase.from("products").select("*").eq("store_id", storeId);
     if (data) setProducts(data);
   }
+  async function confirmDelete() {
+    if (!deleteModal) return;
+    const { id, type } = deleteModal;
+    setDeleteModal(null);
+    if (type === "product") {
+      const { error } = await supabase.from("products").delete().eq("id", id);
+      console.log("Delete result:", error ? error.message : "success", "id:", id);
+      const { data: { session } } = await supabase.auth.getSession();
+      const email = session?.user?.email || "";
+      const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+      if (store) {
+        const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+        if (data) setProducts(data);
+      }
+    } else if (type === "staff") {
+      const { data: { session } } = await supabase.auth.getSession();
+      const email = session?.user?.email || "";
+      await supabase.from("staff").delete().eq("id", id);
+      fetchStaff(email);
+    } else if (type === "supplier") {
+      const { data: { session } } = await supabase.auth.getSession();
+      const email = session?.user?.email || "";
+      await supabase.from("suppliers").delete().eq("id", id);
+      fetchSuppliers(email);
+    }
+  }
   async function handleDeleteProduct(id: string) {
     setEditingProduct(null);
     setShowAddProduct(false);
-    if (!window.confirm("Delete this product?")) return;
+
     const { error } = await supabase.from("products").delete().eq("id", id);
     console.log("Delete result:", error ? error.message : "success", "id:", id);
     const { data: { session } } = await supabase.auth.getSession();
@@ -504,7 +531,7 @@ export default function Home() {
                       </div>
                       {item.stock_quantity <= item.reorder_threshold && <span style={{ background: "#fef2f2", color: "#dc2626", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, marginRight: 4 }}>Reorder</span>}
                       <button onClick={() => { setEditingProduct(item); setShowAddProduct(false); setProductForm({ name: item.name, category: item.category || "Other", stock_quantity: String(item.stock_quantity), price: String(item.price || ""), reorder_threshold: String(item.reorder_threshold || 10) }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
-                      <button onClick={() => handleDeleteProduct(item.id)} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                      <button onClick={() => setDeleteModal({ id: item.id, name: item.name, type: "product" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
                     </div>
                   ))}
                 </div>
@@ -561,7 +588,7 @@ export default function Home() {
                       </div>
                       <span style={{ background: s.status === "on" ? "#f0fdf4" : WARM_BG, color: s.status === "on" ? "#16a34a" : MUTED, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginRight: 8 }}>{s.status === "on" ? "On" : "Off"}</span>
                       <button onClick={() => { setEditingStaff(s); setShowAddStaff(false); setStaffForm({ name: s.name, role: s.role, shift: s.shift, status: s.status, phone: s.phone || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
-                      <button onClick={() => handleDeleteStaff(s.id)} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                      <button onClick={() => setDeleteModal({ id: s.id, name: s.name, type: "staff" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
                     </div>
                   ))}
                 </div>
@@ -619,7 +646,7 @@ export default function Home() {
                       <span style={{ fontWeight: 700, fontSize: 14, color: BLACK, marginRight: 8 }}>{s.invoice_amount}</span>
                       <span style={{ background: s.status === "paid" ? "#f0fdf4" : s.status === "overdue" ? "#fef2f2" : "#fffbeb", color: s.status === "paid" ? "#16a34a" : s.status === "overdue" ? "#dc2626" : "#d97706", padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginRight: 8 }}>{s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span>
                       <button onClick={() => { setEditingSupplier(s); setShowAddSupplier(false); setSupplierForm({ name: s.name, invoice_amount: s.invoice_amount, due_date: s.due_date, status: s.status, notes: s.notes || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
-                      <button onClick={() => handleDeleteSupplier(s.id)} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                      <button onClick={() => setDeleteModal({ id: s.id, name: s.name, type: "supplier" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
                     </div>
                   ))}
                 </div>
