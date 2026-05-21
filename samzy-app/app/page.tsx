@@ -752,7 +752,7 @@ export default function Home() {
       )}
 
     {deleteModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+        <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ background: "#fff", borderRadius: 20, padding: "36px 32px", maxWidth: 400, width: "100%", textAlign: "center" as const, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
             <div style={{ width: 56, height: 56, borderRadius: 14, background: "#fef2f2", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, margin: "0 auto 20px" }}>🗑️</div>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0f0f0f", margin: "0 0 10px" }}>Delete {deleteModal.type === "product" ? "Product" : deleteModal.type === "staff" ? "Staff Member" : "Supplier"}?</h2>
