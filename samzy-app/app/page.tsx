@@ -88,6 +88,10 @@ export default function Home() {
   const [staff, setStaff] = useState<any[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
   const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [productForm, setProductForm] = useState({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
+  const [inventoryTab, setInventoryTab] = useState<"all" | "low">("all");
   const [suppliersLoading, setSuppliersLoading] = useState(false);
   const [showAddSupplier, setShowAddSupplier] = useState(false);
   const [editingSupplier, setEditingSupplier] = useState<any>(null);
@@ -170,6 +174,38 @@ export default function Home() {
     const email = session?.user?.email || "";
     await supabase.from("suppliers").delete().eq("id", id);
     fetchSuppliers(email);
+  }
+  async function handleAddProduct() {
+    if (!productForm.name || !productForm.stock_quantity) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    if (!store) { alert("Store not found."); return; }
+    const { error } = await supabase.from("products").insert([{ store_id: store.id, name: productForm.name, category: productForm.category, stock_quantity: parseInt(productForm.stock_quantity), price: parseFloat(productForm.price) || 0, reorder_threshold: parseInt(productForm.reorder_threshold) || 10 }]);
+    if (error) { alert("Error: " + error.message); return; }
+    setShowAddProduct(false);
+    setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
+    const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+    if (data) setProducts(data);
+  }
+  async function handleEditProduct() {
+    if (!editingProduct) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    await supabase.from("products").update({ name: productForm.name, category: productForm.category, stock_quantity: parseInt(productForm.stock_quantity), price: parseFloat(productForm.price) || 0, reorder_threshold: parseInt(productForm.reorder_threshold) || 10 }).eq("id", editingProduct.id);
+    setEditingProduct(null);
+    setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
+    const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+    if (data) setProducts(data);
+  }
+  async function handleDeleteProduct(id: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    await supabase.from("products").delete().eq("id", id);
+    const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+    if (data) setProducts(data);
   }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
@@ -406,36 +442,63 @@ export default function Home() {
           {/* INVENTORY */}
           {activeNav === "inventory" && (
             <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: BLACK }}>Low Stock Alerts</h2>
-              {isMobile ? (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Inventory ({products.length} products)</h2>
+                <button onClick={() => { setShowAddProduct(true); setEditingProduct(null); setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Product</button>
+              </div>
+              <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                {(["all", "low"] as const).map(tab => (
+                  <button key={tab} onClick={() => setInventoryTab(tab)} style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid " + (inventoryTab === tab ? ORANGE : BORDER), background: inventoryTab === tab ? ORANGE : "#fff", color: inventoryTab === tab ? "#fff" : MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                    {tab === "all" ? "All Products" : `Low Stock (${products.filter(p => p.stock_quantity <= p.reorder_threshold).length})`}
+                  </button>
+                ))}
+              </div>
+              {(showAddProduct || editingProduct) && (
+                <div style={{ background: WARM_BG, borderRadius: 12, padding: "20px", border: "1px solid " + BORDER, marginBottom: 20 }}>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: BLACK }}>{editingProduct ? "Edit Product" : "Add New Product"}</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+                    {[{ label: "Product Name", key: "name", placeholder: "Whole Milk 1L" }, { label: "Price (€)", key: "price", placeholder: "1.99" }, { label: "Stock Quantity", key: "stock_quantity", placeholder: "50" }, { label: "Reorder At", key: "reorder_threshold", placeholder: "10" }].map(f => (
+                      <div key={f.key}>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: MUTED, display: "block", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>{f.label}</label>
+                        <input value={(productForm as any)[f.key]} onChange={e => setProductForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, outline: "none", boxSizing: "border-box" as const, fontFamily: "-apple-system, sans-serif" }} />
+                      </div>
+                    ))}
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: MUTED, display: "block", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Category</label>
+                      <select value={productForm.category} onChange={e => setProductForm(prev => ({ ...prev, category: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, outline: "none", background: "#fff", fontFamily: "-apple-system, sans-serif" }}>
+                        {["Dairy", "Bakery", "Beverages", "Produce", "Meat", "Pantry", "Frozen", "Cleaning", "Other"].map(c => <option key={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+                    <button onClick={() => { setShowAddProduct(false); setEditingProduct(null); }} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid " + BORDER, background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: MUTED }}>Cancel</button>
+                    <button onClick={editingProduct ? handleEditProduct : handleAddProduct} style={{ flex: 2, padding: "10px", borderRadius: 8, border: "none", background: ORANGE, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{editingProduct ? "Save Changes" : "Add Product"}</button>
+                  </div>
+                </div>
+              )}
+              {products.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>📦</div>
+                  <p style={{ color: MUTED, fontSize: 14, margin: 0 }}>No products yet. Add manually or use the Scanner to scan a delivery note.</p>
+                </div>
+              ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {products.filter(p => p.stock_quantity <= p.reorder_threshold).map(item => (
-                    <div key={item.name} style={{ background: WARM_BG, borderRadius: 12, padding: "14px 16px", border: "1px solid " + BORDER }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <span style={{ fontWeight: 600, fontSize: 14, color: BLACK }}>{item.name}</span>
-                        <span style={{ background: "#fef2f2", color: "#dc2626", padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>Reorder</span>
+                  {(inventoryTab === "all" ? products : products.filter(p => p.stock_quantity <= p.reorder_threshold)).map(item => (
+                    <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid " + (item.stock_quantity <= item.reorder_threshold ? "#fecaca" : BORDER), background: item.stock_quantity <= item.reorder_threshold ? "#fef2f2" : WARM_BG }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{item.name}</div>
+                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{item.category || "General"} · €{parseFloat(item.price || 0).toFixed(2)}</div>
                       </div>
-                      <div style={{ display: "flex", gap: 16 }}>
-                        <span style={{ fontSize: 12, color: MUTED }}>{item.category || "General"}</span>
-                        <span style={{ fontSize: 12, color: "#dc2626", fontWeight: 700 }}>{item.stock_quantity} left</span>
-                        <span style={{ fontSize: 12, color: MUTED }}>Min: {item.reorder_threshold}</span>
+                      <div style={{ textAlign: "center" as const, marginRight: 8 }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: item.stock_quantity <= item.reorder_threshold ? "#dc2626" : BLACK }}>{item.stock_quantity}</div>
+                        <div style={{ fontSize: 10, color: MUTED }}>in stock</div>
                       </div>
+                      {item.stock_quantity <= item.reorder_threshold && <span style={{ background: "#fef2f2", color: "#dc2626", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, marginRight: 4 }}>Reorder</span>}
+                      <button onClick={() => { setEditingProduct(item); setShowAddProduct(false); setProductForm({ name: item.name, category: item.category || "Other", stock_quantity: String(item.stock_quantity), price: String(item.price || ""), reorder_threshold: String(item.reorder_threshold || 10) }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
+                      <button onClick={() => handleDeleteProduct(item.id)} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead><tr>{["Product","Category","In Stock","Threshold","Status"].map(h => <th key={h} style={{ textAlign: "left", fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, padding: "8px 12px", borderBottom: "1px solid " + BORDER }}>{h}</th>)}</tr></thead>
-                  <tbody>{products.filter(p => p.stock_quantity <= p.reorder_threshold).map(item => (
-                    <tr key={item.name} style={{ borderBottom: "1px solid " + BORDER }}>
-                      <td style={{ padding: "14px 12px", fontSize: 14, fontWeight: 500, color: BLACK }}>{item.name}</td>
-                      <td style={{ padding: "14px 12px" }}><span style={{ background: WARM_BG, color: MUTED, padding: "3px 10px", borderRadius: 20, fontSize: 12 }}>{item.category || "General"}</span></td>
-                      <td style={{ padding: "14px 12px", fontSize: 14, fontWeight: 700, color: "#dc2626" }}>{item.stock_quantity}</td>
-                      <td style={{ padding: "14px 12px", fontSize: 14, color: MUTED }}>{item.reorder_threshold}</td>
-                      <td style={{ padding: "14px 12px" }}><span style={{ background: "#fef2f2", color: "#dc2626", padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>Reorder Now</span></td>
-                    </tr>
-                  ))}</tbody>
-                </table>
               )}
             </div>
           )}
