@@ -203,6 +203,8 @@ export default function Home() {
     if (data) setProducts(data);
   }
   async function handleDeleteProduct(id: string) {
+    setEditingProduct(null);
+    setShowAddProduct(false);
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
