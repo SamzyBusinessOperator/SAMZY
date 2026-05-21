@@ -181,11 +181,12 @@ export default function Home() {
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
     if (!store) { alert("Store not found."); return; }
-    const { error } = await supabase.from("products").insert([{ store_id: store.id, name: productForm.name, category: productForm.category, stock_quantity: parseInt(productForm.stock_quantity), price: parseFloat(productForm.price) || 0, reorder_threshold: parseInt(productForm.reorder_threshold) || 10 }]);
+    const storeId = store.id;
+    const { error } = await supabase.from("products").insert([{ store_id: storeId, name: productForm.name, category: productForm.category, stock_quantity: parseInt(productForm.stock_quantity), price: parseFloat(productForm.price) || 0, reorder_threshold: parseInt(productForm.reorder_threshold) || 10 }]);
     if (error) { alert("Error: " + error.message); return; }
     setShowAddProduct(false);
     setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
-    const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+    const { data } = await supabase.from("products").select("*").eq("store_id", storeId);
     if (data) setProducts(data);
   }
   async function handleEditProduct() {
@@ -193,18 +194,22 @@ export default function Home() {
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    if (!store) { alert("Store not found."); return; }
+    const storeId = store.id;
     await supabase.from("products").update({ name: productForm.name, category: productForm.category, stock_quantity: parseInt(productForm.stock_quantity), price: parseFloat(productForm.price) || 0, reorder_threshold: parseInt(productForm.reorder_threshold) || 10 }).eq("id", editingProduct.id);
     setEditingProduct(null);
     setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
-    const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+    const { data } = await supabase.from("products").select("*").eq("store_id", storeId);
     if (data) setProducts(data);
   }
   async function handleDeleteProduct(id: string) {
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    if (!store) return;
+    const storeId = store.id;
     await supabase.from("products").delete().eq("id", id);
-    const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+    const { data } = await supabase.from("products").select("*").eq("store_id", storeId);
     if (data) setProducts(data);
   }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
