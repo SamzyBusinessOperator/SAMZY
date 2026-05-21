@@ -240,7 +240,7 @@ export default function Home() {
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
     if (store) {
       const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
-      if (data) setProducts(data);
+      if (data) setProducts([...data]);
     }
   }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
