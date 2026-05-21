@@ -87,6 +87,11 @@ export default function Home() {
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [staff, setStaff] = useState<any[]>([]);
   const [staffLoading, setStaffLoading] = useState(false);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+  const [suppliersLoading, setSuppliersLoading] = useState(false);
+  const [showAddSupplier, setShowAddSupplier] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<any>(null);
+  const [supplierForm, setSupplierForm] = useState({ name: "", invoice_amount: "", due_date: "", status: "pending", notes: "" });
   const [showAddStaff, setShowAddStaff] = useState(false);
   const [editingStaff, setEditingStaff] = useState<any>(null);
   const [staffForm, setStaffForm] = useState({ name: "", role: "", shift: "", status: "on", phone: "" });
@@ -131,6 +136,41 @@ export default function Home() {
     await supabase.from("staff").delete().eq("id", id);
     fetchStaff(email);
   }
+  async function fetchSuppliers(email: string) {
+    if (!email) return;
+    setSuppliersLoading(true);
+    try {
+      const { data, error } = await supabase.from("suppliers").select("*").ilike("store_email", email).order("created_at", { ascending: false });
+      if (error) console.error("fetchSuppliers error:", error.message);
+      setSuppliers(data || []);
+    } catch(e: any) { console.error("fetchSuppliers exception:", e.message); }
+    setSuppliersLoading(false);
+  }
+  async function handleAddSupplier() {
+    if (!supplierForm.name || !supplierForm.invoice_amount || !supplierForm.due_date) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    const { error } = await supabase.from("suppliers").insert([{ ...supplierForm, store_email: email }]);
+    if (error) { alert("Error: " + error.message); return; }
+    setShowAddSupplier(false);
+    setSupplierForm({ name: "", invoice_amount: "", due_date: "", status: "pending", notes: "" });
+    fetchSuppliers(email);
+  }
+  async function handleEditSupplier() {
+    if (!editingSupplier) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    await supabase.from("suppliers").update({ name: supplierForm.name, invoice_amount: supplierForm.invoice_amount, due_date: supplierForm.due_date, status: supplierForm.status, notes: supplierForm.notes }).eq("id", editingSupplier.id);
+    setEditingSupplier(null);
+    setSupplierForm({ name: "", invoice_amount: "", due_date: "", status: "pending", notes: "" });
+    fetchSuppliers(email);
+  }
+  async function handleDeleteSupplier(id: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    await supabase.from("suppliers").delete().eq("id", id);
+    fetchSuppliers(email);
+  }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
 
@@ -142,6 +182,7 @@ export default function Home() {
       setUserEmail(session.user.email || "");
       setDbStatus("connected");
       fetchStaff(session.user.email || "");
+      fetchSuppliers(session.user.email || "");
         supabase.from("stores").select("id").ilike("owner_email", session.user.email || "").single().then(({ data: store }) => {
           if (store) supabase.from("products").select("*").eq("store_id", store.id).then(({ data }) => { if (data) setProducts(data); });
         });
@@ -459,34 +500,57 @@ export default function Home() {
           {/* SUPPLIERS */}
           {activeNav === "suppliers" && (
             <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: BLACK }}>Supplier Invoices</h2>
-              {isMobile ? (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {mockData.suppliers.map(s => (
-                    <div key={s.name} style={{ background: WARM_BG, borderRadius: 12, padding: "14px 16px", border: "1px solid " + BORDER }}>
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
-                        <span style={{ fontWeight: 600, fontSize: 14, color: BLACK }}>{s.name}</span>
-                        <span style={{ background: s.status === "paid" ? "#f0fdf4" : s.status === "overdue" ? "#fef2f2" : "#fffbeb", color: s.status === "paid" ? "#16a34a" : s.status === "overdue" ? "#dc2626" : "#d97706", padding: "3px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600 }}>{s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Supplier Invoices ({suppliers.length})</h2>
+                <button onClick={() => { setShowAddSupplier(true); setEditingSupplier(null); setSupplierForm({ name: "", invoice_amount: "", due_date: "", status: "pending", notes: "" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Supplier</button>
+              </div>
+              {(showAddSupplier || editingSupplier) && (
+                <div style={{ background: WARM_BG, borderRadius: 12, padding: "20px", border: "1px solid " + BORDER, marginBottom: 20 }}>
+                  <h3 style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 700, color: BLACK }}>{editingSupplier ? "Edit Supplier" : "Add New Supplier"}</h3>
+                  <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
+                    {[{ label: "Supplier Name", key: "name", placeholder: "FreshFarm Co." }, { label: "Invoice Amount", key: "invoice_amount", placeholder: "€1,240" }, { label: "Due Date", key: "due_date", placeholder: "May 30, 2026" }, { label: "Notes", key: "notes", placeholder: "Optional notes" }].map(f => (
+                      <div key={f.key}>
+                        <label style={{ fontSize: 11, fontWeight: 700, color: MUTED, display: "block", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>{f.label}</label>
+                        <input value={(supplierForm as any)[f.key]} onChange={e => setSupplierForm(prev => ({ ...prev, [f.key]: e.target.value }))} placeholder={f.placeholder} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, outline: "none", boxSizing: "border-box" as const, fontFamily: "-apple-system, sans-serif" }} />
                       </div>
-                      <div style={{ display: "flex", gap: 16 }}>
-                        <span style={{ fontSize: 13, fontWeight: 700, color: BLACK }}>{s.invoice}</span>
-                        <span style={{ fontSize: 12, color: MUTED }}>Due {s.due}</span>
+                    ))}
+                    <div>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: MUTED, display: "block", marginBottom: 6, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Status</label>
+                      <select value={supplierForm.status} onChange={e => setSupplierForm(prev => ({ ...prev, status: e.target.value }))} style={{ width: "100%", padding: "10px 12px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, outline: "none", background: "#fff", fontFamily: "-apple-system, sans-serif" }}>
+                        <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
+                        <option value="overdue">Overdue</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+                    <button onClick={() => { setShowAddSupplier(false); setEditingSupplier(null); }} style={{ flex: 1, padding: "10px", borderRadius: 8, border: "1px solid " + BORDER, background: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", color: MUTED }}>Cancel</button>
+                    <button onClick={editingSupplier ? handleEditSupplier : handleAddSupplier} style={{ flex: 2, padding: "10px", borderRadius: 8, border: "none", background: ORANGE, color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>{editingSupplier ? "Save Changes" : "Add Supplier"}</button>
+                  </div>
+                </div>
+              )}
+              {suppliersLoading ? (
+                <p style={{ color: MUTED, fontSize: 14, textAlign: "center", padding: "24px 0" }}>Loading suppliers...</p>
+              ) : suppliers.length === 0 ? (
+                <div style={{ textAlign: "center", padding: "40px 0" }}>
+                  <div style={{ fontSize: 32, marginBottom: 12 }}>🚚</div>
+                  <p style={{ color: MUTED, fontSize: 14, margin: 0 }}>No suppliers added yet. Click Add Supplier to get started.</p>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  {suppliers.map(s => (
+                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
+                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>Due: {s.due_date}{s.notes ? " · " + s.notes : ""}</div>
                       </div>
+                      <span style={{ fontWeight: 700, fontSize: 14, color: BLACK, marginRight: 8 }}>{s.invoice_amount}</span>
+                      <span style={{ background: s.status === "paid" ? "#f0fdf4" : s.status === "overdue" ? "#fef2f2" : "#fffbeb", color: s.status === "paid" ? "#16a34a" : s.status === "overdue" ? "#dc2626" : "#d97706", padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginRight: 8 }}>{s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span>
+                      <button onClick={() => { setEditingSupplier(s); setShowAddSupplier(false); setSupplierForm({ name: s.name, invoice_amount: s.invoice_amount, due_date: s.due_date, status: s.status, notes: s.notes || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
+                      <button onClick={() => handleDeleteSupplier(s.id)} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
                     </div>
                   ))}
                 </div>
-              ) : (
-                <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                  <thead><tr>{["Supplier","Invoice","Due Date","Status"].map(h => <th key={h} style={{ textAlign: "left", fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, padding: "8px 12px", borderBottom: "1px solid " + BORDER }}>{h}</th>)}</tr></thead>
-                  <tbody>{mockData.suppliers.map(s => (
-                    <tr key={s.name} style={{ borderBottom: "1px solid " + BORDER }}>
-                      <td style={{ padding: "14px 12px", fontSize: 14, fontWeight: 500, color: BLACK }}>{s.name}</td>
-                      <td style={{ padding: "14px 12px", fontSize: 14, color: BLACK, fontWeight: 600 }}>{s.invoice}</td>
-                      <td style={{ padding: "14px 12px", fontSize: 14, color: MUTED }}>{s.due}</td>
-                      <td style={{ padding: "14px 12px" }}><span style={{ background: s.status === "paid" ? "#f0fdf4" : s.status === "overdue" ? "#fef2f2" : "#fffbeb", color: s.status === "paid" ? "#16a34a" : s.status === "overdue" ? "#dc2626" : "#d97706", padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600 }}>{s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span></td>
-                    </tr>
-                  ))}</tbody>
-                </table>
               )}
             </div>
           )}
