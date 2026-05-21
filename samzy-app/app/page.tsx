@@ -176,6 +176,12 @@ export default function Home() {
     await supabase.from("suppliers").delete().eq("id", id);
     fetchSuppliers(email);
   }
+  async function fetchProducts() {
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    fetchProducts();
+  }
   async function handleAddProduct() {
     if (!productForm.name || !productForm.stock_quantity) return;
     const { data: { session } } = await supabase.auth.getSession();
@@ -238,10 +244,7 @@ export default function Home() {
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
-    if (store) {
-      const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
-      if (data) setProducts([...data]);
-    }
+    fetchProducts();
   }
   const maxSale = Math.max(...mockData.weekSales.map((d) => d.amount));
   const salesGrowth = (((mockData.todaySales - mockData.yesterdaySales) / mockData.yesterdaySales) * 100).toFixed(1);
@@ -484,7 +487,7 @@ export default function Home() {
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
                 {(["all", "low"] as const).map(tab => (
-                  <button key={tab} onClick={() => setInventoryTab(tab)} style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid " + (inventoryTab === tab ? ORANGE : BORDER), background: inventoryTab === tab ? ORANGE : "#fff", color: inventoryTab === tab ? "#fff" : MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
+                  <button key={tab} onClick={() => { setInventoryTab(tab); fetchProducts(); }} style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid " + (inventoryTab === tab ? ORANGE : BORDER), background: inventoryTab === tab ? ORANGE : "#fff", color: inventoryTab === tab ? "#fff" : MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                     {tab === "all" ? "All Products" : `Low Stock (${products.filter(p => p.stock_quantity <= p.reorder_threshold).length})`}
                   </button>
                 ))}
