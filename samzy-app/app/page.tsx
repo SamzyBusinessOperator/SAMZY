@@ -520,7 +520,7 @@ export default function Home() {
                   <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>AI Insights</h2>
                 </div>
                 <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 10 }}>
-                  {mockData.aiInsights.map((ins, i) => (
+                  {([] as any[]).map((ins, i) => (
                     <div key={i} style={{ background: insightBg(ins.type), borderRadius: 10, padding: "14px", borderLeft: "3px solid " + insightColor(ins.type) }}>
                       <div style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
                         <span style={{ fontSize: 16 }}>{ins.icon}</span>
@@ -754,7 +754,7 @@ export default function Home() {
                   <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Today's Insights</h2>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {mockData.aiInsights.map((ins, i) => (
+                  {([] as any[]).map((ins, i) => (
                     <div key={i} style={{ background: insightBg(ins.type), borderRadius: 10, padding: "14px", borderLeft: "3px solid " + insightColor(ins.type), display: "flex", gap: 12 }}>
                       <span style={{ fontSize: 18, flexShrink: 0 }}>{ins.icon}</span>
                       <div>
