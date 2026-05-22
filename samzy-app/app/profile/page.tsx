@@ -11,7 +11,18 @@ const CARD_BG = "#FFFFFF";
 const BORDER = "#F0EEEB";
 const MUTED = "#6B6B6B";
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
 export default function Profile() {
+  const isMobile = useIsMobile();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -111,7 +122,7 @@ export default function Profile() {
     <div style={{ minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
 
       {/* Header */}
-      <header style={{ background: BLACK, padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
+      <header style={{ background: BLACK, padding: isMobile ? "0 16px" : "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Image src="/logo.png" alt="Samzy" width={32} height={32} />
@@ -123,7 +134,7 @@ export default function Profile() {
         <a href="/" style={{ color: ORANGE, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>Dashboard</a>
       </header>
 
-      <div style={{ maxWidth: 700, margin: "48px auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 700, margin: isMobile ? "24px auto" : "48px auto", padding: isMobile ? "0 16px" : "0 24px" }}>
 
         {/* Page Title */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 36 }}>
@@ -148,10 +159,10 @@ export default function Profile() {
         )}
 
         {/* Basic Information */}
-        <div style={{ background: CARD_BG, borderRadius: 16, padding: "28px 32px", border: "1px solid " + BORDER, marginBottom: 20, position: "relative", overflow: "hidden" }}>
+        <div style={{ background: CARD_BG, borderRadius: 16, padding: isMobile ? "20px 16px" : "28px 32px", border: "1px solid " + BORDER, marginBottom: 20, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: ORANGE }} />
           <h2 style={{ fontSize: 15, fontWeight: 700, color: BLACK, margin: "0 0 24px" }}>Basic Information</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : 20 }}>
             {[
               { label: "Store Name", field: "name", placeholder: "e.g. Mercado Central" },
               { label: "Phone Number", field: "phone", placeholder: "+351 000 000 000" },
@@ -190,10 +201,10 @@ export default function Profile() {
         </div>
 
         {/* Store Details */}
-        <div style={{ background: CARD_BG, borderRadius: 16, padding: "28px 32px", border: "1px solid " + BORDER, marginBottom: 28, position: "relative", overflow: "hidden" }}>
+        <div style={{ background: CARD_BG, borderRadius: 16, padding: isMobile ? "20px 16px" : "28px 32px", border: "1px solid " + BORDER, marginBottom: 28, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: BLACK }} />
           <h2 style={{ fontSize: 15, fontWeight: 700, color: BLACK, margin: "0 0 24px" }}>Store Details</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 14 : 20 }}>
             <div>
               <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>POS System</label>
               {editing ? (
@@ -235,9 +246,9 @@ export default function Profile() {
         </div>
 
         {/* Billing */}
-        <div style={{ background: CARD_BG, borderRadius: 16, padding: "28px 32px", border: "1px solid " + BORDER, marginBottom: 28, position: "relative", overflow: "hidden" }}>
+        <div style={{ background: CARD_BG, borderRadius: 16, padding: isMobile ? "20px 16px" : "28px 32px", border: "1px solid " + BORDER, marginBottom: 28, position: "relative", overflow: "hidden" }}>
           <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: ORANGE }} />
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div style={{ display: "flex", justifyContent: isMobile ? "flex-start" : "space-between", alignItems: isMobile ? "flex-start" : "center", flexDirection: isMobile ? "column" as const : "row" as const, gap: isMobile ? 16 : 0 }}>
             <div>
               <h2 style={{ fontSize: 15, fontWeight: 700, color: BLACK, margin: "0 0 6px" }}>Billing & Subscription</h2>
               <p style={{ color: MUTED, fontSize: 13, margin: 0 }}>Manage your plan, update your card, or cancel anytime.</p>
