@@ -503,8 +503,8 @@ export default function Home() {
                 </div>
                 <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
                   <h2 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: BLACK }}>Top Products</h2>
-                  {(topProducts.length > 0 ? topProducts : mockData.topProducts).map((p, i) => (
-                    <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < mockData.topProducts.length - 1 ? "1px solid " + BORDER : "none" }}>
+                  {topProducts.map((p, i) => (
+                    <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < topProducts.length - 1 ? "1px solid " + BORDER : "none" }}>
                       <span style={{ width: 20, height: 20, background: i === 0 ? ORANGE : WARM_BG, borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: i === 0 ? "#fff" : MUTED, flexShrink: 0 }}>{i + 1}</span>
                       <span style={{ flex: 1, fontSize: 12, color: BLACK, fontWeight: 500 }}>{p.name}</span>
                       <span style={{ fontSize: 12, fontWeight: 700, color: ORANGE }}>${p.revenue}</span>
