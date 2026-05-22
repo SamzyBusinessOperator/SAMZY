@@ -638,15 +638,20 @@ export default function Home() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {staff.map(s => (
-                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
-                      <div style={{ width: 40, height: 40, borderRadius: 10, background: BLACK, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{s.name.split(" ").map((n: string) => n[0]).join("")}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
-                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{s.role} · {s.shift}{s.phone ? " · " + s.phone : ""}</div>
+                    <div key={s.id} style={{ padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                        <div style={{ width: 40, height: 40, borderRadius: 10, background: BLACK, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, flexShrink: 0 }}>{s.name.split(" ").map((n: string) => n[0]).join("")}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
+                          <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{s.role} · {s.shift}</div>
+                        </div>
+                        <span style={{ background: s.status === "on" ? "#f0fdf4" : WARM_BG, color: s.status === "on" ? "#16a34a" : MUTED, padding: "5px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, flexShrink: 0 }}>{s.status === "on" ? "On" : "Off"}</span>
                       </div>
-                      <span style={{ background: s.status === "on" ? "#f0fdf4" : WARM_BG, color: s.status === "on" ? "#16a34a" : MUTED, padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginRight: 8 }}>{s.status === "on" ? "On" : "Off"}</span>
-                      <button onClick={() => { setEditingStaff(s); setShowAddStaff(false); setStaffForm({ name: s.name, role: s.role, shift: s.shift, status: s.status, phone: s.phone || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
-                      <button onClick={() => setDeleteModal({ id: s.id, name: s.name, type: "staff" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <div style={{ flex: 1 }} />
+                        <button onClick={() => { setEditingStaff(s); setShowAddStaff(false); setStaffForm({ name: s.name, role: s.role, shift: s.shift, status: s.status, phone: s.phone || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK }}>Edit</button>
+                        <button onClick={() => setDeleteModal({ id: s.id, name: s.name, type: "staff" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                      </div>
                     </div>
                   ))}
                 </div>
