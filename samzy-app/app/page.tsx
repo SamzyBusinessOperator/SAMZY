@@ -304,7 +304,7 @@ export default function Home() {
       setTimeout(() => {
         supabase.from("stores").select("city, onboarding_complete, subscription_status, trial_ends_at").eq("owner_email", session.user.email || "").single().then(({ data }) => {
           if (data?.onboarding_complete === false) { window.location.href = "/onboarding"; return; }
-          if (data?.subscription_status === "trial" && data?.trial_ends_at) { const days = Math.ceil((new Date(data.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); setTrialDaysLeft(days); }
+          if (data?.subscription_status === "trial") { const trialEnd = data?.trial_ends_at ? new Date(data.trial_ends_at) : new Date(Date.now() + 14 * 86400000); const days = Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); setTrialDaysLeft(Math.max(0, days)); }
           if (data?.subscription_status === "trial" && data?.trial_ends_at && new Date(data.trial_ends_at) < new Date()) { window.location.href = "/pricing?trial_expired=true"; }
           if (data?.subscription_status === "cancelled") { window.location.href = "/pricing?cancelled=true"; }
           if (data?.subscription_status === "past_due") { window.location.href = "/pricing?past_due=true"; }
@@ -390,6 +390,11 @@ export default function Home() {
               </div>
               <div style={{ fontSize: 12, color: BLACK, fontWeight: 600, marginBottom: 2 }}>{storeName}</div>
               <button onClick={handleLogout} style={{ background: "none", border: "none", color: MUTED, fontSize: 11, cursor: "pointer", padding: 0, marginTop: 4 }}>Sign out</button>
+              {trialDaysLeft !== null && trialDaysLeft > 0 && (
+                <a href="/pricing" style={{ display: "block", marginTop: 12, background: ORANGE, color: "#fff", padding: "8px 12px", borderRadius: 8, textDecoration: "none", fontSize: 12, fontWeight: 700, textAlign: "center" as const }}>
+                  ⚡ Upgrade to Pro
+                </a>
+              )}
             </div>
           )}
         </aside>

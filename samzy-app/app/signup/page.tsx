@@ -31,7 +31,9 @@ export default function Signup() {
     if (error) {
       setError(error.message);
     } else {
-      await supabase.from("stores").insert([{ name: storeName, owner_email: email }]);
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 14);
+      await supabase.from("stores").insert([{ name: storeName, owner_email: email, subscription_status: "trial", trial_ends_at: trialEnd.toISOString() }]);
       setSuccess(true);
     }
     setLoading(false);
