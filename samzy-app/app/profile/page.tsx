@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useState, useEffect } from "react";
 import { supabase } from "../../lib/supabase";
+import PageLoader from "../components/PageLoader";
 
 const ORANGE = "#FC7800";
 const BLACK = "#0f0f0f";
@@ -104,11 +105,7 @@ export default function Profile() {
     fontWeight: 500,
   };
 
-  if (loading) return (
-    <div style={{ minHeight: "100vh", background: WARM_BG, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <p style={{ color: MUTED }}>Loading...</p>
-    </div>
-  );
+  if (loading) return <PageLoader />;
 
   return (
     <div style={{ minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
