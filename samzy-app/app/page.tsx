@@ -573,18 +573,23 @@ export default function Home() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {(inventoryTab === "all" ? products : products.filter(p => p.stock_quantity <= p.reorder_threshold)).map(item => (
-                    <div key={item.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "14px 16px", borderRadius: 12, border: "1px solid " + (item.stock_quantity <= item.reorder_threshold ? "#fecaca" : BORDER), background: item.stock_quantity <= item.reorder_threshold ? "#fef2f2" : WARM_BG }}>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{item.name}</div>
-                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{item.category || "General"} · €{parseFloat(item.price || 0).toFixed(2)}</div>
+                    <div key={item.id} style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid " + (item.stock_quantity <= item.reorder_threshold ? "#fecaca" : BORDER), background: item.stock_quantity <= item.reorder_threshold ? "#fef2f2" : WARM_BG }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: isMobile ? 10 : 0 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{item.name}</div>
+                          <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{item.category || "General"} · €{parseFloat(item.price || 0).toFixed(2)}</div>
+                        </div>
+                        <div style={{ textAlign: "center" as const }}>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: item.stock_quantity <= item.reorder_threshold ? "#dc2626" : BLACK }}>{item.stock_quantity}</div>
+                          <div style={{ fontSize: 10, color: MUTED }}>in stock</div>
+                        </div>
                       </div>
-                      <div style={{ textAlign: "center" as const, marginRight: 8 }}>
-                        <div style={{ fontSize: 16, fontWeight: 700, color: item.stock_quantity <= item.reorder_threshold ? "#dc2626" : BLACK }}>{item.stock_quantity}</div>
-                        <div style={{ fontSize: 10, color: MUTED }}>in stock</div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        {item.stock_quantity <= item.reorder_threshold && <span style={{ background: "#fef2f2", color: "#dc2626", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, flex: 1 }}>Reorder needed</span>}
+                        {!(item.stock_quantity <= item.reorder_threshold) && <div style={{ flex: 1 }} />}
+                        <button onClick={() => { setEditingProduct(item); setShowAddProduct(false); setProductForm({ name: item.name, category: item.category || "Other", stock_quantity: String(item.stock_quantity), price: String(item.price || ""), reorder_threshold: String(item.reorder_threshold || 10) }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK }}>Edit</button>
+                        <button onClick={() => setDeleteModal({ id: item.id, name: item.name, type: "product" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
                       </div>
-                      {item.stock_quantity <= item.reorder_threshold && <span style={{ background: "#fef2f2", color: "#dc2626", padding: "4px 10px", borderRadius: 20, fontSize: 11, fontWeight: 600, marginRight: 4 }}>Reorder</span>}
-                      <button onClick={() => { setEditingProduct(item); setShowAddProduct(false); setProductForm({ name: item.name, category: item.category || "Other", stock_quantity: String(item.stock_quantity), price: String(item.price || ""), reorder_threshold: String(item.reorder_threshold || 10) }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
-                      <button onClick={() => setDeleteModal({ id: item.id, name: item.name, type: "product" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
                     </div>
                   ))}
                 </div>
@@ -692,9 +697,10 @@ export default function Home() {
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {suppliers.map(s => (
                     <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
-                      <div style={{ flex: 1 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
-                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>Due: {s.due_date}{s.notes ? " · " + s.notes : ""}</div>
+                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>Due: {s.due_date}</div>
+                        {s.notes && <div style={{ fontSize: 11, color: MUTED, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, maxWidth: isMobile ? 160 : 300 }}>{s.notes}</div>}
                       </div>
                       <span style={{ fontWeight: 700, fontSize: 14, color: BLACK, marginRight: 8 }}>{s.invoice_amount}</span>
                       <span style={{ background: s.status === "paid" ? "#f0fdf4" : s.status === "overdue" ? "#fef2f2" : "#fffbeb", color: s.status === "paid" ? "#16a34a" : s.status === "overdue" ? "#dc2626" : "#d97706", padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginRight: 8 }}>{s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span>
