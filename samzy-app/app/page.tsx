@@ -92,6 +92,9 @@ export default function Home() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
   const [inventoryTab, setInventoryTab] = useState<"all" | "low">("all");
+  const [realStats, setRealStats] = useState({ todaySales: 0, yesterdaySales: 0, monthSales: 0, cashFlow: 0 });
+  const [weekSalesData, setWeekSalesData] = useState<{day: string, amount: number}[]>([]);
+  const [topProducts, setTopProducts] = useState<{name: string, sales: number, revenue: number}[]>([]);
   const [deleteModal, setDeleteModal] = useState<{ id: string; name: string; type: "product" | "staff" | "supplier" } | null>(null);
   const [suppliersLoading, setSuppliersLoading] = useState(false);
   const [showAddSupplier, setShowAddSupplier] = useState(false);
@@ -176,6 +179,48 @@ export default function Home() {
     await supabase.from("suppliers").delete().eq("id", id);
     fetchSuppliers(email);
   }
+  async function fetchRealStats(email: string) {
+    try {
+      const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+      if (!store) return;
+      const today = new Date().toISOString().split("T")[0];
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+      const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
+      const { data: todaySalesData } = await supabase.from("sales").select("total").eq("store_id", store.id).eq("sale_date", today);
+      const { data: yesterdaySalesData } = await supabase.from("sales").select("total").eq("store_id", store.id).eq("sale_date", yesterday);
+      const { data: monthSalesData } = await supabase.from("sales").select("total").eq("store_id", store.id).gte("sale_date", monthStart);
+      const { data: supplierData } = await supabase.from("suppliers").select("invoice_amount").eq("store_email", email).eq("status", "pending");
+      const todayTotal = (todaySalesData || []).reduce((sum: number, s: any) => sum + parseFloat(s.total || 0), 0);
+      const yesterdayTotal = (yesterdaySalesData || []).reduce((sum: number, s: any) => sum + parseFloat(s.total || 0), 0);
+      const monthTotal = (monthSalesData || []).reduce((sum: number, s: any) => sum + parseFloat(s.total || 0), 0);
+      const pendingInvoices = (supplierData || []).reduce((sum: number, s: any) => {
+        const amt = parseFloat(String(s.invoice_amount).replace(/[^0-9.]/g, "")) || 0;
+        return sum + amt;
+      }, 0);
+      setRealStats({ todaySales: todayTotal, yesterdaySales: yesterdayTotal, monthSales: monthTotal, cashFlow: monthTotal - pendingInvoices });
+      // Week sales
+      const days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      const weekData = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 86400000);
+        const dateStr = d.toISOString().split("T")[0];
+        const { data: daySales } = await supabase.from("sales").select("total").eq("store_id", store.id).eq("sale_date", dateStr);
+        const total = (daySales || []).reduce((sum: number, s: any) => sum + parseFloat(s.total || 0), 0);
+        weekData.push({ day: days[d.getDay()], amount: total });
+      }
+      setWeekSalesData(weekData);
+      // Top products
+      const { data: allSales } = await supabase.from("sales").select("product_name, quantity, total").eq("store_id", store.id).gte("sale_date", monthStart);
+      const productMap: Record<string, {sales: number, revenue: number}> = {};
+      (allSales || []).forEach((s: any) => {
+        if (!productMap[s.product_name]) productMap[s.product_name] = { sales: 0, revenue: 0 };
+        productMap[s.product_name].sales += s.quantity;
+        productMap[s.product_name].revenue += parseFloat(s.total || 0);
+      });
+      const topProds = Object.entries(productMap).map(([name, v]) => ({ name, ...v })).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+      setTopProducts(topProds);
+    } catch(e: any) { console.error("fetchRealStats error:", e.message); }
+  }
   async function fetchProducts() {
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
@@ -251,6 +296,7 @@ export default function Home() {
       setDbStatus("connected");
       fetchStaff(session.user.email || "");
       fetchSuppliers(session.user.email || "");
+      fetchRealStats(session.user.email || "");
         supabase.from("stores").select("id").ilike("owner_email", session.user.email || "").single().then(({ data: store }) => {
           if (store) supabase.from("products").select("*").eq("store_id", store.id).then(({ data }) => { if (data) setProducts(data); });
         });
@@ -405,10 +451,10 @@ export default function Home() {
               {/* KPI Grid — 2 cols on mobile, 4 on desktop */}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: isMobile ? 12 : 16, marginBottom: isMobile ? 16 : 24 }}>
                 {[
-                  { title: "Today's Sales", value: "$" + mockData.todaySales.toLocaleString(), sub: "+" + salesGrowth + "%", accent: ORANGE, icon: "💵" },
-                  { title: "Monthly Revenue", value: "$" + mockData.monthSales.toLocaleString(), sub: "May 2026", accent: "#0071e3", icon: "📊" },
-                  { title: "Cash Flow", value: "$" + mockData.cashFlow.toLocaleString(), sub: "Available", accent: "#16a34a", icon: "🏦" },
-                  { title: "Low Stock", value: String(mockData.lowStock.length), sub: "Items", accent: "#dc2626", icon: "⚠️" },
+                  { title: "Today's Sales", value: "€" + realStats.todaySales.toFixed(2), sub: realStats.yesterdaySales > 0 ? (((realStats.todaySales - realStats.yesterdaySales) / realStats.yesterdaySales) * 100).toFixed(1) + "% vs yesterday" : "No sales yet", accent: ORANGE, icon: "💵" },
+                  { title: "Monthly Revenue", value: "€" + realStats.monthSales.toFixed(2), sub: new Date().toLocaleString("default", { month: "long", year: "numeric" }), accent: "#0071e3", icon: "📊" },
+                  { title: "Cash Flow", value: "€" + realStats.cashFlow.toFixed(2), sub: "Revenue minus invoices", accent: "#16a34a", icon: "🏦" },
+                  { title: "Low Stock", value: String(products.filter(p => p.stock_quantity <= p.reorder_threshold).length), sub: "Items need reorder", accent: "#dc2626", icon: "⚠️" },
                 ].map((k) => (
                   <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
                     <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: k.accent }} />
@@ -428,7 +474,7 @@ export default function Home() {
                     <span style={{ fontSize: 11, color: MUTED, background: WARM_BG, padding: "3px 8px", borderRadius: 20 }}>This week</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 8, height: isMobile ? 100 : 140 }}>
-                    {mockData.weekSales.map((d) => (
+                    {(weekSalesData.length > 0 ? weekSalesData : mockData.weekSales).map((d) => (
                       <div key={d.day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
                         <div style={{ fontSize: 8, color: MUTED, marginBottom: 3 }}>${(d.amount / 1000).toFixed(1)}k</div>
                         <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
@@ -441,7 +487,7 @@ export default function Home() {
                 </div>
                 <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
                   <h2 style={{ margin: "0 0 16px", fontSize: 14, fontWeight: 700, color: BLACK }}>Top Products</h2>
-                  {mockData.topProducts.map((p, i) => (
+                  {(topProducts.length > 0 ? topProducts : mockData.topProducts).map((p, i) => (
                     <div key={p.name} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: i < mockData.topProducts.length - 1 ? "1px solid " + BORDER : "none" }}>
                       <span style={{ width: 20, height: 20, background: i === 0 ? ORANGE : WARM_BG, borderRadius: 5, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 700, color: i === 0 ? "#fff" : MUTED, flexShrink: 0 }}>{i + 1}</span>
                       <span style={{ flex: 1, fontSize: 12, color: BLACK, fontWeight: 500 }}>{p.name}</span>
@@ -654,10 +700,10 @@ export default function Home() {
           {activeNav === "finances" && (
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
               {[
-                { title: "Today's Revenue", value: "$" + mockData.todaySales.toLocaleString(), color: ORANGE, icon: "💵" },
-                { title: "Monthly Revenue", value: "$" + mockData.monthSales.toLocaleString(), color: "#0071e3", icon: "📊" },
-                { title: "Cash Available", value: "$" + mockData.cashFlow.toLocaleString(), color: "#16a34a", icon: "🏦" },
-                { title: "Pending Invoices", value: "$4,900", color: "#dc2626", icon: "📄" },
+                { title: "Today's Revenue", value: "€" + realStats.todaySales.toFixed(2), color: ORANGE, icon: "💵" },
+                { title: "Monthly Revenue", value: "€" + realStats.monthSales.toFixed(2), color: "#0071e3", icon: "📊" },
+                { title: "Cash Available", value: "€" + realStats.cashFlow.toFixed(2), color: "#16a34a", icon: "🏦" },
+                { title: "Pending Invoices", value: "€" + (realStats.monthSales - realStats.cashFlow).toFixed(2), color: "#dc2626", icon: "📄" },
               ].map(k => (
                 <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
                   <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: k.color }} />
