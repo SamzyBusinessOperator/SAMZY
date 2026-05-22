@@ -186,9 +186,9 @@ export default function Home() {
       const today = new Date().toISOString().split("T")[0];
       const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
-      const { data: todaySalesData } = await supabase.from("sales").select("total").eq("store_id", store.id).eq("sale_date", today);
-      const { data: yesterdaySalesData } = await supabase.from("sales").select("total").eq("store_id", store.id).eq("sale_date", yesterday);
-      const { data: monthSalesData } = await supabase.from("sales").select("total").eq("store_id", store.id).gte("sale_date", monthStart);
+      const { data: todaySalesData } = await supabase.from("sales").select("total").ilike("store_email", email).eq("sale_date", today);
+      const { data: yesterdaySalesData } = await supabase.from("sales").select("total").ilike("store_email", email).eq("sale_date", yesterday);
+      const { data: monthSalesData } = await supabase.from("sales").select("total").ilike("store_email", email).gte("sale_date", monthStart);
       const { data: supplierData } = await supabase.from("suppliers").select("invoice_amount").eq("store_email", email).eq("status", "pending");
       const todayTotal = (todaySalesData || []).reduce((sum: number, s: any) => sum + parseFloat(s.total || 0), 0);
       const yesterdayTotal = (yesterdaySalesData || []).reduce((sum: number, s: any) => sum + parseFloat(s.total || 0), 0);
@@ -210,7 +210,7 @@ export default function Home() {
       }
       setWeekSalesData(weekData);
       // Top products
-      const { data: allSales } = await supabase.from("sales").select("product_name, quantity, total").eq("store_id", store.id).gte("sale_date", monthStart);
+      const { data: allSales } = await supabase.from("sales").select("product_name, quantity, total").ilike("store_email", email).gte("sale_date", monthStart);
       const productMap: Record<string, {sales: number, revenue: number}> = {};
       (allSales || []).forEach((s: any) => {
         if (!productMap[s.product_name]) productMap[s.product_name] = { sales: 0, revenue: 0 };
