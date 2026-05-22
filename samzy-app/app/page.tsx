@@ -302,7 +302,7 @@ export default function Home() {
           if (store) supabase.from("products").select("*").eq("store_id", store.id).then(({ data }) => { if (data) setProducts(data); });
         });
       setTimeout(() => {
-        supabase.from("stores").select("city, onboarding_complete, subscription_status, trial_ends_at").eq("owner_email", session.user.email || "").single().then(({ data }) => {
+        supabase.from("stores").select("city, onboarding_complete, subscription_status, trial_ends_at").ilike("owner_email", session.user.email || "").single().then(({ data }) => {
           if (data?.onboarding_complete === false) { window.location.href = "/onboarding"; return; }
           if (data?.subscription_status === "trial") { const trialEnd = data?.trial_ends_at ? new Date(data.trial_ends_at) : new Date(Date.now() + 14 * 86400000); const days = Math.ceil((trialEnd.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)); setTrialDaysLeft(Math.max(0, days)); }
           if (data?.subscription_status === "trial" && data?.trial_ends_at && new Date(data.trial_ends_at) < new Date()) { window.location.href = "/pricing?trial_expired=true"; }
