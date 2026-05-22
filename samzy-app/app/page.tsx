@@ -490,7 +490,7 @@ export default function Home() {
                     <span style={{ fontSize: 11, color: MUTED, background: WARM_BG, padding: "3px 8px", borderRadius: 20 }}>This week</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 8, height: isMobile ? 100 : 140 }}>
-                    {(weekSalesData.length > 0 ? weekSalesData : mockData.weekSales).map((d) => (
+                    {weekSalesData.map((d) => (
                       <div key={d.day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
                         <div style={{ fontSize: 8, color: MUTED, marginBottom: 3 }}>${(d.amount / 1000).toFixed(1)}k</div>
                         <div style={{ flex: 1, width: "100%", display: "flex", alignItems: "flex-end" }}>
