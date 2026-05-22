@@ -10,7 +10,18 @@ const CARD_BG = "#FFFFFF";
 const BORDER = "#F0EEEB";
 const MUTED = "#6B6B6B";
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
 export default function Onboarding() {
+  const isMobile = useIsMobile();
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
   const [ownerEmail, setOwnerEmail] = useState("");
@@ -58,7 +69,7 @@ export default function Onboarding() {
     <div style={{ minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", display: "flex", flexDirection: "column" }}>
 
       {/* Top bar */}
-      <div style={{ padding: "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div style={{ padding: isMobile ? "16px 20px" : "20px 40px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Image src="/logo.png" alt="Samzy" width={32} height={32} />
           <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
@@ -87,7 +98,7 @@ export default function Onboarding() {
           {step === 1 && (
             <div>
               <div style={{ marginBottom: 32 }}>
-                <h1 style={{ fontSize: 28, fontWeight: 700, color: BLACK, margin: 0, letterSpacing: -0.5 }}>Welcome to Samzy!</h1>
+                <h1 style={{ fontSize: isMobile ? 24 : 28, fontWeight: 700, color: BLACK, margin: 0, letterSpacing: -0.5 }}>Welcome to Samzy!</h1>
                 <p style={{ color: MUTED, fontSize: 15, marginTop: 8 }}>Let's set up your store in 2 quick steps</p>
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -103,7 +114,7 @@ export default function Onboarding() {
                   <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Address</label>
                   <input value={form.address} onChange={e => update("address", e.target.value)} placeholder="Street address" style={inputStyle} />
                 </div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 12 }}>
                   <div>
                     <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>City</label>
                     <input value={form.city} onChange={e => update("city", e.target.value)} placeholder="Lisbon" style={inputStyle} />
