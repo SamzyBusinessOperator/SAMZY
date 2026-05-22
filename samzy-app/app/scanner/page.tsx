@@ -21,7 +21,18 @@ interface SupplierResult {
   notes: string;
 }
 type Mode = "choose" | "inventory" | "supplier" | "receipt";
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
 export default function Scanner() {
+  const isMobile = useIsMobile();
   const [mode, setMode] = useState<Mode>("choose");
   const [image, setImage] = useState<string | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -131,7 +142,7 @@ export default function Scanner() {
   };
   return (
     <div style={{ minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
-      <header style={{ background: CARD_BG, borderBottom: "1px solid " + BORDER, padding: "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
+      <header style={{ background: CARD_BG, borderBottom: "1px solid " + BORDER, padding: isMobile ? "0 16px" : "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <Image src="/logo.png" alt="Samzy" width={32} height={32} />
@@ -142,9 +153,9 @@ export default function Scanner() {
         </div>
         <a href="/" style={{ color: ORANGE, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>Dashboard</a>
       </header>
-      <div style={{ maxWidth: 680, margin: "48px auto", padding: "0 24px" }}>
+      <div style={{ maxWidth: 680, margin: isMobile ? "24px auto" : "48px auto", padding: isMobile ? "0 16px" : "0 24px" }}>
         <div style={{ marginBottom: 36 }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: BLACK, margin: 0, letterSpacing: -0.5 }}>Smart Scanner</h1>
+          <h1 style={{ fontSize: isMobile ? 24 : 28, fontWeight: 700, color: BLACK, margin: 0, letterSpacing: -0.5 }}>Smart Scanner</h1>
           <p style={{ color: MUTED, fontSize: 14, marginTop: 6 }}>Scan any document — AI extracts and saves the data automatically</p>
         </div>
         {message && (
@@ -240,7 +251,7 @@ export default function Scanner() {
                         <input value={item.name} onChange={e => updateItem(i, "name", e.target.value)} style={{ fontSize: 14, fontWeight: 600, color: BLACK, background: "none", border: "none", outline: "none", flex: 1, fontFamily: "inherit" }} />
                         <button onClick={() => removeItem(i)} style={{ background: "none", border: "none", color: "#dc2626", cursor: "pointer", fontSize: 16, marginLeft: 8 }}>✕</button>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "1fr 1fr 1fr", gap: 10 }}>
                         <div>
                           <label style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>Qty</label>
                           <input type="number" value={item.quantity} onChange={e => updateItem(i, "quantity", parseInt(e.target.value))} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, color: BLACK, background: CARD_BG, outline: "none", boxSizing: "border-box" as const }} />
