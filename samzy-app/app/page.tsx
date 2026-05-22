@@ -453,8 +453,8 @@ export default function Home() {
                 {[
                   { title: "Today's Sales", value: "€" + realStats.todaySales.toFixed(2), sub: realStats.yesterdaySales > 0 ? (((realStats.todaySales - realStats.yesterdaySales) / realStats.yesterdaySales) * 100).toFixed(1) + "% vs yesterday" : "No sales yet", accent: ORANGE, icon: "💵" },
                   { title: "Monthly Revenue", value: "€" + realStats.monthSales.toFixed(2), sub: new Date().toLocaleString("default", { month: "long", year: "numeric" }), accent: "#0071e3", icon: "📊" },
-                  { title: "Cash Flow", value: "€" + realStats.cashFlow.toFixed(2), sub: "Revenue minus invoices", accent: "#16a34a", icon: "🏦" },
-                  { title: "Low Stock", value: String(products.filter(p => p.stock_quantity <= p.reorder_threshold).length), sub: "Items need reorder", accent: "#dc2626", icon: "⚠️" },
+                  { title: "Cash Flow", value: "€" + Math.max(0, realStats.cashFlow).toFixed(2), sub: realStats.cashFlow < 0 ? "⚠️ Invoices exceed revenue" : "After pending invoices", accent: realStats.cashFlow < 0 ? "#dc2626" : "#16a34a", icon: "🏦" },
+                  { title: "Low Stock", value: String(products.filter(p => p.stock_quantity !== null && p.reorder_threshold !== null && p.stock_quantity <= p.reorder_threshold).length), sub: "Items need reorder", accent: "#dc2626", icon: "⚠️" },
                 ].map((k) => (
                   <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
                     <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: k.accent }} />
