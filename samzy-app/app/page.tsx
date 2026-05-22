@@ -2,6 +2,7 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import PageLoader from "./components/PageLoader";
 
 const ORANGE = "#FC7800";
 const BLACK = "#0f0f0f";
