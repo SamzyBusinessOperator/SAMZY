@@ -696,16 +696,19 @@ export default function Home() {
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                   {suppliers.map(s => (
-                    <div key={s.id} style={{ display: "flex", alignItems: "center", gap: 14, padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
-                        <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>Due: {s.due_date}</div>
-                        {s.notes && <div style={{ fontSize: 11, color: MUTED, marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" as const, maxWidth: isMobile ? 160 : 300 }}>{s.notes}</div>}
+                    <div key={s.id} style={{ padding: "16px", borderRadius: 12, border: "1px solid " + BORDER, background: WARM_BG }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>{s.name}</div>
+                          <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>Due: {s.due_date}</div>
+                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: BLACK, marginLeft: 12 }}>{s.invoice_amount}</div>
                       </div>
-                      <span style={{ fontWeight: 700, fontSize: 14, color: BLACK, marginRight: 8 }}>{s.invoice_amount}</span>
-                      <span style={{ background: s.status === "paid" ? "#f0fdf4" : s.status === "overdue" ? "#fef2f2" : "#fffbeb", color: s.status === "paid" ? "#16a34a" : s.status === "overdue" ? "#dc2626" : "#d97706", padding: "5px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600, marginRight: 8 }}>{s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span>
-                      <button onClick={() => { setEditingSupplier(s); setShowAddSupplier(false); setSupplierForm({ name: s.name, invoice_amount: s.invoice_amount, due_date: s.due_date, status: s.status, notes: s.notes || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK, marginRight: 6 }}>Edit</button>
-                      <button onClick={() => setDeleteModal({ id: s.id, name: s.name, type: "supplier" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span style={{ background: s.status === "paid" ? "#f0fdf4" : s.status === "overdue" ? "#fef2f2" : "#fffbeb", color: s.status === "paid" ? "#16a34a" : s.status === "overdue" ? "#dc2626" : "#d97706", padding: "4px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, flex: 1 }}>{s.status.charAt(0).toUpperCase() + s.status.slice(1)}</span>
+                        <button onClick={() => { setEditingSupplier(s); setShowAddSupplier(false); setSupplierForm({ name: s.name, invoice_amount: s.invoice_amount, due_date: s.due_date, status: s.status, notes: s.notes || "" }); }} style={{ background: "transparent", border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: BLACK }}>Edit</button>
+                        <button onClick={() => setDeleteModal({ id: s.id, name: s.name, type: "supplier" })} style={{ background: "transparent", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer", color: "#dc2626" }}>Delete</button>
+                      </div>
                     </div>
                   ))}
                 </div>
