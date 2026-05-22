@@ -324,7 +324,17 @@ export default function Home() {
       const res = await fetch("/api/advisor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question, storeData: mockData }),
+        body: JSON.stringify({ question, storeData: {
+          todaySales: realStats.todaySales,
+          yesterdaySales: realStats.yesterdaySales,
+          monthSales: realStats.monthSales,
+          cashFlow: realStats.cashFlow,
+          lowStock: products.filter(p => p.stock_quantity <= p.reorder_threshold),
+          topProducts: topProducts,
+          weekSales: weekSalesData,
+          staff: staff,
+          suppliers: suppliers,
+        }}),
       });
       const data = await res.json();
       setChatHistory(prev => [...prev, { q: question, a: data.answer }]);
