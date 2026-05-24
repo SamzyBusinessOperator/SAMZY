@@ -427,6 +427,15 @@ export default function Home() {
 
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {/* Language Bar */}
+        <div style={{ padding: isMobile ? "8px 16px" : "8px 24px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 11, color: MUTED, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>🌐</span>
+          <div style={{ display: "flex", gap: 4 }}>
+            {languages.map(l => (
+              <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 14, cursor: "pointer", fontWeight: lang === l.code ? 700 : 400 }}>{l.flag}</button>
+            ))}
+          </div>
+        </div>
         {/* Desktop header */}
         {/* Trial Banner */}
         {trialDaysLeft !== null && trialDaysLeft > 0 && (
