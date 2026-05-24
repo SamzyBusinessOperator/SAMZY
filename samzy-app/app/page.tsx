@@ -2,6 +2,8 @@
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { useLanguage } from "../lib/LanguageContext";
+import { languages } from "../lib/translations";
 import PageLoader from "./components/PageLoader";
 
 const ORANGE = "#FC7800";
@@ -14,11 +16,11 @@ const LIGHT_ORANGE = "#FFF4E8";
 
 const navItems = [
   { id: "dashboard", label: "Dashboard", icon: "▦" },
-  { id: "inventory", label: "Inventory", icon: "📦" },
-  { id: "staff", label: "Staff", icon: "👥" },
-  { id: "suppliers", label: "Suppliers", icon: "🚚" },
-  { id: "finances", label: "Finances", icon: "💰" },
-  { id: "ai", label: "AI", icon: "✦" },
+  { id: "inventory", label: tr.inventory, icon: "📦" },
+  { id: "staff", label: tr.staff, icon: "👥" },
+  { id: "suppliers", label: tr.suppliers, icon: "🚚" },
+  { id: "finances", label: tr.finances, icon: "💰" },
+  { id: "ai", label: tr.ai, icon: "✦" },
   { id: "profile", label: "Profile", icon: "👤" },
   { id: "scanner", label: "Scanner", icon: "📷" },
 ];
@@ -106,6 +108,7 @@ export default function Home() {
   const [staffForm, setStaffForm] = useState({ name: "", role: "", shift: "", status: "on", phone: "" });
   const [products, setProducts] = useState<any[]>([]);
   const isMobile = useIsMobile();
+  const { lang, setLang, tr } = useLanguage();
   async function fetchStaff(email: string) {
     if (!email) return;
     setStaffLoading(true);
@@ -389,11 +392,17 @@ export default function Home() {
                 <span style={{ fontSize: 11, color: MUTED }}>{dbStatus === "connected" ? "Live" : "Connecting..."}</span>
               </div>
               <div style={{ fontSize: 12, color: BLACK, fontWeight: 600, marginBottom: 2 }}>{storeName}</div>
-              <button onClick={handleLogout} style={{ background: "none", border: "none", color: MUTED, fontSize: 11, cursor: "pointer", padding: 0, marginTop: 4 }}>Sign out</button>
+              <button onClick={handleLogout} style={{ background: "none", border: "none", color: MUTED, fontSize: 11, cursor: "pointer", padding: 0, marginTop: 4 }}>{tr.signOut}</button>
+              <div style={{ marginTop: 12 }}>
+                <div style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: 0.5, marginBottom: 6 }}>{tr.language}</div>
+                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 4 }}>
+                  {languages.map(l => (
+                    <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 6px", fontSize: 14, cursor: "pointer" }}>{l.flag}</button>
+                  ))}
+                </div>
+              </div>
               {trialDaysLeft !== null && trialDaysLeft > 0 && (
-                <a href="/pricing" style={{ display: "block", marginTop: 12, background: ORANGE, color: "#fff", padding: "8px 12px", borderRadius: 8, textDecoration: "none", fontSize: 12, fontWeight: 700, textAlign: "center" as const }}>
-                  ⚡ Upgrade to Pro
-                </a>
+                <a href="/pricing" style={{ display: "block", marginTop: 12, background: ORANGE, color: "#fff", padding: "8px 12px", borderRadius: 8, textDecoration: "none", fontSize: 12, fontWeight: 700, textAlign: "center" as const }}>{tr.upgradeToPro}</a>
               )}
             </div>
           )}
@@ -467,10 +476,10 @@ export default function Home() {
               {/* KPI Grid — 2 cols on mobile, 4 on desktop */}
               <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: isMobile ? 12 : 16, marginBottom: isMobile ? 16 : 24 }}>
                 {[
-                  { title: "Today's Sales", value: "€" + realStats.todaySales.toFixed(2), sub: realStats.yesterdaySales > 0 ? (((realStats.todaySales - realStats.yesterdaySales) / realStats.yesterdaySales) * 100).toFixed(1) + "% vs yesterday" : "No sales yet", accent: ORANGE, icon: "💵" },
-                  { title: "Monthly Revenue", value: "€" + realStats.monthSales.toFixed(2), sub: new Date().toLocaleString("default", { month: "long", year: "numeric" }), accent: "#0071e3", icon: "📊" },
-                  { title: "Cash Flow", value: "€" + Math.max(0, realStats.cashFlow).toFixed(2), sub: realStats.cashFlow < 0 ? "⚠️ Invoices exceed revenue" : "After pending invoices", accent: realStats.cashFlow < 0 ? "#dc2626" : "#16a34a", icon: "🏦" },
-                  { title: "Low Stock", value: String(products.filter(p => p.stock_quantity !== null && p.reorder_threshold !== null && p.stock_quantity <= p.reorder_threshold).length), sub: "Items need reorder", accent: "#dc2626", icon: "⚠️" },
+                  { title: tr.todaySales, value: "€" + realStats.todaySales.toFixed(2), sub: realStats.yesterdaySales > 0 ? (((realStats.todaySales - realStats.yesterdaySales) / realStats.yesterdaySales) * 100).toFixed(1) + "% vs yesterday" : tr.noSalesYet, accent: ORANGE, icon: "💵" },
+                  { title: tr.monthlyRevenue, value: "€" + realStats.monthSales.toFixed(2), sub: new Date().toLocaleString("default", { month: "long", year: "numeric" }), accent: "#0071e3", icon: "📊" },
+                  { title: tr.cashFlow, value: "€" + Math.max(0, realStats.cashFlow).toFixed(2), sub: realStats.cashFlow < 0 ? tr.invoicesExceedRevenue : tr.afterPendingInvoices, accent: realStats.cashFlow < 0 ? "#dc2626" : "#16a34a", icon: "🏦" },
+                  { title: tr.lowStock, value: String(products.filter(p => p.stock_quantity !== null && p.reorder_threshold !== null && p.stock_quantity <= p.reorder_threshold).length), sub: tr.itemsNeedReorder, accent: "#dc2626", icon: "⚠️" },
                 ].map((k) => (
                   <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
                     <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: k.accent }} />
