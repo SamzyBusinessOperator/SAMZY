@@ -417,10 +417,10 @@ export default function Home() {
             <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            {languages.map(l => (
-              <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : "transparent", border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "2px 4px", fontSize: 13, cursor: "pointer" }}>{l.flag}</button>
-            ))}
-            <button onClick={handleLogout} style={{ background: LIGHT_ORANGE, border: "none", color: ORANGE, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 12px", borderRadius: 8, marginLeft: 4 }}>Out</button>
+            <select value={lang} onChange={e => setLang(e.target.value as any)} style={{ fontSize: 13, border: "1px solid " + BORDER, borderRadius: 8, padding: "4px 6px", background: WARM_BG, color: BLACK, cursor: "pointer" }}>
+              {languages.map(l => <option key={l.code} value={l.code}>{l.flag} {l.label}</option>)}
+            </select>
+            <button onClick={handleLogout} style={{ background: LIGHT_ORANGE, border: "none", color: ORANGE, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 12px", borderRadius: 8 }}>Out</button>
           </div>
         </header>
       )}
