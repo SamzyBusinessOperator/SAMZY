@@ -426,10 +426,10 @@ export default function Home() {
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
         {/* Language Bar - All devices */}
-        <div style={{ padding: "6px 16px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, flexShrink: 0 }}>
-          <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>🌐</span>
+        <div style={{ padding: "10px 16px", background: WARM_BG, borderBottom: "2px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>🌐 Language:</span>
           {languages.map(l => (
-            <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 15, cursor: "pointer" }}>{l.flag}</button>
+            <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : CARD_BG, border: "2px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 8, padding: "4px 10px", fontSize: 18, cursor: "pointer", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}>{l.flag}</button>
           ))}
         </div>
         {/* Desktop header */}
