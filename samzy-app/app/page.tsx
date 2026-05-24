@@ -429,15 +429,13 @@ export default function Home() {
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
 
-        {/* Language Bar - Desktop only */}
-        {!isMobile && (
-          <div style={{ padding: "6px 24px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, flexShrink: 0 }}>
-            <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>🌐</span>
-            {languages.map(l => (
-              <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 15, cursor: "pointer" }}>{l.flag}</button>
-            ))}
-          </div>
-        )}
+        {/* Language Bar - All devices */}
+        <div style={{ padding: "6px 16px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, flexShrink: 0 }}>
+          <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>🌐</span>
+          {languages.map(l => (
+            <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 15, cursor: "pointer" }}>{l.flag}</button>
+          ))}
+        </div>
         {/* Desktop header */}
         {/* Trial Banner */}
         {trialDaysLeft !== null && trialDaysLeft > 0 && (
