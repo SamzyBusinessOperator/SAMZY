@@ -109,6 +109,16 @@ export default function Home() {
   const [products, setProducts] = useState<any[]>([]);
   const isMobile = useIsMobile();
   const { lang, setLang, tr } = useLanguage();
+  const navItems = [
+    { id: "dashboard", label: "Dashboard", icon: "▦" },
+    { id: "inventory", label: tr.inventory, icon: "📦" },
+    { id: "staff", label: tr.staff, icon: "👥" },
+    { id: "suppliers", label: tr.suppliers, icon: "🚚" },
+    { id: "finances", label: tr.finances, icon: "💰" },
+    { id: "ai", label: tr.ai, icon: "✦" },
+    { id: "scanner", label: "Scanner", icon: "📷" },
+    { id: "profile", label: "Profile", icon: "👤" },
+  ];
   async function fetchStaff(email: string) {
     if (!email) return;
     setStaffLoading(true);
