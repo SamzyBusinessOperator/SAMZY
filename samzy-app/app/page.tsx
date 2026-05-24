@@ -411,6 +411,11 @@ export default function Home() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
 
+            <div style={{ display: "flex", gap: 3 }}>
+              {languages.map(l => (
+                <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : "transparent", border: lang === l.code ? "1px solid " + ORANGE : "none", borderRadius: 4, padding: "1px 3px", fontSize: 14, cursor: "pointer" }}>{l.flag}</button>
+              ))}
+            </div>
             <button onClick={handleLogout} style={{ background: LIGHT_ORANGE, border: "none", color: ORANGE, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 12px", borderRadius: 8 }}>Out</button>
           </div>
         </header>
@@ -418,15 +423,16 @@ export default function Home() {
 
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {/* Language Bar */}
-        <div style={{ padding: "8px 16px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}>
-          <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>🌐</span>
-          <div style={{ display: "flex", gap: 4 }}>
+
+        {/* Language Bar - Desktop only */}
+        {!isMobile && (
+          <div style={{ padding: "6px 24px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, flexShrink: 0 }}>
+            <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>🌐</span>
             {languages.map(l => (
-              <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 16, cursor: "pointer" }}>{l.flag}</button>
+              <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 15, cursor: "pointer" }}>{l.flag}</button>
             ))}
           </div>
-        </div>
+        )}
         {/* Desktop header */}
         {/* Trial Banner */}
         {trialDaysLeft !== null && trialDaysLeft > 0 && (
