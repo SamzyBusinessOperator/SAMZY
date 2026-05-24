@@ -836,12 +836,7 @@ export default function Home() {
         </nav>
       )}
 
-    {/* Floating Language Selector */}
-    <div style={{ position: "fixed", bottom: isMobile ? 80 : 24, left: 16, zIndex: 9998, display: "flex", flexDirection: "column", gap: 4 }}>
-      {languages.map(l => (
-        <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ width: 36, height: 36, borderRadius: "50%", background: lang === l.code ? ORANGE : CARD_BG, border: "2px solid " + (lang === l.code ? ORANGE : BORDER), fontSize: 18, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 8px rgba(0,0,0,0.15)" }}>{l.flag}</button>
-      ))}
-    </div>
+
     {deleteModal && (
         <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
           <div style={{ background: "#fff", borderRadius: 20, padding: "36px 32px", maxWidth: 400, width: "100%", textAlign: "center" as const, boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}>
