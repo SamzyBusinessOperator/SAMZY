@@ -14,16 +14,6 @@ const BORDER = "#F0EEEB";
 const MUTED = "#6B6B6B";
 const LIGHT_ORANGE = "#FFF4E8";
 
-const navItems = [
-  { id: "dashboard", label: "Dashboard", icon: "▦" },
-  { id: "inventory", label: tr.inventory, icon: "📦" },
-  { id: "staff", label: tr.staff, icon: "👥" },
-  { id: "suppliers", label: tr.suppliers, icon: "🚚" },
-  { id: "finances", label: tr.finances, icon: "💰" },
-  { id: "ai", label: tr.ai, icon: "✦" },
-  { id: "profile", label: "Profile", icon: "👤" },
-  { id: "scanner", label: "Scanner", icon: "📷" },
-];
 
 const mockData = {
   todaySales: 4820, yesterdaySales: 4210, monthSales: 98340, cashFlow: 12450,
