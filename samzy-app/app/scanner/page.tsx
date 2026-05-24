@@ -1,3 +1,4 @@
+import { useIsMobile } from "@/lib/useIsMobile";
 "use client";
 import Image from "next/image";
 import { useState, useEffect, useRef } from "react";
@@ -21,16 +22,6 @@ interface SupplierResult {
   notes: string;
 }
 type Mode = "choose" | "inventory" | "supplier" | "receipt";
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return isMobile;
-}
 export default function Scanner() {
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<Mode>("choose");

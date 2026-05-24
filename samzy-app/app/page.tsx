@@ -1,3 +1,4 @@
+import { useIsMobile } from "@/lib/useIsMobile";
 "use client";
 import Image from "next/image";
 import { useEffect, useState } from "react";
@@ -57,16 +58,6 @@ function insightBg(type: string) {
   return ({ positive: "#f0fdf4", warning: "#fffbeb", alert: "#fef2f2", tip: LIGHT_ORANGE } as any)[type] || "#f8f8f8";
 }
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 900);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return isMobile;
-}
 
 export default function Home() {
   const [activeNav, setActiveNav] = useState("dashboard");

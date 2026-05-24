@@ -1,3 +1,4 @@
+import { useIsMobile } from "@/lib/useIsMobile";
 "use client";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -7,16 +8,6 @@ const WARM_BG = "#FAFAF8";
 const CARD_BG = "#FFFFFF";
 const BORDER = "#F0EEEB";
 const MUTED = "#6B6B6B";
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth < 768);
-    check();
-    window.addEventListener("resize", check);
-    return () => window.removeEventListener("resize", check);
-  }, []);
-  return isMobile;
-}
 export default function Privacy() {
   const isMobile = useIsMobile();
   const sections = [
