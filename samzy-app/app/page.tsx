@@ -393,14 +393,7 @@ export default function Home() {
               </div>
               <div style={{ fontSize: 12, color: BLACK, fontWeight: 600, marginBottom: 2 }}>{storeName}</div>
               <button onClick={handleLogout} style={{ background: "none", border: "none", color: MUTED, fontSize: 11, cursor: "pointer", padding: 0, marginTop: 4 }}>{tr.signOut}</button>
-              <div style={{ marginTop: 12 }}>
-                <div style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: 0.5, marginBottom: 6 }}>{tr.language}</div>
-                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 4 }}>
-                  {languages.map(l => (
-                    <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 6px", fontSize: 14, cursor: "pointer" }}>{l.flag}</button>
-                  ))}
-                </div>
-              </div>
+
               {trialDaysLeft !== null && trialDaysLeft > 0 && (
                 <a href="/pricing" style={{ display: "block", marginTop: 12, background: ORANGE, color: "#fff", padding: "8px 12px", borderRadius: 8, textDecoration: "none", fontSize: 12, fontWeight: 700, textAlign: "center" as const }}>{tr.upgradeToPro}</a>
               )}
@@ -417,9 +410,7 @@ export default function Home() {
             <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <select value={lang} onChange={e => setLang(e.target.value as any)} style={{ fontSize: 13, border: "1px solid " + BORDER, borderRadius: 8, padding: "4px 6px", background: WARM_BG, color: BLACK, cursor: "pointer" }}>
-              {languages.map(l => <option key={l.code} value={l.code}>{l.flag} {l.label}</option>)}
-            </select>
+
             <button onClick={handleLogout} style={{ background: LIGHT_ORANGE, border: "none", color: ORANGE, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 12px", borderRadius: 8 }}>Out</button>
           </div>
         </header>
@@ -428,11 +419,11 @@ export default function Home() {
       {/* MAIN CONTENT */}
       <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {/* Language Bar */}
-        <div style={{ padding: isMobile ? "8px 16px" : "8px 24px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}>
-          <span style={{ fontSize: 11, color: MUTED, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>🌐</span>
+        <div style={{ padding: "8px 16px", background: CARD_BG, borderBottom: "1px solid " + BORDER, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, flexShrink: 0 }}>
+          <span style={{ fontSize: 11, color: MUTED, fontWeight: 600 }}>🌐</span>
           <div style={{ display: "flex", gap: 4 }}>
             {languages.map(l => (
-              <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 14, cursor: "pointer", fontWeight: lang === l.code ? 700 : 400 }}>{l.flag}</button>
+              <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : WARM_BG, border: "1px solid " + (lang === l.code ? ORANGE : BORDER), borderRadius: 6, padding: "3px 7px", fontSize: 16, cursor: "pointer" }}>{l.flag}</button>
             ))}
           </div>
         </div>
