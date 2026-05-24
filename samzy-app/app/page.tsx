@@ -1,5 +1,5 @@
-import { useIsMobile } from "@/lib/useIsMobile";
 "use client";
+import { useIsMobile } from "@/lib/useIsMobile";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
