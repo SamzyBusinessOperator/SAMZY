@@ -35,6 +35,12 @@ export default function Signup() {
       trialEnd.setDate(trialEnd.getDate() + 14);
       await supabase.from("stores").insert([{ name: storeName, owner_email: email, subscription_status: "trial", trial_ends_at: trialEnd.toISOString() }]);
       setSuccess(true);
+      // Send welcome email
+      fetch("/api/email/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, storeName }),
+      });
     }
     setLoading(false);
   }
