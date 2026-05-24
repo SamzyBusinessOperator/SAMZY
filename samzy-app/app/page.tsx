@@ -416,9 +416,9 @@ export default function Home() {
                 <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : "transparent", border: lang === l.code ? "1px solid " + ORANGE : "none", borderRadius: 4, padding: "1px 3px", fontSize: 14, cursor: "pointer" }}>{l.flag}</button>
               ))}
             </div>
-            <div style={{ display: "flex", gap: 4, background: WARM_BG, borderRadius: 8, padding: "2px 4px" }}>
+            <div style={{ display: "flex", gap: 4, background: "#FC7800", borderRadius: 8, padding: "4px 8px" }}>
               {languages.map(l => (
-                <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : "transparent", border: "none", borderRadius: 4, padding: "2px 4px", fontSize: 16, cursor: "pointer" }}>{l.flag}</button>
+                <button key={l.code} onClick={() => setLang(l.code as any)} style={{ background: "white", border: "none", borderRadius: 4, padding: "2px 6px", fontSize: 18, cursor: "pointer" }}>{l.flag}</button>
               ))}
             </div>
             <button onClick={handleLogout} style={{ background: LIGHT_ORANGE, border: "none", color: ORANGE, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 12px", borderRadius: 8 }}>Out</button>
