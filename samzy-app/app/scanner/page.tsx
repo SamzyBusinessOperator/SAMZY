@@ -246,7 +246,7 @@ export default function Scanner() {
                         <div>
                           <label style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: 0.5, display: "block", marginBottom: 4 }}>Category</label>
                           <select value={item.category} onChange={e => updateItem(i, "category", e.target.value)} style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, color: BLACK, background: CARD_BG, outline: "none", boxSizing: "border-box" as const }}>
-                            {["Dairy", "Bakery", "Beverages", "Produce", "Meat", "Pantry", "Frozen", "Cleaning", "Other"].map(c => <option key={c}>{c}</option>)}
+                            {["Dairy", "Bakery", "Beverages", "Produce", "Meat", "Pantry", "Frozen", "Cleaning", "Vegetables", "Fruits", "Beauty", "Other"].map(c => <option key={c}>{c}</option>)}
                           </select>
                         </div>
                       </div>
