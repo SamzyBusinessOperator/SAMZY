@@ -97,7 +97,6 @@ export default function Home() {
     { id: "finances", label: tr.finances, icon: "💰" },
     { id: "ai", label: tr.ai, icon: "✦" },
     { id: "scanner", label: "Scanner", icon: "📷" },
-    { id: "gmail", label: "Gmail", icon: "📧" },
     { id: "profile", label: "Profile", icon: "👤" },
   ];
   async function fetchStaff(email: string) {
@@ -368,7 +367,7 @@ export default function Home() {
           </div>
           <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 2 }}>
             {navItems.map((item) => (
-              <button key={item.id} onClick={() => item.id === "profile" ? window.location.href = "/profile" : item.id === "scanner" ? window.location.href = "/scanner" : item.id === "gmail" ? window.location.href = "/gmail" : setActiveNav(item.id)} style={{
+              <button key={item.id} onClick={() => item.id === "profile" ? window.location.href = "/profile" : item.id === "scanner" ? window.location.href = "/scanner" : setActiveNav(item.id)} style={{
                 display: "flex", alignItems: "center", gap: 12, padding: sidebarOpen ? "11px 12px" : "11px",
                 borderRadius: 10, background: activeNav === item.id ? LIGHT_ORANGE : "none", border: "none",
                 color: activeNav === item.id ? ORANGE : MUTED, cursor: "pointer", fontSize: 13.5,
@@ -806,7 +805,7 @@ export default function Home() {
       {isMobile && (
         <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: CARD_BG, borderTop: "1px solid " + BORDER, display: "flex", zIndex: 100 }}>
           {navItems.map((item) => (
-            <button key={item.id} onClick={() => item.id === "profile" ? window.location.href = "/profile" : item.id === "scanner" ? window.location.href = "/scanner" : item.id === "gmail" ? window.location.href = "/gmail" : setActiveNav(item.id)} style={{
+            <button key={item.id} onClick={() => item.id === "profile" ? window.location.href = "/profile" : item.id === "scanner" ? window.location.href = "/scanner" : setActiveNav(item.id)} style={{
               flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               padding: "10px 4px", background: "none", border: "none", cursor: "pointer",
               color: activeNav === item.id ? ORANGE : MUTED,
