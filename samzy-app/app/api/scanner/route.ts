@@ -44,7 +44,7 @@ Extract the total amount due, supplier name, and payment due date. If due date n
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
-        max_tokens: 4096,
+        max_tokens: 8192,
         messages: [{
           role: "user",
           content: [
@@ -58,7 +58,16 @@ Extract the total amount due, supplier name, and payment due date. If due date n
     const data = await response.json();
     if (data.error) return NextResponse.json({ error: data.error.message }, { status: 400 });
     const text = data.content?.[0]?.text || "{}";
-    const clean = text.replace(/```json|```/g, "").trim();
+    let clean = text.replace(/```json|```/g, "").trim();
+    
+    // Fix truncated JSON by finding the last complete item
+    if (!clean.endsWith("}")) {
+      const lastComplete = clean.lastIndexOf('},');
+      if (lastComplete > 0) {
+        clean = clean.substring(0, lastComplete + 1) + "]}";
+      }
+    }
+    
     const result = JSON.parse(clean);
     return NextResponse.json(result);
   } catch (err: any) {
