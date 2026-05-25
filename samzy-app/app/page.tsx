@@ -4,7 +4,6 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useLanguage } from "../lib/LanguageContext";
-import { languages } from "../lib/translations";
 import PageLoader from "./components/PageLoader";
 
 const ORANGE = "#FC7800";
@@ -407,11 +406,7 @@ export default function Home() {
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
 
-            <div style={{ display: "flex", gap: 3 }}>
-              {languages.map(l => (
-                <button key={l.code} onClick={() => setLang(l.code as any)} title={l.label} style={{ background: lang === l.code ? ORANGE : "transparent", border: lang === l.code ? "1px solid " + ORANGE : "none", borderRadius: 4, padding: "1px 3px", fontSize: 14, cursor: "pointer" }}>{l.flag}</button>
-              ))}
-            </div>
+
 
             <button onClick={handleLogout} style={{ background: LIGHT_ORANGE, border: "none", color: ORANGE, fontSize: 12, fontWeight: 600, cursor: "pointer", padding: "6px 12px", borderRadius: 8 }}>Out</button>
           </div>
