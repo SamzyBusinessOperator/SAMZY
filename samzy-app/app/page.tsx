@@ -220,7 +220,9 @@ export default function Home() {
     const { data: { session } } = await supabase.auth.getSession();
     const email = session?.user?.email || "";
     const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
-    fetchProducts();
+    if (!store) return;
+    const { data } = await supabase.from("products").select("*").eq("store_id", store.id);
+    if (data) setProducts(data);
   }
   async function handleAddProduct() {
     if (!productForm.name || !productForm.stock_quantity) return;
