@@ -8,29 +8,26 @@ export function exportToExcel(data: any[], filename: string, sheetName: string) 
 }
 
 export function exportToPDF(title: string, headers: string[], rows: any[][], filename: string) {
-  // Dynamic import to avoid SSR issues
   import("jspdf").then(({ default: jsPDF }) => {
-    import("jspdf-autotable").then(() => {
+    import("jspdf-autotable").then(({ default: autoTable }) => {
       const doc = new jsPDF() as any;
-      
-      // Header
+
+      // Orange header bar
       doc.setFillColor(252, 120, 0);
-      doc.rect(0, 0, 210, 25, "F");
+      doc.rect(0, 0, 210, 28, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(16);
       doc.setFont("helvetica", "bold");
       doc.text("Samzy — " + title, 14, 16);
-      
-      // Date
       doc.setFontSize(9);
       doc.setFont("helvetica", "normal");
-      doc.text("Generated: " + new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }), 14, 22);
+      doc.text("Generated: " + new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }), 14, 24);
 
-      // Table
-      doc.autoTable({
+      // Table using autoTable directly
+      autoTable(doc, {
         head: [headers],
         body: rows,
-        startY: 32,
+        startY: 34,
         headStyles: { fillColor: [15, 15, 15], textColor: 255, fontStyle: "bold", fontSize: 9 },
         bodyStyles: { fontSize: 8 },
         alternateRowStyles: { fillColor: [250, 250, 248] },
