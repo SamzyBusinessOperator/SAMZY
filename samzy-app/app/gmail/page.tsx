@@ -27,7 +27,15 @@ export default function GmailPage() {
     const error = params.get("error");
     if (token) {
       setAccessToken(token);
+      localStorage.setItem("gmail_access_token", token);
       setMessage("✅ Gmail connected! Click 'Scan for Invoices' to begin.");
+      window.history.replaceState({}, "", "/gmail");
+    } else {
+      const saved = localStorage.getItem("gmail_access_token");
+      if (saved) {
+        setAccessToken(saved);
+        setMessage("✅ Gmail connected! Click 'Scan for Invoices' to begin.");
+      }
     }
     if (error) setMessage("❌ Error: " + error);
   }, []);
@@ -125,9 +133,12 @@ export default function GmailPage() {
         {/* Connected - Scan */}
         {accessToken && (
           <div style={{ background: CARD_BG, borderRadius: 16, padding: isMobile ? "24px 20px" : "32px", border: "1px solid " + BORDER, marginBottom: 20 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e" }} />
-              <span style={{ fontSize: 14, color: BLACK, fontWeight: 600 }}>Gmail Connected</span>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#22c55e" }} />
+                <span style={{ fontSize: 14, color: BLACK, fontWeight: 600 }}>Gmail Connected</span>
+              </div>
+              <button onClick={() => { localStorage.removeItem("gmail_access_token"); setAccessToken(""); setMessage(""); setInvoices([]); }} style={{ background: "none", border: "1px solid " + BORDER, borderRadius: 8, padding: "4px 12px", fontSize: 12, color: MUTED, cursor: "pointer" }}>Disconnect</button>
             </div>
             {message && (
               <div style={{ background: message.startsWith("❌") ? "#fef2f2" : LIGHT_ORANGE, border: "1px solid " + (message.startsWith("❌") ? "#fecaca" : "#fed7aa"), borderRadius: 10, padding: "12px 16px", marginBottom: 20, fontSize: 14, color: message.startsWith("❌") ? "#dc2626" : "#92400e" }}>
