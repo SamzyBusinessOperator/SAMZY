@@ -25,18 +25,32 @@ export async function POST(req: NextRequest) {
       );
       const msgData = await msgRes.json();
 
-      // Extract email body
+      // Extract email body - handle nested parts
       let body = "";
-      const parts = msgData.payload?.parts || [];
-      for (const part of parts) {
-        if (part.mimeType === "text/plain" && part.body?.data) {
-          body = Buffer.from(part.body.data, "base64").toString("utf-8");
-          break;
+      const extractBody = (payload: any): string => {
+        if (payload?.body?.data) {
+          return Buffer.from(payload.body.data, "base64").toString("utf-8");
         }
-      }
-      if (!body && msgData.payload?.body?.data) {
-        body = Buffer.from(msgData.payload.body.data, "base64").toString("utf-8");
-      }
+        if (payload?.parts) {
+          for (const part of payload.parts) {
+            if (part.mimeType === "text/plain" && part.body?.data) {
+              return Buffer.from(part.body.data, "base64").toString("utf-8");
+            }
+          }
+          for (const part of payload.parts) {
+            if (part.mimeType === "text/html" && part.body?.data) {
+              const html = Buffer.from(part.body.data, "base64").toString("utf-8");
+              return html.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+            }
+            if (part.parts) {
+              const nested = extractBody(part);
+              if (nested) return nested;
+            }
+          }
+        }
+        return "";
+      };
+      body = extractBody(msgData.payload);
 
       const subject = msgData.payload?.headers?.find((h: any) => h.name === "Subject")?.value || "";
       const from = msgData.payload?.headers?.find((h: any) => h.name === "From")?.value || "";
