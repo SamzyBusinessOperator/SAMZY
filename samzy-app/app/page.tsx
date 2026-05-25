@@ -181,9 +181,9 @@ export default function Home() {
       const today = new Date().toISOString().split("T")[0];
       const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
       const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split("T")[0];
-      const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
-      if (!store) return;
-      const sid = store.id;
+      const { data: storeData } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+      if (!storeData) return;
+      const sid = storeData.id;
       const { data: todaySalesData } = await supabase.from("sales").select("total").eq("store_id", sid).eq("sale_date", today);
       const { data: yesterdaySalesData } = await supabase.from("sales").select("total").eq("store_id", sid).eq("sale_date", yesterday);
       const { data: monthSalesData } = await supabase.from("sales").select("total").eq("store_id", sid).gte("sale_date", monthStart);
