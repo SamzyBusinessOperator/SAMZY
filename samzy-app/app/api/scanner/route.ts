@@ -11,7 +11,17 @@ export async function POST(req: NextRequest) {
       inventory: `Analyze this delivery note and extract ALL products listed.
 Return ONLY a JSON object with no extra text:
 {"type":"inventory","items":[{"name":"Product Name","quantity":10,"price":2.50,"category":"Dairy"}]}
-Categories: Dairy, Bakery, Beverages, Produce, Meat, Pantry, Frozen, Cleaning, Beauty, Vegetables, Fruits, Other.
+Use EXACT categories based on the product type:
+- Dairy: milk, cheese, yogurt, butter, cream
+- Vegetables: tomatoes, onions, potatoes, carrots, broccoli, spinach, peppers, cucumber, lettuce, zucchini, mushrooms, garlic, ginger, cauliflower, eggplant, leek
+- Fruits: bananas, apples, oranges, grapes, strawberries, blueberries, mango, pineapple, kiwi, lemons, avocado, watermelon
+- Beverages: juice, water, cola, energy drink, tea, coffee
+- Bakery: bread, croissants, buns, bagels, pita, tortilla, baguette
+- Frozen: frozen peas, frozen fries, ice cream, frozen pizza, frozen fish
+- Meat: chicken, beef, pork, bacon, lamb
+- Pantry: rice, pasta, oil, sauce, beans, flour, sugar, salt, honey, jam, ketchup, oats
+- Beauty: shampoo, conditioner, body wash, hand soap, toothpaste, deodorant, moisturiser, sunscreen, shower gel, lip balm
+- Cleaning: dish soap, laundry detergent, surface cleaner, bleach, sponges, trash bags, paper towels, toilet cleaner
 Extract every single product. If price not visible use 0. If quantity not visible use 1.`,
       supplier: `Analyze this supplier invoice and extract the details.
 Return ONLY a JSON object with no extra text:
