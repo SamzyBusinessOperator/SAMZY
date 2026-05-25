@@ -21,7 +21,7 @@ interface SupplierResult {
   due_date: string;
   notes: string;
 }
-type Mode = "choose" | "inventory" | "supplier" | "receipt";
+type Mode = "choose" | "inventory" | "supplier";
 export default function Scanner() {
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<Mode>("choose");
@@ -37,7 +37,7 @@ export default function Scanner() {
   const modes = [
     { id: "inventory", icon: "📦", title: "Delivery Note", desc: "Scan a delivery note to auto-add products to inventory" },
     { id: "supplier", icon: "📄", title: "Supplier Invoice", desc: "Scan an invoice to auto-fill supplier details" },
-    { id: "receipt", icon: "🧾", title: "Sales Receipt", desc: "Scan a receipt to record sales data" },
+
   ];
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -92,15 +92,7 @@ export default function Scanner() {
       } else {
         const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
         if (!store) { setMessage("Store not found."); setSaving(false); return; }
-        if (mode === "receipt") {
-          for (const item of scannedItems) {
-            await supabase.from("sales").insert([{ store_id: store.id, store_email: email, product_name: item.name, category: item.category, quantity: item.quantity, price: item.price, total: item.quantity * item.price, sale_date: new Date().toISOString().split("T")[0] }]);
-            const { data: existing } = await supabase.from("products").select("id, stock_quantity").eq("store_id", store.id).ilike("name", item.name).single();
-            if (existing) {
-              await supabase.from("products").update({ stock_quantity: Math.max(0, existing.stock_quantity - item.quantity) }).eq("id", existing.id);
-            }
-          }
-        } else {
+        {
           for (const item of scannedItems) {
             const { data: existing } = await supabase.from("products").select("id, stock_quantity, price").eq("store_id", store.id).ilike("name", item.name).single();
             if (existing) {
@@ -129,7 +121,7 @@ export default function Scanner() {
   const doneMessages: Record<string, string> = {
     inventory: "Products have been added to your inventory.",
     supplier: "Supplier invoice has been saved.",
-    receipt: "Sales data has been recorded.",
+
   };
   return (
     <div style={{ minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
