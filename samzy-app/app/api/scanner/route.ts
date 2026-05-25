@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     const isPDF = mediaType === "application/pdf";
 
     const prompts: Record<string, string> = {
-      inventory: `Analyze this delivery note and extract ALL products listed.
+      inventory: `Analyze this delivery note and extract ALL products listed. IMPORTANT: Use the EXACT category name as written in the document - do not change or reclassify categories.
 Return ONLY a JSON object with no extra text:
 {"type":"inventory","items":[{"name":"Product Name","quantity":10,"price":2.50,"category":"Dairy"}]}
 Use EXACT categories based on the product type:
