@@ -1,5 +1,6 @@
 "use client";
 import { useIsMobile } from "@/lib/useIsMobile";
+import { exportToExcel, exportToPDF } from "../lib/exportUtils";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
@@ -315,6 +316,54 @@ export default function Home() {
     window.location.href = "/landing";
   }
 
+  function exportInventory(format: "pdf" | "excel") {
+    if (format === "excel") {
+      exportToExcel(products.map(p => ({ Name: p.name, Category: p.category, Stock: p.stock_quantity, Price: "€" + p.price, "Reorder At": p.reorder_threshold })), "samzy_inventory", "Inventory");
+    } else {
+      exportToPDF("Inventory Report", ["Product", "Category", "Stock", "Price", "Reorder At"],
+        products.map(p => [p.name, p.category, p.stock_quantity, "€" + p.price, p.reorder_threshold]), "samzy_inventory");
+    }
+  }
+
+  function exportStaff(format: "pdf" | "excel") {
+    if (format === "excel") {
+      exportToExcel(staff.map(s => ({ Name: s.name, Role: s.role, Status: s.status, Phone: s.phone || "" })), "samzy_staff", "Staff");
+    } else {
+      exportToPDF("Staff Report", ["Name", "Role", "Status", "Phone"],
+        staff.map(s => [s.name, s.role, s.status, s.phone || ""]), "samzy_staff");
+    }
+  }
+
+  function exportSuppliers(format: "pdf" | "excel") {
+    if (format === "excel") {
+      exportToExcel(suppliers.map(s => ({ Name: s.name, "Invoice Amount": s.invoice_amount, Status: s.status, "Due Date": s.due_date || "", Notes: s.notes || "" })), "samzy_suppliers", "Suppliers");
+    } else {
+      exportToPDF("Suppliers Report", ["Name", "Invoice Amount", "Status", "Due Date"],
+        suppliers.map(s => [s.name, s.invoice_amount, s.status, s.due_date || "N/A"]), "samzy_suppliers");
+    }
+  }
+
+  function exportFinances(format: "pdf" | "excel") {
+    if (format === "excel") {
+      const data = [
+        { Metric: "Today's Sales", Value: "€" + realStats.todaySales.toFixed(2) },
+        { Metric: "Monthly Revenue", Value: "€" + realStats.monthSales.toFixed(2) },
+        { Metric: "Cash Flow", Value: "€" + realStats.cashFlow.toFixed(2) },
+        { Metric: "Pending Invoices", Value: suppliers.filter(s => s.status === "pending").length + " invoices" },
+        ...topProducts.map(p => ({ Metric: "Top Product: " + p.name, Value: "€" + p.revenue })),
+      ];
+      exportToExcel(data, "samzy_finances", "Finances");
+    } else {
+      exportToPDF("Finances Report", ["Metric", "Value"], [
+        ["Today's Sales", "€" + realStats.todaySales.toFixed(2)],
+        ["Monthly Revenue", "€" + realStats.monthSales.toFixed(2)],
+        ["Cash Flow", "€" + realStats.cashFlow.toFixed(2)],
+        ["Pending Invoices", suppliers.filter(s => s.status === "pending").length + " invoices"],
+        ...topProducts.map(p => ["Top Product: " + p.name, "€" + p.revenue]),
+      ], "samzy_finances");
+    }
+  }
+
   async function askAdvisor() {
     if (!question.trim()) return;
     setLoading(true);
@@ -536,7 +585,11 @@ export default function Home() {
             <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Inventory ({products.length} products)</h2>
-                <button onClick={() => { setShowAddProduct(true); setEditingProduct(null); setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Product</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => exportInventory("excel")} style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Excel</button>
+                  <button onClick={() => exportInventory("pdf")} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ PDF</button>
+                  <button onClick={() => { setShowAddProduct(true); setEditingProduct(null); setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Product</button>
+                </div>
               </div>
               <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
                 {(["all", "low"] as const).map(tab => (
@@ -605,7 +658,11 @@ export default function Home() {
             <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Staff ({staff.length})</h2>
-                <button onClick={() => { setShowAddStaff(true); setEditingStaff(null); setStaffForm({ name: "", role: "", shift: "", status: "on", phone: "" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Staff</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => exportStaff("excel")} style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Excel</button>
+                  <button onClick={() => exportStaff("pdf")} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ PDF</button>
+                  <button onClick={() => { setShowAddStaff(true); setEditingStaff(null); setStaffForm({ name: "", role: "", shift: "", status: "on", phone: "" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Staff</button>
+                </div>
               </div>
               {(showAddStaff || editingStaff) && (
                 <div style={{ background: WARM_BG, borderRadius: 12, padding: "20px", border: "1px solid " + BORDER, marginBottom: 20 }}>
@@ -667,7 +724,11 @@ export default function Home() {
             <div style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
                 <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Supplier Invoices ({suppliers.length})</h2>
-                <button onClick={() => { setShowAddSupplier(true); setEditingSupplier(null); setSupplierForm({ name: "", invoice_amount: "", due_date: "", status: "pending", notes: "" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Supplier</button>
+                <div style={{ display: "flex", gap: 8 }}>
+                  <button onClick={() => exportSuppliers("excel")} style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Excel</button>
+                  <button onClick={() => exportSuppliers("pdf")} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ PDF</button>
+                  <button onClick={() => { setShowAddSupplier(true); setEditingSupplier(null); setSupplierForm({ name: "", invoice_amount: "", due_date: "", status: "pending", notes: "" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Supplier</button>
+                </div>
               </div>
               {(showAddSupplier || editingSupplier) && (
                 <div style={{ background: WARM_BG, borderRadius: 12, padding: "20px", border: "1px solid " + BORDER, marginBottom: 20 }}>
@@ -726,6 +787,11 @@ export default function Home() {
 
           {/* FINANCES */}
           {activeNav === "finances" && (
+            <div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 16 }}>
+              <button onClick={() => exportFinances("excel")} style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Excel</button>
+              <button onClick={() => exportFinances("pdf")} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ PDF</button>
+            </div>
             <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: isMobile ? 12 : 16 }}>
               {[
                 { title: "Today's Revenue", value: "€" + realStats.todaySales.toFixed(2), color: ORANGE, icon: "💵" },
@@ -740,6 +806,7 @@ export default function Home() {
                   <div style={{ fontSize: 12, color: MUTED, marginTop: 4 }}>{k.title}</div>
                 </div>
               ))}
+            </div>
             </div>
           )}
 
