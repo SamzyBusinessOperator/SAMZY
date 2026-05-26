@@ -90,17 +90,26 @@ export default function Scanner() {
         const { error } = await supabase.from("suppliers").insert([{ ...supplierResult, store_email: email, status: "pending" }]);
         if (error) { setMessage("Error: " + error.message); setSaving(false); return; }
         setMessage("Supplier saved successfully!");
-        } else {
+      } else if (mode === "receipt") {
         const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
         if (!store) { setMessage("Store not found."); setSaving(false); return; }
-        {
-          for (const item of scannedItems) {
-            const { data: existing } = await supabase.from("products").select("id, stock_quantity, price").eq("store_id", store.id).ilike("name", item.name).single();
-            if (existing) {
-              await supabase.from("products").update({ stock_quantity: existing.stock_quantity + item.quantity, price: item.price || existing.price }).eq("id", existing.id);
-            } else {
-              await supabase.from("products").insert([{ store_id: store.id, name: item.name, category: item.category, stock_quantity: item.quantity, price: item.price, reorder_threshold: 10 }]);
-            }
+        for (const item of scannedItems) {
+          await supabase.from("sales").insert([{ store_id: store.id, store_email: email, product_name: item.name, category: item.category, quantity: item.quantity, price: item.price, total: item.quantity * item.price, sale_date: new Date().toISOString().split("T")[0] }]);
+          const { data: existing } = await supabase.from("products").select("id, stock_quantity").eq("store_id", store.id).ilike("name", item.name).single();
+          if (existing) {
+            await supabase.from("products").update({ stock_quantity: Math.max(0, existing.stock_quantity - item.quantity) }).eq("id", existing.id);
+          }
+        }
+        setMessage(`${scannedItems.length} sales recorded and stock updated!`);
+      } else {
+        const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+        if (!store) { setMessage("Store not found."); setSaving(false); return; }
+        for (const item of scannedItems) {
+          const { data: existing } = await supabase.from("products").select("id, stock_quantity, price").eq("store_id", store.id).ilike("name", item.name).single();
+          if (existing) {
+            await supabase.from("products").update({ stock_quantity: existing.stock_quantity + item.quantity, price: item.price || existing.price }).eq("id", existing.id);
+          } else {
+            await supabase.from("products").insert([{ store_id: store.id, name: item.name, category: item.category, stock_quantity: item.quantity, price: item.price, reorder_threshold: 10 }]);
           }
         }
         setMessage(`${scannedItems.length} products saved!`);
