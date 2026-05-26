@@ -23,6 +23,11 @@ Use EXACT categories based on the product type:
 - Beauty: shampoo, conditioner, body wash, hand soap, toothpaste, deodorant, moisturiser, sunscreen, shower gel, lip balm
 - Cleaning: dish soap, laundry detergent, surface cleaner, bleach, sponges, trash bags, paper towels, toilet cleaner
 Extract every single product. If price not visible use 0. If quantity not visible use 1.`,
+      receipt: `Analyze this sales receipt and extract ALL items purchased.
+Return ONLY a JSON object with no extra text:
+{"type":"receipt","items":[{"name":"Product Name","quantity":1,"price":2.50,"category":"Dairy"}]}
+Use EXACT category based on product type: Dairy, Vegetables, Fruits, Beverages, Bakery, Frozen, Meat, Pantry, Beauty, Cleaning, Snacks, Other.
+Extract every single item. If quantity not visible use 1.`,
       supplier: `Analyze this supplier invoice and extract the details.
 Return ONLY a JSON object with no extra text:
 {"type":"supplier","supplier":{"name":"Supplier Company Name","invoice_amount":"1240","due_date":"May 30, 2026","notes":"Any relevant notes"}}

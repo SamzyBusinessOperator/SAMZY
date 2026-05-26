@@ -21,7 +21,7 @@ interface SupplierResult {
   due_date: string;
   notes: string;
 }
-type Mode = "choose" | "inventory" | "supplier";
+type Mode = "choose" | "inventory" | "supplier" | "receipt";
 export default function Scanner() {
   const isMobile = useIsMobile();
   const [mode, setMode] = useState<Mode>("choose");
@@ -37,6 +37,7 @@ export default function Scanner() {
   const modes = [
     { id: "inventory", icon: "📦", title: "Delivery Note", desc: "Scan a delivery note to auto-add products to inventory" },
     { id: "supplier", icon: "📄", title: "Supplier Invoice", desc: "Scan an invoice to auto-fill supplier details" },
+    { id: "receipt", icon: "🧾", title: "Sales Receipt", desc: "Scan a customer receipt to record sales and update stock" },
 
   ];
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -89,7 +90,7 @@ export default function Scanner() {
         const { error } = await supabase.from("suppliers").insert([{ ...supplierResult, store_email: email, status: "pending" }]);
         if (error) { setMessage("Error: " + error.message); setSaving(false); return; }
         setMessage("Supplier saved successfully!");
-      } else {
+        } else {
         const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
         if (!store) { setMessage("Store not found."); setSaving(false); return; }
         {
@@ -121,6 +122,7 @@ export default function Scanner() {
   const doneMessages: Record<string, string> = {
     inventory: "Products have been added to your inventory.",
     supplier: "Supplier invoice has been saved.",
+    receipt: "Sales data has been recorded and stock updated.",
 
   };
   return (
