@@ -93,7 +93,6 @@ export default function Home() {
   const navItems = [
     { id: "dashboard", label: "Dashboard", icon: "▦" },
     { id: "inventory", label: tr.inventory, icon: "📦" },
-    { id: "staff", label: tr.staff, icon: "👥" },
     { id: "suppliers", label: tr.suppliers, icon: "🚚" },
     { id: "finances", label: tr.finances, icon: "💰" },
     { id: "ai", label: tr.ai, icon: "✦" },
