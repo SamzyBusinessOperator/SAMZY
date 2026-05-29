@@ -281,9 +281,16 @@ export default function PricingTool() {
                   <div key={i} style={{ padding: "12px 16px", borderBottom: i < products.length - 1 ? "1px solid " + BORDER : "none", background: hasIncrease ? "#fef2f2" : hasDecrease ? "#f0fdf4" : i % 2 === 0 ? CARD_BG : WARM_BG, display: "grid", gridTemplateColumns: isMobile ? "2fr 1fr 1fr 1fr" : "3fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr", gap: 8, alignItems: "center" }}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: BLACK }}>{p.name}</div>
-                      <div style={{ fontSize: 11, color: MUTED }}>{p.packSize} · Qty: {p.qty}</div>
+                      <div style={{ fontSize: 11, color: MUTED }}>{p.packSize} · Qty: {p.qty} cases</div>
                       <div style={{ fontSize: 11, color: "#0071e3" }}>
-                        Per pack: €{(() => { const m = p.packSize.match(/(\d+)\s*x/i); const packQty = m ? parseInt(m[1]) : 1; return (p.costSIVA / packQty).toFixed(3); })()}
+                        {(() => {
+                          const m = p.packSize.match(/(\d+)\s*x/i);
+                          const packQty = m ? parseInt(m[1]) : 1;
+                          const perPack = p.costSIVA / packQty;
+                          const totalStock = p.qty * packQty;
+                          const totalCost = p.costSIVA * p.qty;
+                          return `Per pack: €${perPack.toFixed(3)} · Total stock: ${totalStock} units · Total cost: €${totalCost.toFixed(2)}`;
+                        })()}
                       </div>
                       {p.priceChange !== undefined && Math.abs(p.priceChange) > 1 && (
                         <div style={{ fontSize: 10, fontWeight: 700, color: hasIncrease ? RED : GREEN }}>
