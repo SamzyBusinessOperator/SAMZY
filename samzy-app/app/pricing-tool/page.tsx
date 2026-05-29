@@ -108,7 +108,7 @@ export default function PricingTool() {
       if (!store) { setMessage("Store not found."); setSaving(false); return; }
 
       for (const p of products) {
-        const { data: existing } = await supabase.from("products").select("id, price").eq("store_id", store.id).ilike("name", p.name).single();
+        const { data: existing } = await supabase.from("products").select("id, price, stock_quantity").eq("store_id", store.id).ilike("name", p.name).single();
         if (existing) {
           await supabase.from("products").update({
             price: p.civacp,
