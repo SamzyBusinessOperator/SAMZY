@@ -226,10 +226,13 @@ export default function PricingTool() {
                     <label style={{ fontSize: 11, fontWeight: 700, color: f.color, display: "block", marginBottom: 4, textTransform: "uppercase" as const }}>{f.label}</label>
                     <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
                       <input
-                        type="number"
-                        step="0.01"
+                        type="text"
+                        inputMode="decimal"
                         value={(margins[f.key as keyof typeof margins] * 100).toFixed(1)}
-                        onChange={e => setMargins(prev => ({ ...prev, [f.key]: parseFloat(e.target.value) / 100 || 0 }))}
+                        onChange={e => {
+                          const val = e.target.value.replace(/[^0-9.]/g, "");
+                          setMargins(prev => ({ ...prev, [f.key]: parseFloat(val) / 100 || 0 }));
+                        }}
                         style={{ ...inputStyle, width: "70%" }}
                       />
                       <span style={{ fontSize: 13, color: MUTED }}>%</span>
