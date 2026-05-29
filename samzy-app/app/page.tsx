@@ -76,6 +76,8 @@ export default function Home() {
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [productForm, setProductForm] = useState({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" });
   const [inventoryTab, setInventoryTab] = useState<"all" | "low">("all");
+  const [inventorySearch, setInventorySearch] = useState("");
+  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [realStats, setRealStats] = useState({ todaySales: 0, yesterdaySales: 0, monthSales: 0, cashFlow: 0 });
   const [weekSalesData, setWeekSalesData] = useState<{day: string, amount: number}[]>([]);
   const [topProducts, setTopProducts] = useState<{name: string, sales: number, revenue: number}[]>([]);
@@ -323,6 +325,27 @@ export default function Home() {
       exportToPDF("Inventory Report", ["Product", "Category", "Stock", "Price", "Reorder At"],
         products.map(p => [p.name, p.category, p.stock_quantity, "€" + p.price, p.reorder_threshold]), "samzy_inventory");
     }
+  }
+
+  async function deleteSelectedProducts() {
+    if (selectedProducts.length === 0) return;
+    if (!confirm(`Delete ${selectedProducts.length} products?`)) return;
+    for (const id of selectedProducts) {
+      await supabase.from("products").delete().eq("id", id);
+    }
+    setSelectedProducts([]);
+    fetchProducts();
+  }
+
+  async function deleteAllProducts() {
+    if (!confirm(`Delete ALL ${products.length} products? This cannot be undone.`)) return;
+    const { data: { session } } = await supabase.auth.getSession();
+    const email = session?.user?.email || "";
+    const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+    if (!store) return;
+    await supabase.from("products").delete().eq("store_id", store.id);
+    setProducts([]);
+    setSelectedProducts([]);
   }
 
   function exportStaff(format: "pdf" | "excel") {
@@ -591,12 +614,27 @@ export default function Home() {
                   <button onClick={() => { setShowAddProduct(true); setEditingProduct(null); setProductForm({ name: "", category: "Other", stock_quantity: "", price: "", reorder_threshold: "10" }); }} style={{ background: ORANGE, color: "#fff", border: "none", borderRadius: 8, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>+ Add Product</button>
                 </div>
               </div>
-              <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+              <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap" as const }}>
                 {(["all", "low"] as const).map(tab => (
                   <button key={tab} onClick={() => { setInventoryTab(tab); fetchProducts(); }} style={{ padding: "7px 16px", borderRadius: 8, border: "1px solid " + (inventoryTab === tab ? ORANGE : BORDER), background: inventoryTab === tab ? ORANGE : "#fff", color: inventoryTab === tab ? "#fff" : MUTED, fontSize: 13, fontWeight: 600, cursor: "pointer" }}>
                     {tab === "all" ? "All Products" : `Low Stock (${products.filter(p => p.stock_quantity <= p.reorder_threshold).length})`}
                   </button>
                 ))}
+              </div>
+              <input value={inventorySearch} onChange={e => setInventorySearch(e.target.value)} placeholder="🔍 Search products..." style={{ width: "100%", padding: "10px 14px", borderRadius: 10, border: "1px solid " + BORDER, fontSize: 14, outline: "none", background: WARM_BG, color: BLACK, marginBottom: 12, boxSizing: "border-box" as const }} />
+              {selectedProducts.length > 0 && (
+                <div style={{ display: "flex", gap: 8, marginBottom: 12, alignItems: "center", flexWrap: "wrap" as const }}>
+                  <span style={{ fontSize: 13, color: MUTED }}>{selectedProducts.length} selected</span>
+                  <button onClick={deleteSelectedProducts} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>🗑 Delete Selected</button>
+                  <button onClick={() => setSelectedProducts([])} style={{ background: WARM_BG, color: MUTED, border: "1px solid " + BORDER, borderRadius: 8, padding: "6px 12px", fontSize: 12, cursor: "pointer" }}>Clear</button>
+                </div>
+              )}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, color: MUTED, cursor: "pointer" }}>
+                  <input type="checkbox" onChange={e => { const filtered = (inventoryTab === "all" ? products : products.filter(p => p.stock_quantity <= p.reorder_threshold)).filter(p => !inventorySearch || p.name.toLowerCase().includes(inventorySearch.toLowerCase())); setSelectedProducts(e.target.checked ? filtered.map(p => p.id) : []); }} checked={selectedProducts.length > 0 && selectedProducts.length === products.length} />
+                  Select All
+                </label>
+                <button onClick={deleteAllProducts} style={{ background: "none", border: "none", color: "#dc2626", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>🗑 Delete All</button>
               </div>
               {(showAddProduct || editingProduct) && (
                 <div style={{ background: WARM_BG, borderRadius: 12, padding: "20px", border: "1px solid " + BORDER, marginBottom: 20 }}>
@@ -628,7 +666,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                  {(inventoryTab === "all" ? products : products.filter(p => p.stock_quantity <= p.reorder_threshold)).map(item => (
+                  {(inventoryTab === "all" ? products : products.filter(p => p.stock_quantity <= p.reorder_threshold)).filter(p => !inventorySearch || p.name.toLowerCase().includes(inventorySearch.toLowerCase())).map(item => (
                     <div key={item.id} style={{ padding: "14px 16px", borderRadius: 12, border: "1px solid " + (item.stock_quantity <= item.reorder_threshold ? "#fecaca" : BORDER), background: item.stock_quantity <= item.reorder_threshold ? "#fef2f2" : WARM_BG }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: isMobile ? 10 : 0 }}>
                         <div style={{ flex: 1 }}>
