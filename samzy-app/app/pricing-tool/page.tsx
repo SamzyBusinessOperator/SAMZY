@@ -282,7 +282,9 @@ export default function PricingTool() {
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 600, color: BLACK }}>{p.name}</div>
                       <div style={{ fontSize: 11, color: MUTED }}>{p.packSize} · Qty: {p.qty}</div>
-                      <div style={{ fontSize: 11, color: "#0071e3" }}>Per item: €{p.itemCost.toFixed(3)}</div>
+                      <div style={{ fontSize: 11, color: "#0071e3" }}>
+                        Per pack: €{(() => { const m = p.packSize.match(/(\d+)\s*x/i); const packQty = m ? parseInt(m[1]) : 1; return (p.costSIVA / packQty).toFixed(3); })()}
+                      </div>
                       {p.priceChange !== undefined && Math.abs(p.priceChange) > 1 && (
                         <div style={{ fontSize: 10, fontWeight: 700, color: hasIncrease ? RED : GREEN }}>
                           {hasIncrease ? "▲" : "▼"} {Math.abs(p.priceChange).toFixed(1)}% price change
