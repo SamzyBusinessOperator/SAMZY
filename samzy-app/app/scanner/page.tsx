@@ -35,10 +35,10 @@ export default function Scanner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const modes = [
-    { id: "inventory", icon: "📦", title: "Delivery Note", desc: "Scan a delivery note to auto-add products to inventory" },
-    { id: "supplier", icon: "📄", title: "Supplier Invoice", desc: "Scan an invoice to auto-fill supplier details" },
+    
+    
     { id: "receipt", icon: "🧾", title: "Sales Receipt", desc: "Scan a customer receipt to record sales and update stock" },
-    { id: "pricing", icon: "💰", title: "Smart Pricing", desc: "Upload a supplier invoice to calculate selling prices and track price history" },
+    { id: "pricing", icon: "📦", title: "Supplier Invoice", desc: "Upload a supplier invoice — AI extracts products, calculates selling prices and updates inventory" },
 
   ];
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
