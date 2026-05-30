@@ -35,11 +35,8 @@ export default function Scanner() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const modes = [
-    
-    
-    { id: "receipt", icon: "🧾", title: "Sales Receipt", desc: "Scan a customer receipt to record sales and update stock" },
     { id: "pricing", icon: "📦", title: "Supplier Invoice", desc: "Upload a supplier invoice — AI extracts products, calculates selling prices and updates inventory" },
-
+    { id: "receipt", icon: "🧾", title: "Sales Receipt", desc: "Scan a customer receipt to record sales and update stock" },
   ];
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
