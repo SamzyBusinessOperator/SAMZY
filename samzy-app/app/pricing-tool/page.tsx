@@ -10,6 +10,13 @@ import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
 
+const ORANGE = "#FC7800";
+const BLACK = "#0f0f0f";
+const WARM_BG = "#FAFAF8";
+const CARD_BG = "#FFFFFF";
+const BORDER = "#F0EEEB";
+const MUTED = "#6B6B6B";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ProductMarkups {
@@ -468,6 +475,7 @@ function EditableCell({
 
 export default function PricingToolPage() {
   
+  const isMobile = useIsMobile();
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [products, setProducts] = useState<ExtractedProduct[]>([])
@@ -747,12 +755,23 @@ export default function PricingToolPage() {
   return (
     <div className="min-h-screen bg-[#FAFAF8]">
 
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-6 py-4">
+      {/* Samzy Header */}
+      <header style={{ background: CARD_BG, borderBottom: "1px solid " + BORDER, padding: isMobile ? "0 16px" : "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 60 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
+            <Image src="/logo.png" alt="Samzy" width={28} height={28} />
+            <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
+          </a>
+          <span style={{ background: ORANGE, color: "#fff", fontSize: 11, fontWeight: 700, padding: "2px 8px", borderRadius: 6 }}>Smart Pricing</span>
+        </div>
+        <a href="/" style={{ color: MUTED, fontSize: 13, textDecoration: "none" }}>← Back to Dashboard</a>
+      </header>
+
+      {/* Action bar */}
+      <div className="bg-white border-b border-gray-100 px-6 py-3">
         <div className="max-w-screen-2xl mx-auto flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-[#0f0f0f]">Smart Pricing Tool</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Upload invoice · AI extracts products · Correct formulas · Apply to inventory</p>
+            <p className="text-sm text-gray-500">Upload invoice · AI extracts products · Correct formulas · Apply to inventory</p>
           </div>
           {products.length > 0 && (
             <div className="flex items-center gap-2">
