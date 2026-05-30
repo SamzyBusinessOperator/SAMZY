@@ -353,7 +353,7 @@ function ProductDetailSheet({
                         ))}
                       </div>
                       {intel.supplierPrices.map((s, i) => (
-                        <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", alignItems: "center", padding: "12px 0", borderTop: "1px solid " + BORDER, background: s.is_best ? "#f0fdf4" : "transparent", borderRadius: s.is_best ? 8 : 0, margin: s.is_best ? "4px -4px" : 0, padding: s.is_best ? "12px 4px" : "12px 0" }}>
+                        <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr", alignItems: "center", padding: s.is_best ? "12px 4px" : "12px 0", borderTop: "1px solid " + BORDER, background: s.is_best ? "#f0fdf4" : "transparent", borderRadius: s.is_best ? 8 : 0, margin: s.is_best ? "4px -4px" : 0 }}>
                           <div style={{ fontSize: 13, fontWeight: s.is_best ? 700 : 400, color: BLACK }}>{s.supplier}</div>
                           <div style={{ fontSize: 13, fontWeight: 600, color: BLACK }}>€{s.latest_price.toFixed(2)}</div>
                           <div style={{ fontSize: 11, color: MUTED }}>{s.last_updated}</div>
