@@ -38,6 +38,7 @@ export default function Scanner() {
     { id: "inventory", icon: "📦", title: "Delivery Note", desc: "Scan a delivery note to auto-add products to inventory" },
     { id: "supplier", icon: "📄", title: "Supplier Invoice", desc: "Scan an invoice to auto-fill supplier details" },
     { id: "receipt", icon: "🧾", title: "Sales Receipt", desc: "Scan a customer receipt to record sales and update stock" },
+    { id: "pricing", icon: "💰", title: "Smart Pricing", desc: "Upload a supplier invoice to calculate selling prices and track price history" },
 
   ];
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -162,7 +163,7 @@ export default function Scanner() {
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             <p style={{ color: MUTED, fontSize: 14, margin: "0 0 8px", fontWeight: 600 }}>What do you want to scan?</p>
             {modes.map(m => (
-              <button key={m.id} onClick={() => setMode(m.id as Mode)} style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 24px", borderRadius: 14, background: CARD_BG, border: "1px solid " + BORDER, cursor: "pointer", textAlign: "left" as const, transition: "border-color 0.2s" }}>
+              <button key={m.id} onClick={() => m.id === 'pricing' ? window.location.href = '/pricing-tool' : setMode(m.id as Mode)} style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 24px", borderRadius: 14, background: CARD_BG, border: "1px solid " + BORDER, cursor: "pointer", textAlign: "left" as const, transition: "border-color 0.2s" }}>
                 <div style={{ width: 48, height: 48, borderRadius: 12, background: WARM_BG, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, flexShrink: 0 }}>{m.icon}</div>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: 15, color: BLACK, marginBottom: 4 }}>{m.title}</div>
