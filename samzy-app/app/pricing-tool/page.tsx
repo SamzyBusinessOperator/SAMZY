@@ -1,5 +1,6 @@
 'use client'
-
+import { useIsMobile } from "@/lib/useIsMobile"
+import Image from "next/image"
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from "../../lib/supabase"
 import {
