@@ -99,7 +99,6 @@ export default function Home() {
     { id: "finances", label: tr.finances, icon: "💰" },
     { id: "ai", label: tr.ai, icon: "✦" },
     { id: "scanner", label: "Scanner", icon: "📷" },
-    { id: "pricing", label: "Pricing", icon: "💲" },
     { id: "profile", label: "Profile", icon: "👤" },
   ];
   async function fetchStaff(email: string) {
