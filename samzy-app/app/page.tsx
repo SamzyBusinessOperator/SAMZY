@@ -427,7 +427,7 @@ export default function Home() {
 
       {/* DESKTOP SIDEBAR */}
       {!isMobile && (
-        <aside style={{ background: CARD_BG, borderRight: "1px solid " + BORDER, display: "flex", flexDirection: "column", width: sidebarOpen ? 240 : 72, transition: "width 0.25s", flexShrink: 0 }}>
+        <aside style={{ background: CARD_BG, borderRight: "1px solid " + BORDER, display: isMobile ? "none" : "flex", flexDirection: "column", width: sidebarOpen ? 240 : 72, transition: "width 0.25s", flexShrink: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: sidebarOpen ? "28px 24px 20px" : "28px 20px 20px", borderBottom: "1px solid " + BORDER }}>
             {sidebarOpen ? (
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
