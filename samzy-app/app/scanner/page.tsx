@@ -562,8 +562,7 @@ export default function Scanner() {
         }
       }
       setSaved(true);
-      setMessage(`✅ ${products.length} products updated in inventory!`);
-      setTimeout(() => setSaved(false), 4000);
+      setMessage(`✅ ${products.length} products saved to inventory!`);
     } catch (err) {
       setMessage("Error applying prices. Please try again.");
     }
@@ -591,10 +590,10 @@ export default function Scanner() {
           <span style={{ fontWeight: 700, fontSize: 15, color: BLACK }}>Samzy</span>
           <span style={{ background: ORANGE, color: "#fff", fontSize: 10, fontWeight: 700, padding: "2px 7px", borderRadius: 5 }}>Scanner</span>
         </div>
-        {step === "table" && (
-          <button onClick={applyPricing} disabled={saving || saved}
-            style={{ padding: "8px 18px", borderRadius: 10, background: saved ? GREEN : ORANGE, border: "none", fontWeight: 700, fontSize: 13, color: "#fff", cursor: "pointer" }}>
-            {saving ? "Saving..." : saved ? "✓ Applied" : "Apply All"}
+        {step === "table" && !saved && (
+          <button onClick={applyPricing} disabled={saving}
+            style={{ padding: "8px 18px", borderRadius: 10, background: ORANGE, border: "none", fontWeight: 700, fontSize: 13, color: "#fff", cursor: "pointer" }}>
+            {saving ? "Saving..." : "Apply All"}
           </button>
         )}
         {step !== "table" && <a href="/" style={{ color: MUTED, fontSize: 13, textDecoration: "none" }}>Dashboard</a>}
@@ -672,12 +671,7 @@ export default function Scanner() {
             )}
           </div>
           {message && <div style={{ background: "#f0fdf4", color: GREEN, padding: "12px 16px", borderRadius: 10, marginBottom: 12, fontSize: 13, border: "1px solid #bbf7d0" }}>{message}</div>}
-          <div style={{ display: "flex", gap: 10 }}>
-            <button onClick={() => setStep("table")} style={{ flex: 1, padding: "14px", borderRadius: 14, background: WARM_BG, border: "1px solid " + BORDER, fontWeight: 700, fontSize: 14, color: BLACK, cursor: "pointer" }}>📋 View Pricing Table</button>
-            <button onClick={applyPricing} disabled={saving || saved} style={{ flex: 1, padding: "14px", borderRadius: 14, background: saved ? GREEN : ORANGE, border: "none", fontWeight: 700, fontSize: 14, color: "#fff", cursor: "pointer" }}>
-              {saving ? "Saving..." : saved ? "✓ Applied" : "Apply Pricing"}
-            </button>
-          </div>
+          <button onClick={() => setStep("table")} style={{ width: "100%", padding: "14px", borderRadius: 14, background: ORANGE, border: "none", fontWeight: 700, fontSize: 15, color: "#fff", cursor: "pointer" }}>📋 View Pricing Table →</button>
         </div>
       )}
 
@@ -703,8 +697,17 @@ export default function Scanner() {
               style={{ width: "100%", padding: "10px 12px 10px 40px", borderRadius: 12, border: "1px solid " + BORDER, fontSize: 13, outline: "none", background: CARD_BG, boxSizing: "border-box" as const, color: BLACK }} />
           </div>
 
-          {/* Hint */}
-          <div style={{ padding: "0 16px 8px", fontSize: 11, color: MUTED }}>💡 Tap any row to view & edit pricing details, history and supplier comparison</div>
+          {saved && (
+            <div style={{ margin: "0 16px 12px", background: "#f0fdf4", borderRadius: 14, padding: "16px 20px", border: "1px solid #bbf7d0" }}>
+              <div style={{ fontWeight: 700, fontSize: 15, color: GREEN, marginBottom: 4 }}>✅ {products.length} products saved to inventory!</div>
+              <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Prices, stock and history have been updated.</div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <a href="/" style={{ flex: 1, padding: "11px", borderRadius: 10, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none", textAlign: "center" }}>← Dashboard</a>
+                <a href="/" style={{ flex: 1, padding: "11px", borderRadius: 10, background: "#fff", border: "1px solid #F0EEEB", color: "#0f0f0f", fontWeight: 700, fontSize: 13, textDecoration: "none", textAlign: "center" }}>📦 Check Inventory</a>
+              </div>
+            </div>
+          )}
+          {!saved && <div style={{ padding: "0 16px 8px", fontSize: 11, color: MUTED }}>💡 Tap any row to view & edit pricing details, history and supplier comparison</div>}
 
           {/* Horizontal scroll table */}
           <div style={{ overflowX: "auto" }}>
