@@ -42,6 +42,14 @@ interface Product {
   priceDirection?: "up" | "down" | "same" | "new";
 }
 
+
+interface SaleItem {
+  name: string;
+  quantity: number;
+  price: number;
+  category: string;
+}
+
 interface InvoiceInfo {
   supplier: string;
   date: string;
@@ -425,7 +433,13 @@ function ProductSheet({ product, onClose, onUpdate }: {
 
 export default function Scanner() {
   const isMobile = useIsMobile();
+  const [scannerMode, setScannerMode] = useState<"choose" | "invoice" | "receipt">("choose");
   const [step, setStep] = useState<"upload" | "success" | "table">("upload");
+  const [receiptStep, setReceiptStep] = useState<"upload" | "review" | "done">("upload");
+  const [saleItems, setSaleItems] = useState<SaleItem[]>([]);
+  const [receiptScanning, setReceiptScanning] = useState(false);
+  const [receiptMessage, setReceiptMessage] = useState("");
+  const [receiptSaving, setReceiptSaving] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [invoiceInfo, setInvoiceInfo] = useState<InvoiceInfo | null>(null);
@@ -537,6 +551,69 @@ export default function Scanner() {
     setScanning(false);
   }
 
+  async function scanReceipt(imageData: string) {
+    setReceiptScanning(true);
+    setReceiptMessage("");
+    try {
+      const res = await fetch("/api/scanner", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageData, mode: "receipt" }),
+      });
+      const data = await res.json();
+      if (data.error) { setReceiptMessage(data.error); setReceiptScanning(false); return; }
+      setSaleItems(data.items || []);
+      setReceiptStep("review");
+    } catch (err) {
+      setReceiptMessage("Could not scan receipt. Please try again.");
+    }
+    setReceiptScanning(false);
+  }
+
+  async function saveSales() {
+    if (!storeId || saleItems.length === 0) return;
+    setReceiptSaving(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const email = session.user.email || "";
+      for (const item of saleItems) {
+        await supabase.from("sales").insert([{
+          store_id: storeId,
+          store_email: email,
+          product_name: item.name,
+          category: item.category,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.quantity * item.price,
+          sale_date: new Date().toISOString().split("T")[0],
+        }]);
+        const { data: existing } = await supabase.from("products")
+          .select("id, stock_quantity")
+          .eq("store_id", storeId)
+          .ilike("name", `%${item.name.substring(0, 15)}%`)
+          .maybeSingle();
+        if (existing) {
+          await supabase.from("products").update({
+            stock_quantity: Math.max(0, (existing.stock_quantity || 0) - item.quantity)
+          }).eq("id", existing.id);
+        }
+      }
+      setReceiptStep("done");
+    } catch (err) {
+      setReceiptMessage("Error saving sales. Please try again.");
+    }
+    setReceiptSaving(false);
+  }
+
+  function handleReceiptFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => scanReceipt(reader.result as string);
+    reader.readAsDataURL(file);
+  }
+
   async function applyPricing() {
     if (!storeId || products.length === 0) return;
     setSaving(true);
@@ -590,8 +667,8 @@ export default function Scanner() {
       {/* Header */}
       <header style={{ background: CARD_BG, borderBottom: "1px solid " + BORDER, padding: isMobile ? "0 16px" : "0 40px", display: "flex", alignItems: "center", justifyContent: "space-between", height: 56, position: "sticky", top: 0, zIndex: 10 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {step !== "upload" && (
-            <button onClick={() => setStep(step === "table" ? "success" : "upload")} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: BLACK, padding: 0, marginRight: 4 }}>←</button>
+          {(step !== "upload" || scannerMode !== "choose") && (
+            <button onClick={() => { if (step === "table") setStep("success"); else if (step === "success") setStep("upload"); else setScannerMode("choose"); }} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: BLACK, padding: 0, marginRight: 4 }}>←</button>
           )}
           <Image src="/logo.png" alt="Samzy" width={26} height={26} />
           <span style={{ fontWeight: 700, fontSize: 15, color: BLACK }}>Samzy</span>
@@ -606,8 +683,145 @@ export default function Scanner() {
         {step !== "table" && <a href="/" style={{ color: MUTED, fontSize: 13, textDecoration: "none" }}>Dashboard</a>}
       </header>
 
-      {/* ── UPLOAD ── */}
-      {step === "upload" && (
+      {/* ── MODE CHOOSER ── */}
+      {scannerMode === "choose" && (
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: isMobile ? "28px 20px" : "48px 24px" }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, color: BLACK, margin: "0 0 6px" }}>Smart Scanner</h1>
+          <p style={{ color: MUTED, fontSize: 14, marginBottom: 28 }}>What do you want to scan?</p>
+          <div style={{ display: "flex", flexDirection: "column" as const, gap: 14 }}>
+            <button onClick={() => setScannerMode("invoice")}
+              style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 24px", borderRadius: 16, background: CARD_BG, border: "1px solid " + BORDER, cursor: "pointer", textAlign: "left" as const }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>📦</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: BLACK, marginBottom: 4 }}>Supplier Invoice</div>
+                <div style={{ fontSize: 13, color: MUTED }}>Upload invoice — AI extracts products, calculates selling prices and updates inventory</div>
+              </div>
+              <span style={{ color: ORANGE, fontSize: 20 }}>→</span>
+            </button>
+            <button onClick={() => setScannerMode("receipt")}
+              style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 24px", borderRadius: 16, background: CARD_BG, border: "1px solid " + BORDER, cursor: "pointer", textAlign: "left" as const }}>
+              <div style={{ width: 52, height: 52, borderRadius: 14, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, flexShrink: 0 }}>🧾</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: BLACK, marginBottom: 4 }}>Sales Receipt</div>
+                <div style={{ fontSize: 13, color: MUTED }}>Scan a customer receipt to record sales and automatically reduce stock</div>
+              </div>
+              <span style={{ color: ORANGE, fontSize: 20 }}>→</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── RECEIPT FLOW ── */}
+      {scannerMode === "receipt" && (
+        <div style={{ maxWidth: 480, margin: "0 auto", padding: isMobile ? "24px 20px 60px" : "40px 24px 60px" }}>
+
+          {receiptStep === "upload" && (
+            <>
+              {receiptMessage && <div style={{ background: "#fef2f2", color: RED, padding: "12px 16px", borderRadius: 10, marginBottom: 16, fontSize: 13 }}>{receiptMessage}</div>}
+              {receiptScanning ? (
+                <div style={{ background: CARD_BG, borderRadius: 20, padding: "48px 24px", textAlign: "center", border: "1px solid " + BORDER }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>🤖</div>
+                  <div style={{ fontWeight: 700, fontSize: 17, color: BLACK, marginBottom: 6 }}>AI is reading the receipt...</div>
+                  <div style={{ color: MUTED, fontSize: 13 }}>Extracting items and prices</div>
+                </div>
+              ) : (
+                <div style={{ background: CARD_BG, borderRadius: 20, border: "2px dashed " + BORDER, padding: "44px 24px", textAlign: "center" }}>
+                  <div style={{ fontSize: 52, marginBottom: 14 }}>🧾</div>
+                  <div style={{ fontWeight: 700, fontSize: 17, color: BLACK, marginBottom: 6 }}>Upload Sales Receipt</div>
+                  <div style={{ color: MUTED, fontSize: 13, marginBottom: 24 }}>Photo or image of any receipt</div>
+                  <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" as const }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 12, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                      📷 Take Photo
+                      <input type="file" accept="image/*" capture="environment" onChange={handleReceiptFile} style={{ display: "none" }} />
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 22px", borderRadius: 12, background: CARD_BG, border: "1px solid " + BORDER, color: BLACK, fontWeight: 600, fontSize: 14, cursor: "pointer" }}>
+                      📁 Upload File
+                      <input type="file" accept="image/*,.pdf" onChange={handleReceiptFile} style={{ display: "none" }} />
+                    </label>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
+          {receiptStep === "review" && (
+            <div>
+              <div style={{ background: CARD_BG, borderRadius: 16, padding: "20px", border: "1px solid " + BORDER, marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: BLACK }}>{saleItems.length} items found</div>
+                    <div style={{ fontSize: 13, color: MUTED }}>Review and edit before saving</div>
+                  </div>
+                  <button onClick={() => { setSaleItems([]); setReceiptStep("upload"); }}
+                    style={{ padding: "8px 14px", borderRadius: 8, background: WARM_BG, border: "1px solid " + BORDER, color: MUTED, fontSize: 13, cursor: "pointer" }}>Rescan</button>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 10 }}>
+                  {saleItems.map((item, i) => (
+                    <div key={i} style={{ background: WARM_BG, borderRadius: 12, padding: "14px 16px", border: "1px solid " + BORDER }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                        <input value={item.name} onChange={e => setSaleItems(prev => prev.map((s, j) => j === i ? { ...s, name: e.target.value } : s))}
+                          style={{ fontSize: 14, fontWeight: 600, color: BLACK, background: "none", border: "none", outline: "none", flex: 1 }} />
+                        <button onClick={() => setSaleItems(prev => prev.filter((_, j) => j !== i))}
+                          style={{ background: "none", border: "none", color: RED, cursor: "pointer", fontSize: 16 }}>✕</button>
+                      </div>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                        <div>
+                          <div style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 4 }}>Qty</div>
+                          <input type="number" value={item.quantity} onChange={e => setSaleItems(prev => prev.map((s, j) => j === i ? { ...s, quantity: parseInt(e.target.value) || 1 } : s))}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, color: BLACK, background: CARD_BG, outline: "none", boxSizing: "border-box" as const }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 4 }}>Price €</div>
+                          <input type="number" step="0.01" value={item.price} onChange={e => setSaleItems(prev => prev.map((s, j) => j === i ? { ...s, price: parseFloat(e.target.value) || 0 } : s))}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, color: BLACK, background: CARD_BG, outline: "none", boxSizing: "border-box" as const }} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 4 }}>Category</div>
+                          <select value={item.category} onChange={e => setSaleItems(prev => prev.map((s, j) => j === i ? { ...s, category: e.target.value } : s))}
+                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, color: BLACK, background: CARD_BG, outline: "none", boxSizing: "border-box" as const }}>
+                            {["Dairy","Bakery","Beverages","Produce","Meat","Pantry","Frozen","Cleaning","Vegetables","Fruits","Beauty","Snacks","Other"].map(c => <option key={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 8, fontSize: 12, color: ORANGE, fontWeight: 600 }}>
+                        Total: €{(item.quantity * item.price).toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {receiptMessage && <div style={{ background: "#fef2f2", color: RED, padding: "12px 16px", borderRadius: 10, marginBottom: 12, fontSize: 13 }}>{receiptMessage}</div>}
+              <div style={{ background: CARD_BG, borderRadius: 14, padding: "14px 16px", border: "1px solid " + BORDER, marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between" }}>
+                  <span style={{ fontSize: 14, fontWeight: 600, color: BLACK }}>Total Sale</span>
+                  <span style={{ fontSize: 16, fontWeight: 800, color: ORANGE }}>€{saleItems.reduce((s, i) => s + i.quantity * i.price, 0).toFixed(2)}</span>
+                </div>
+              </div>
+              <button onClick={saveSales} disabled={receiptSaving}
+                style={{ width: "100%", padding: "15px", borderRadius: 14, background: receiptSaving ? MUTED : ORANGE, border: "none", color: "#fff", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                {receiptSaving ? "Saving..." : `✅ Save ${saleItems.length} Sales →`}
+              </button>
+            </div>
+          )}
+
+          {receiptStep === "done" && (
+            <div style={{ background: CARD_BG, borderRadius: 20, padding: "40px 24px", border: "1px solid " + BORDER, textAlign: "center" }}>
+              <div style={{ width: 64, height: 64, borderRadius: 20, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32, margin: "0 auto 16px" }}>✅</div>
+              <h2 style={{ fontSize: 20, fontWeight: 800, color: BLACK, margin: "0 0 8px" }}>Sales Recorded!</h2>
+              <p style={{ color: MUTED, fontSize: 14, margin: "0 0 8px" }}>{saleItems.length} items saved · Stock updated automatically.</p>
+              <p style={{ color: ORANGE, fontWeight: 700, fontSize: 16, margin: "0 0 28px" }}>€{saleItems.reduce((s, i) => s + i.quantity * i.price, 0).toFixed(2)} total sale</p>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => { setSaleItems([]); setReceiptStep("upload"); }}
+                  style={{ flex: 1, padding: "13px", borderRadius: 12, background: WARM_BG, border: "1px solid " + BORDER, fontWeight: 600, fontSize: 14, color: BLACK, cursor: "pointer" }}>Scan Another</button>
+                <a href="/" style={{ flex: 1, padding: "13px", borderRadius: 12, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 14, textDecoration: "none", display: "flex", alignItems: "center", justifyContent: "center" }}>← Dashboard</a>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── INVOICE FLOW ── */}
+      {scannerMode === "invoice" && step === "upload" && (
         <div style={{ maxWidth: 480, margin: "0 auto", padding: isMobile ? "28px 20px" : "48px 24px" }}>
           <h1 style={{ fontSize: 24, fontWeight: 800, color: BLACK, margin: "0 0 6px" }}>Smart Scanner</h1>
           <p style={{ color: MUTED, fontSize: 14, marginBottom: 28 }}>Upload a supplier invoice — AI extracts all products, calculates selling prices and updates inventory automatically.</p>
@@ -645,8 +859,7 @@ export default function Scanner() {
         </div>
       )}
 
-      {/* ── SUCCESS ── */}
-      {step === "success" && invoiceInfo && (
+      {scannerMode === "invoice" && step === "success" && invoiceInfo && (
         <div style={{ maxWidth: 480, margin: "0 auto", padding: isMobile ? "28px 20px" : "48px 24px" }}>
           <div style={{ background: CARD_BG, borderRadius: 20, padding: "28px 24px", border: "1px solid " + BORDER, marginBottom: 16 }}>
             <div style={{ width: 60, height: 60, borderRadius: 18, background: "#f0fdf4", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, margin: "0 auto 14px" }}>✅</div>
@@ -682,8 +895,7 @@ export default function Scanner() {
         </div>
       )}
 
-      {/* ── TABLE VIEW ── */}
-      {step === "table" && (
+      {scannerMode === "invoice" && step === "table" && (
         <div style={{ padding: isMobile ? "12px 0" : "20px 0" }}>
           {/* Invoice summary bar */}
           <div style={{ padding: "0 16px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap" as const, gap: 8 }}>
