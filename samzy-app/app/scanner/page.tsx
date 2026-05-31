@@ -435,7 +435,8 @@ export default function Scanner() {
     async function getStore() {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const { data } = await supabase.from("stores").select("id").eq("user_id", session.user.id).single();
+      const email = session.user.email || "";
+      const { data } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
       if (data) setStoreId(data.id);
     }
     getStore();
