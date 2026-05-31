@@ -178,12 +178,19 @@ function ProductSheet({ product, onClose, onUpdate }: {
     const num = parseFloat(val);
     if (isNaN(num)) return;
     const updated = { ...p, [field]: field.endsWith("Pct") ? num / 100 : num };
-    // Recalculate if a base field changed
+    // Recalculate prices if a rate/cost field changed
     const recalcFields = ["itemCost", "ivaRate", "transportPct", "shopSemPct", "shopComPct", "specialPct", "bigWholesalePct", "restComPct"];
     if (recalcFields.includes(field)) {
       const calced = calcAll({ ...updated });
       Object.assign(updated, calced);
     }
+    // Back-calculate markup % if a selling price is edited directly
+    if (field === "shopSem" && updated.itemWT > 0) updated.shopSemPct = r2((num / updated.itemWT) - 1);
+    if (field === "civacp" && updated.itemWT > 0) updated.ivaRate = r2((num / updated.itemWT) - 1);
+    if (field === "shopCom" && updated.civacp > 0) updated.shopComPct = r2((num / updated.civacp) - 1);
+    if (field === "special" && updated.civacp > 0) updated.specialPct = r2((num / updated.civacp) - 1);
+    if (field === "bigWholesale" && updated.civacp > 0) updated.bigWholesalePct = r2((num / updated.civacp) - 1);
+    if (field === "restCom" && updated.civacp > 0) updated.restComPct = r2((num / updated.civacp) - 1);
     setP(updated as Product);
     onUpdate(updated as Product);
     setEditField(null);
