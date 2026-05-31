@@ -201,7 +201,7 @@ function ProductSheet({ product, onClose, onUpdate }: {
 
   function Cell({ label, value, field, decimals = 2, isPct = false, highlight = false }: { label: string; value: number; field: string; decimals?: number; isPct?: boolean; highlight?: boolean }) {
     const isEditing = editField === field;
-    const display = isPct ? `${(value * 100).toFixed(1)}%` : `€${value.toFixed(decimals)}`;
+    const display = isPct ? `${parseFloat((value * 100).toFixed(4)).toString()}%` : `€${value.toFixed(decimals)}`;
     if (isEditing) return (
       <div style={{ background: "#fff8f0", borderRadius: 10, padding: "10px 12px", border: "2px solid " + ORANGE }}>
         <div style={{ fontSize: 10, color: MUTED, marginBottom: 4, textTransform: "uppercase" as const }}>{label}</div>
