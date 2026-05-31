@@ -61,6 +61,11 @@ function insightBg(type: string) {
 
 export default function Home() {
   const [activeNav, setActiveNav] = useState("dashboard");
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const nav = params.get("nav");
+    if (nav) setActiveNav(nav);
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [dbStatus, setDbStatus] = useState("connecting");
   const [storeName, setStoreName] = useState("Your Store");

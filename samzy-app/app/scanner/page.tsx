@@ -710,7 +710,7 @@ export default function Scanner() {
               <div style={{ fontSize: 13, color: MUTED, marginBottom: 14 }}>Prices, stock and history have been updated.</div>
               <div style={{ display: "flex", gap: 10 }}>
                 <a href="/" style={{ flex: 1, padding: "11px", borderRadius: 10, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 13, textDecoration: "none", textAlign: "center" }}>← Dashboard</a>
-                <a href="/" style={{ flex: 1, padding: "11px", borderRadius: 10, background: "#fff", border: "1px solid #F0EEEB", color: "#0f0f0f", fontWeight: 700, fontSize: 13, textDecoration: "none", textAlign: "center" }}>📦 Check Inventory</a>
+                <a href="/?nav=inventory" style={{ flex: 1, padding: "11px", borderRadius: 10, background: "#fff", border: "1px solid #F0EEEB", color: "#0f0f0f", fontWeight: 700, fontSize: 13, textDecoration: "none", textAlign: "center" }}>📦 Check Inventory</a>
               </div>
             </div>
           )}
