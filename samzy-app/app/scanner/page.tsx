@@ -206,7 +206,7 @@ function ProductSheet({ product, onClose, onUpdate }: {
       <div style={{ background: "#fff8f0", borderRadius: 10, padding: "10px 12px", border: "2px solid " + ORANGE }}>
         <div style={{ fontSize: 10, color: MUTED, marginBottom: 4, textTransform: "uppercase" as const }}>{label}</div>
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          <input autoFocus type="number" step={decimals === 3 ? "0.001" : "0.01"} defaultValue={isPct ? (value * 100).toFixed(1) : value.toFixed(decimals)}
+          <input autoFocus type="number" step="any" value={editVal}
             onChange={e => setEditVal(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") handleEdit(field, editVal || (isPct ? (value * 100).toString() : value.toString())); if (e.key === "Escape") setEditField(null); }}
             style={{ flex: 1, border: "none", outline: "none", background: "transparent", fontSize: 15, fontWeight: 700, color: ORANGE }} />
@@ -216,7 +216,7 @@ function ProductSheet({ product, onClose, onUpdate }: {
       </div>
     );
     return (
-      <div onClick={() => { setEditField(field); setEditVal(""); }}
+      <div onClick={() => { setEditField(field); setEditVal(isPct ? (value * 100).toFixed(2) : value.toFixed(decimals)); }}
         style={{ background: highlight ? "#fff8f0" : WARM_BG, borderRadius: 10, padding: "10px 12px", border: `1px solid ${highlight ? ORANGE + "40" : BORDER}`, cursor: "pointer", transition: "all 0.15s" }}>
         <div style={{ fontSize: 10, color: highlight ? ORANGE : MUTED, textTransform: "uppercase" as const, marginBottom: 4, fontWeight: 600 }}>{label}</div>
         <div style={{ fontSize: 15, fontWeight: 700, color: highlight ? ORANGE : BLACK }}>{display}</div>
