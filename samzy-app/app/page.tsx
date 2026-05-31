@@ -423,7 +423,7 @@ export default function Home() {
   const headerPad = isMobile ? "16px 16px 0" : "28px 40px 0";
 
   return (
-    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", overflow: "hidden" }}>
+    <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", height: isMobile ? "auto" : "100vh", minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", overflow: isMobile ? "auto" : "hidden" }}>
 
       {/* DESKTOP SIDEBAR */}
       {!isMobile && (
