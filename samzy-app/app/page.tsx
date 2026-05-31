@@ -489,7 +489,7 @@ export default function Home() {
       )}
 
       {/* MAIN CONTENT */}
-      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+      <main style={{ flex: 1, display: "flex", flexDirection: "column", overflow: isMobile ? "auto" : "hidden" }}>
         {/* Desktop header */}
         {/* Trial Banner */}
         {trialDaysLeft !== null && trialDaysLeft > 0 && (
