@@ -563,7 +563,7 @@ export default function Home() {
                     <h2 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: BLACK }}>Weekly Sales</h2>
                     <span style={{ fontSize: 11, color: MUTED, background: WARM_BG, padding: "3px 8px", borderRadius: 20 }}>This week</span>
                   </div>
-                  {weekSalesData.length === 0 ? <div style={{ height: isMobile ? 100 : 140, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, fontSize: 13 }}>No sales data yet</div> : <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 8, height: isMobile ? 100 : 140 }}>
+                  {weekSalesData.every(d => d.amount === 0) ? <div style={{ height: isMobile ? 100 : 140, display: "flex", alignItems: "center", justifyContent: "center", color: MUTED, fontSize: 13 }}>No sales data yet</div> : <div style={{ display: "flex", alignItems: "flex-end", gap: isMobile ? 6 : 8, height: isMobile ? 100 : 140 }}>
                     {weekSalesData.map((d) => (
                       <div key={d.day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", height: "100%" }}>
                         <div style={{ fontSize: 8, color: MUTED, marginBottom: 3 }}>${(d.amount / 1000).toFixed(1)}k</div>
