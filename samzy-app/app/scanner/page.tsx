@@ -405,7 +405,7 @@ function ProductSheet({ product, onClose, onUpdate }: {
                     </div>
                   </div>
                 )}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                   {[{ icon: "📞", label: "Call" }, { icon: "✉️", label: "Email" }, { icon: "📋", label: "Quote" }].map(a => (
                     <button key={a.label} style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 6, padding: "16px 8px", borderRadius: 12, border: "1px solid " + BORDER, background: CARD_BG, cursor: "pointer" }}>
                       <span style={{ fontSize: 24 }}>{a.icon}</span>
@@ -764,7 +764,7 @@ export default function Scanner() {
                         <button onClick={() => setSaleItems(prev => prev.filter((_, j) => j !== i))}
                           style={{ background: "none", border: "none", color: RED, cursor: "pointer", fontSize: 16 }}>✕</button>
                       </div>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
                         <div>
                           <div style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 4 }}>Qty</div>
                           <input type="number" value={item.quantity} onChange={e => setSaleItems(prev => prev.map((s, j) => j === i ? { ...s, quantity: parseInt(e.target.value) || 1 } : s))}
@@ -775,13 +775,7 @@ export default function Scanner() {
                           <input type="number" step="0.01" value={item.price} onChange={e => setSaleItems(prev => prev.map((s, j) => j === i ? { ...s, price: parseFloat(e.target.value) || 0 } : s))}
                             style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, color: BLACK, background: CARD_BG, outline: "none", boxSizing: "border-box" as const }} />
                         </div>
-                        <div>
-                          <div style={{ fontSize: 10, color: MUTED, fontWeight: 700, textTransform: "uppercase" as const, marginBottom: 4 }}>Category</div>
-                          <select value={item.category} onChange={e => setSaleItems(prev => prev.map((s, j) => j === i ? { ...s, category: e.target.value } : s))}
-                            style={{ width: "100%", padding: "8px 10px", borderRadius: 8, border: "1px solid " + BORDER, fontSize: 13, color: BLACK, background: CARD_BG, outline: "none", boxSizing: "border-box" as const }}>
-                            {["Dairy","Bakery","Beverages","Produce","Meat","Pantry","Frozen","Cleaning","Vegetables","Fruits","Beauty","Snacks","Other"].map(c => <option key={c}>{c}</option>)}
-                          </select>
-                        </div>
+
                       </div>
                       <div style={{ marginTop: 8, fontSize: 12, color: ORANGE, fontWeight: 600 }}>
                         Total: €{(item.quantity * item.price).toFixed(2)}

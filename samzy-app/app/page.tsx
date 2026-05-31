@@ -66,7 +66,7 @@ export default function Home() {
     const nav = params.get("nav");
     if (nav) setActiveNav(nav);
   }, []);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== "undefined" ? window.innerWidth > 768 : true);
   const [dbStatus, setDbStatus] = useState("connecting");
   const [storeName, setStoreName] = useState("Your Store");
   const [userEmail, setUserEmail] = useState("");
