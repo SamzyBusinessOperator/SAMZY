@@ -56,6 +56,8 @@ interface InvoiceInfo {
   invoiceNumber: string;
   total: number;
   count: number;
+  transportPct?: string | null;
+  transportCharge?: number;
 }
 
 interface PriceHistoryEntry {
@@ -527,12 +529,15 @@ export default function Scanner() {
       }));
 
       setProducts(enriched);
+      const autoTransport = data.transportPct ? (data.transportPct * 100).toFixed(2) : null;
       setInvoiceInfo({
         supplier: data.supplier || data.supplierName || "Unknown Supplier",
         date: new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }),
         invoiceNumber: `INV-${Date.now().toString().slice(-4)}`,
         total: data.total || enriched.reduce((s, p) => s + (p.costSIVA * p.qty), 0),
         count: enriched.length,
+        transportPct: autoTransport,
+        transportCharge: data.transportCharge || 0,
       });
       setStep("success");
     } catch (err: any) {
@@ -875,6 +880,7 @@ export default function Scanner() {
                 { label: "Supplier", value: invoiceInfo.supplier },
                 { label: "Date", value: invoiceInfo.date },
                 { label: "Total Amount", value: `€${invoiceInfo.total.toFixed(2)}`, orange: true },
+              ...(invoiceInfo.transportPct ? [{ label: "Transport % (auto)", value: `${invoiceInfo.transportPct}%`, orange: false }] : []),
               ].map((row, i) => (
                 <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderTop: i > 0 ? "1px solid " + BORDER : "none" }}>
                   <span style={{ fontSize: 13, color: MUTED }}>{row.label}</span>
