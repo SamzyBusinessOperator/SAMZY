@@ -35,7 +35,7 @@ export default function Landing() {
         backdropFilter: "blur(20px) saturate(180%)",
         WebkitBackdropFilter: "blur(20px) saturate(180%)",
         borderBottom: navBlurred ? "1px solid rgba(0,0,0,0.08)" : "none",
-        display: "flex", alignItems: "center", justifyContent: "space-between",
+        display: "flex", alignItems: "center", justifyContent: isMobile ? "center" : "space-between",
         padding: "0 22px", transition: "all 0.3s",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
