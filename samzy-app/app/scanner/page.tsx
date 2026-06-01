@@ -382,7 +382,7 @@ function ProductSheet({ product, onClose, onUpdate }: {
 
 // ─── Main Scanner ─────────────────────────────────────────────────────────────
 
-function InlineEditCell({ value, unit = "", onSave }: { value: number; unit?: string; onSave: (v: number) => void }) {
+function InlineEditCell({ value, unit = "", onSave, decimals = 1, highlight = false }: { value: number; unit?: string; onSave: (v: number) => void; decimals?: number; highlight?: boolean }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState("");
   const ref = useRef<HTMLInputElement>(null);
@@ -393,20 +393,20 @@ function InlineEditCell({ value, unit = "", onSave }: { value: number; unit?: st
     setEditing(false);
   }
   if (editing) return (
-    <td style={{ padding: "6px 6px", whiteSpace: "nowrap" }} onClick={e => e.stopPropagation()}>
+    <td style={{ padding: "6px 6px", whiteSpace: "nowrap", background: "#fff8f0" }} onClick={e => e.stopPropagation()}>
       <input ref={ref} type="number" step="any" value={draft}
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
         onKeyDown={e => { if (e.key === "Enter") commit(); if (e.key === "Escape") setEditing(false); }}
-        style={{ width: 52, fontSize: 11, fontWeight: 700, color: "#FC7800", border: "1px solid #FC7800", borderRadius: 4, padding: "2px 4px", outline: "none", background: "#fff8f0" }}
+        style={{ width: 60, fontSize: 11, fontWeight: 700, color: "#FC7800", border: "1px solid #FC7800", borderRadius: 4, padding: "2px 4px", outline: "none", background: "#fff8f0" }}
       />
     </td>
   );
   return (
     <td onClick={(e) => { e.stopPropagation(); setDraft(value.toFixed(1)); setEditing(true); }}
-      style={{ padding: "10px 10px", color: "#6B6B6B", whiteSpace: "nowrap", cursor: "pointer" }}
+      style={{ padding: "10px 10px", color: highlight ? "#FC7800" : "#6B6B6B", fontWeight: highlight ? 700 : 400, whiteSpace: "nowrap", cursor: "pointer" }}
       title="Click to edit">
-      {value.toFixed(1)}{unit}
+      {unit === "" ? "€" : ""}{value.toFixed(decimals)}{unit}
     </td>
   );
 }
@@ -970,22 +970,22 @@ export default function Scanner() {
                       </div>
                     </td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>€{p.costSIVA.toFixed(3)}</td>
-                    <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.itemCost.toFixed(3)}</td>
+                    <InlineEditCell value={p.itemCost} unit="" decimals={3} highlight onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, itemCost: v, costSIVA: v}))} />
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{(p.itemCost / (p.packSize.match(/^(\d+)\s*[x×*]/i)?.[1] ? parseInt(p.packSize.match(/^(\d+)\s*[x×*]/i)![1]) : 1)).toFixed(3)}</td>
                     <InlineEditCell value={p.transportPct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, transportPct: v/100}))} />
                     <InlineEditCell value={p.ivaRate * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, ivaRate: v/100}))} />
-                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.itemWT.toFixed(3)}</td>
-                    <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.civacp.toFixed(2)}</td>
+                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap", fontFamily: "monospace" }}>€{p.itemWT.toFixed(3)}</td>
+                    <InlineEditCell value={p.civacp} unit="" decimals={2} highlight onSave={(v: number) => { const updated = {...p, civacp: v}; updateProduct(products.indexOf(p), updated); }} />
                     <InlineEditCell value={p.shopSemPct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, shopSemPct: v/100}))} />
-                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.shopSem.toFixed(2)}</td>
+                    <InlineEditCell value={p.shopSem} unit="" decimals={2} onSave={(v: number) => { const pct = p.itemWT > 0 ? (v/p.itemWT)-1 : p.shopSemPct; updateProduct(products.indexOf(p), recalcProduct({...p, shopSemPct: pct, shopSem: v})); }} />
                     <InlineEditCell value={p.shopComPct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, shopComPct: v/100}))} />
-                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.shopCom.toFixed(2)}</td>
+                    <InlineEditCell value={p.shopCom} unit="" decimals={2} onSave={(v: number) => { const pct = p.civacp > 0 ? (v/p.civacp)-1 : p.shopComPct; updateProduct(products.indexOf(p), recalcProduct({...p, shopComPct: pct})); }} />
                     <InlineEditCell value={p.specialPct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, specialPct: v/100}))} />
-                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.special.toFixed(2)}</td>
+                    <InlineEditCell value={p.special} unit="" decimals={2} onSave={(v: number) => { const pct = p.civacp > 0 ? (v/p.civacp)-1 : p.specialPct; updateProduct(products.indexOf(p), recalcProduct({...p, specialPct: pct})); }} />
                     <InlineEditCell value={p.bigWholesalePct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, bigWholesalePct: v/100}))} />
-                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.bigWholesale.toFixed(2)}</td>
+                    <InlineEditCell value={p.bigWholesale} unit="" decimals={2} onSave={(v: number) => { const pct = p.civacp > 0 ? (v/p.civacp)-1 : p.bigWholesalePct; updateProduct(products.indexOf(p), recalcProduct({...p, bigWholesalePct: pct})); }} />
                     <InlineEditCell value={p.restComPct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, restComPct: v/100}))} />
-                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.restCom.toFixed(2)}</td>
+                    <InlineEditCell value={p.restCom} unit="" decimals={2} onSave={(v: number) => { const pct = p.civacp > 0 ? (v/p.civacp)-1 : p.restComPct; updateProduct(products.indexOf(p), recalcProduct({...p, restComPct: pct})); }} />
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{p.qty}</td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{p.totalUnits}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 600, color: BLACK, whiteSpace: "nowrap" }}>€{p.totalCost.toFixed(2)}</td>

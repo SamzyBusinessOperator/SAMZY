@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
 {
   "supplier": "supplier name",
   "total": 1234.56,
+  "transportCharge": 0,
+  "invoiceSubtotal": 1234.56,
   "products": [
     {
       "name": "Product Name",
