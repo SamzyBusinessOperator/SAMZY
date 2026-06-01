@@ -276,48 +276,34 @@ function ProductSheet({ product, onClose, onUpdate }: {
           {/* PRICING TAB */}
           {tab === "pricing" && (
             <div>
-              <div style={{ fontSize: 11, color: MUTED, marginBottom: 12, fontWeight: 600 }}>TAP ANY CELL TO EDIT · RECALCULATES AUTOMATICALLY</div>
-              {/* Cost row */}
-              <div style={{ fontSize: 12, fontWeight: 700, color: BLACK, marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Costs</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-                <Cell label="Cost S/IVA" value={p.costSIVA} field="costSIVA" decimals={3} />
-                <Cell label="Item Cost" value={p.itemCost} field="itemCost" decimals={3} highlight />
-                <Cell label="IVA %" value={p.ivaRate} field="ivaRate" isPct />
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
-                <Cell label="Transport %" value={p.transportPct} field="transportPct" isPct />
-                <Cell label="Item W/T" value={p.itemWT} field="itemWT" decimals={3} />
-              </div>
-              {/* Selling prices */}
-              <div style={{ fontSize: 12, fontWeight: 700, color: BLACK, marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Selling Prices</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
-                <Cell label="C/IVACP" value={p.civacp} field="civacp" highlight />
-                <Cell label="Shop Sem" value={p.shopSem} field="shopSem" />
-                <Cell label="Shop Com" value={p.shopCom} field="shopCom" />
-                <Cell label="Special" value={p.special} field="special" />
-                <Cell label="Big Wholesale" value={p.bigWholesale} field="bigWholesale" />
-                <Cell label="Rest Com" value={p.restCom} field="restCom" />
-              </div>
-              {/* Markup rates */}
-              <div style={{ fontSize: 12, fontWeight: 700, color: BLACK, marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Markup Rates</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 16 }}>
-                <Cell label="Shop Sem %" value={p.shopSemPct} field="shopSemPct" isPct />
-                <Cell label="Shop Com %" value={p.shopComPct} field="shopComPct" isPct />
-                <Cell label="Special %" value={p.specialPct} field="specialPct" isPct />
-                <Cell label="Wholesale %" value={p.bigWholesalePct} field="bigWholesalePct" isPct />
-                <Cell label="Rest Com %" value={p.restComPct} field="restComPct" isPct />
-              </div>
-              {/* Summary */}
-              <div style={{ background: CARD_BG, borderRadius: 14, padding: "14px 16px", border: "1px solid " + BORDER }}>
+              <div style={{ background: CARD_BG, borderRadius: 14, padding: "14px 16px", border: "1px solid " + BORDER, marginBottom: 16 }}>
                 {[
-                  { label: "Per Case Cost", value: `€${r3(p.itemCost)}` },
+                  { label: "Cost S/IVA (Invoice)", value: `€${p.costSIVA.toFixed(3)}` },
+                  { label: "Item Cost (Working)", value: `€${r3(p.itemCost)}`, highlight: true },
+                  { label: "Per Unit Cost", value: `€${(p.itemCost / (p.packSize.match(/^(\d+)\s*[x×*]/i)?.[1] ? parseInt(p.packSize.match(/^(\d+)\s*[x×*]/i)![1]) : 1)).toFixed(3)}` },
+                  { label: "Item W/T (+" + (p.transportPct * 100).toFixed(2) + "% transport)", value: `€${p.itemWT.toFixed(3)}` },
+                  { label: "C/IVACP (+" + (p.ivaRate * 100).toFixed(0) + "% IVA)", value: `€${p.civacp.toFixed(2)}`, highlight: true },
+                  { label: "Shop Sem (+" + (p.shopSemPct * 100).toFixed(0) + "%)", value: `€${p.shopSem.toFixed(2)}` },
+                  { label: "Shop Com (+" + (p.shopComPct * 100).toFixed(0) + "%)", value: `€${p.shopCom.toFixed(2)}` },
+                  { label: "Special (+" + (p.specialPct * 100).toFixed(0) + "%)", value: `€${p.special.toFixed(2)}` },
+                  { label: "Wholesale (+" + (p.bigWholesalePct * 100).toFixed(0) + "%)", value: `€${p.bigWholesale.toFixed(2)}` },
+                  { label: "Rest Com (+" + (p.restComPct * 100).toFixed(0) + "%)", value: `€${p.restCom.toFixed(2)}` },
+                ].map((row, i) => (
+                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: i > 0 ? "1px solid " + BORDER : "none" }}>
+                    <span style={{ fontSize: 13, color: MUTED }}>{row.label}</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: (row as any).highlight ? ORANGE : BLACK }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ background: WARM_BG, borderRadius: 14, padding: "14px 16px", border: "1px solid " + BORDER }}>
+                {[
                   { label: "Total Cases", value: `${p.qty} cases` },
                   { label: "Total Stock Units", value: `${p.totalUnits} units` },
                   { label: "Total Invoice Cost", value: `€${r2(p.itemCost * p.qty).toFixed(2)}`, bold: true },
                 ].map((row, i) => (
                   <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: i > 0 ? "1px solid " + BORDER : "none" }}>
                     <span style={{ fontSize: 13, color: MUTED }}>{row.label}</span>
-                    <span style={{ fontSize: 13, fontWeight: row.bold ? 700 : 600, color: row.bold ? ORANGE : BLACK }}>{row.value}</span>
+                    <span style={{ fontSize: 13, fontWeight: row.bold ? 800 : 600, color: row.bold ? ORANGE : BLACK }}>{row.value}</span>
                   </div>
                 ))}
               </div>
