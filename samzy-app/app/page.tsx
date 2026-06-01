@@ -101,8 +101,7 @@ export default function Home() {
     { id: "dashboard", label: "Dashboard", icon: "▦" },
     { id: "inventory", label: tr.inventory, icon: "📦" },
     { id: "suppliers", label: tr.suppliers, icon: "🚚" },
-    { id: "finances", label: tr.finances, icon: "💰" },
-    { id: "ai", label: tr.ai, icon: "✦" },
+    { id: "sales", label: "Sales History", icon: "🧾" },
     { id: "scanner", label: "Scanner", icon: "📷" },
     { id: "profile", label: "Profile", icon: "👤" },
   ];
@@ -506,8 +505,9 @@ export default function Home() {
                 {activeNav === "inventory" && "Inventory"}
                 {activeNav === "staff" && "Staff"}
                 {activeNav === "suppliers" && "Suppliers"}
-                {activeNav === "finances" && "Finances"}
-                {activeNav === "ai" && "AI Advisor"}
+                {activeNav === "sales" && "Sales History"}
+                
+                
               </h1>
               <p style={{ margin: "4px 0 0", color: MUTED, fontSize: 14 }}>
                 {activeNav === "dashboard" ? "Here's what's happening at " + storeName + " today" : "Manage your " + activeNav}
@@ -527,8 +527,9 @@ export default function Home() {
               {activeNav === "inventory" && "Inventory"}
               {activeNav === "staff" && "Staff"}
               {activeNav === "suppliers" && "Suppliers"}
-              {activeNav === "finances" && "Finances"}
-              {activeNav === "ai" && "AI Advisor"}
+                {activeNav === "sales" && "Sales History"}
+              
+              
             </h1>
           </div>
         )}
@@ -942,5 +943,138 @@ export default function Home() {
         </div>
       )}
     </div>
+  );
+}
+// ─── Sales History Component ──────────────────────────────────────────────────
+function SalesHistory({ storeId }: { storeId: string | null }) {
+  const [sales, setSales] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const ORANGE = "#FC7800"; const BLACK = "#0f0f0f"; const WARM_BG = "#FAFAF8";
+  const CARD_BG = "#FFFFFF"; const BORDER = "#F0EEEB"; const MUTED = "#6B6B6B";
+
+  useEffect(() => {
+    async function load() {
+      if (!storeId) return;
+      setLoading(true);
+      const { data } = await supabase.from("sales")
+        .select("*")
+        .eq("store_id", storeId)
+        .order("sale_date", { ascending: false })
+        .limit(200);
+      setSales(data || []);
+      setLoading(false);
+    }
+    load();
+  }, [storeId]);
+
+  const filtered = sales.filter(s => s.product_name?.toLowerCase().includes(search.toLowerCase()));
+  const totalRevenue = sales.reduce((sum, s) => sum + (s.total || 0), 0);
+  const totalItems = sales.reduce((sum, s) => sum + (s.quantity || 0), 0);
+
+  return (
+    <div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+        <div style={{ background: CARD_BG, borderRadius: 14, padding: "16px", border: "1px solid " + BORDER }}>
+          <div style={{ fontSize: 11, color: MUTED, marginBottom: 4 }}>Total Revenue</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: ORANGE }}>€{totalRevenue.toFixed(2)}</div>
+        </div>
+        <div style={{ background: CARD_BG, borderRadius: 14, padding: "16px", border: "1px solid " + BORDER }}>
+          <div style={{ fontSize: 11, color: MUTED, marginBottom: 4 }}>Total Sales</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: BLACK }}>{sales.length}</div>
+        </div>
+        <div style={{ background: CARD_BG, borderRadius: 14, padding: "16px", border: "1px solid " + BORDER }}>
+          <div style={{ fontSize: 11, color: MUTED, marginBottom: 4 }}>Items Sold</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: BLACK }}>{totalItems}</div>
+        </div>
+      </div>
+      <div style={{ position: "relative", marginBottom: 14 }}>
+        <input type="text" placeholder="Search sales..." value={search} onChange={e => setSearch(e.target.value)}
+          style={{ width: "100%", padding: "10px 14px", borderRadius: 12, border: "1px solid " + BORDER, fontSize: 13, outline: "none", background: CARD_BG, boxSizing: "border-box" as const }} />
+      </div>
+      {loading ? (
+        <div style={{ textAlign: "center", padding: 40, color: MUTED }}>Loading...</div>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: 40, background: CARD_BG, borderRadius: 14, border: "1px solid " + BORDER }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🧾</div>
+          <div style={{ fontWeight: 600, color: BLACK, marginBottom: 6 }}>No sales yet</div>
+          <div style={{ fontSize: 13, color: MUTED }}>Use the Sales Receipt scanner to record sales.</div>
+        </div>
+      ) : (
+        <div style={{ background: CARD_BG, borderRadius: 14, border: "1px solid " + BORDER, overflow: "hidden" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", padding: "10px 16px", background: BLACK }}>
+            {["Product", "Category", "Qty", "Price", "Total"].map(h => (
+              <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#fff", textTransform: "uppercase" as const }}>{h}</span>
+            ))}
+          </div>
+          {filtered.map((s, i) => (
+            <div key={i} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 1fr", padding: "12px 16px", borderTop: "1px solid " + BORDER, background: i % 2 === 0 ? CARD_BG : WARM_BG }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: BLACK }}>{s.product_name}</div>
+                <div style={{ fontSize: 11, color: MUTED }}>{s.sale_date}</div>
+              </div>
+              <span style={{ fontSize: 12, color: MUTED }}>{s.category}</span>
+              <span style={{ fontSize: 12, color: BLACK }}>{s.quantity}</span>
+              <span style={{ fontSize: 12, color: BLACK }}>€{parseFloat(s.price || 0).toFixed(2)}</span>
+              <span style={{ fontSize: 12, fontWeight: 700, color: ORANGE }}>€{parseFloat(s.total || 0).toFixed(2)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Floating AI Chatbot ──────────────────────────────────────────────────────
+function FloatingAI({ question, setQuestion, loading, chatHistory, onAsk }: {
+  question: string;
+  setQuestion: (q: string) => void;
+  loading: boolean;
+  chatHistory: { q: string; a: string }[];
+  onAsk: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ORANGE = "#FC7800"; const BLACK = "#0f0f0f";
+
+  return (
+    <>
+      {/* Floating button */}
+      <button onClick={() => setOpen(!open)}
+        style={{ position: "fixed", bottom: 80, right: 20, width: 52, height: 52, borderRadius: 26, background: BLACK, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, zIndex: 200, boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+        {open ? "✕" : "✦"}
+      </button>
+
+      {/* Chat panel */}
+      {open && (
+        <div style={{ position: "fixed", bottom: 144, right: 16, width: 320, background: "#1a1a1a", borderRadius: 20, border: "1px solid #333", zIndex: 200, boxShadow: "0 8px 40px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column" as const, maxHeight: 440 }}>
+          <div style={{ padding: "16px 20px", borderBottom: "1px solid #333", display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: ORANGE, fontSize: 16 }}>✦</span>
+            <span style={{ color: "#fff", fontWeight: 700, fontSize: 14 }}>AI Advisor</span>
+          </div>
+          <div style={{ flex: 1, overflowY: "auto", padding: "12px 16px", maxHeight: 280 }}>
+            {chatHistory.length === 0 ? (
+              <p style={{ color: "#888", fontSize: 13, textAlign: "center", marginTop: 20 }}>Ask me anything about your store 👋</p>
+            ) : (
+              chatHistory.map((chat, i) => (
+                <div key={i} style={{ marginBottom: 14 }}>
+                  <p style={{ margin: "0 0 4px", color: "#aaa", fontSize: 12 }}>You: {chat.q}</p>
+                  <p style={{ margin: 0, color: "#e5e5e5", fontSize: 13, lineHeight: 1.6 }}>✦ {chat.a}</p>
+                </div>
+              ))
+            )}
+          </div>
+          <div style={{ padding: "12px 16px", borderTop: "1px solid #333", display: "flex", gap: 8 }}>
+            <input value={question} onChange={e => setQuestion(e.target.value)}
+              onKeyDown={e => e.key === "Enter" && onAsk()}
+              placeholder="Ask about your store..."
+              style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: "1px solid #444", background: "#2a2a2a", color: "#fff", fontSize: 13, outline: "none" }} />
+            <button onClick={onAsk} disabled={loading}
+              style={{ padding: "10px 14px", borderRadius: 10, background: loading ? "#444" : ORANGE, border: "none", color: "#fff", fontWeight: 700, cursor: "pointer" }}>
+              {loading ? "..." : "→"}
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
