@@ -52,10 +52,7 @@ export default function Landing() {
             ))}
           </div>
         )}
-        <a href="/login" style={{
-          fontSize: 13, color: WHITE, background: ORANGE,
-          padding: "7px 16px", borderRadius: 20, textDecoration: "none", fontWeight: 600,
-        }}>Login</a>
+<div />
       </nav>
 
       {/* HERO */}
@@ -289,10 +286,7 @@ export default function Landing() {
               background: ORANGE, color: WHITE, padding: "18px 40px", borderRadius: 30,
               fontSize: 17, fontWeight: 700, textDecoration: "none", letterSpacing: -0.3,
             }}>Get in Touch</a>
-            <a href="/login" style={{
-              background: "transparent", color: WHITE, padding: "18px 40px", borderRadius: 30,
-              fontSize: 17, fontWeight: 600, textDecoration: "none", border: "1px solid #333", letterSpacing: -0.3,
-            }}>Client Login</a>
+
           </div>
         </div>
       </section>
@@ -306,7 +300,7 @@ export default function Landing() {
             <span style={{ fontSize: 13, color: MID_GRAY }}>— Custom Business Software</span>
           </div>
           <div style={{ display: "flex", gap: 24 }}>
-            {["Privacy Policy", "Terms", "Client Login"].map(link => (
+            {["Privacy Policy", "Terms"].map(link => (
               <a key={link} href="#" style={{ fontSize: 12, color: MID_GRAY, textDecoration: "none" }}>{link}</a>
             ))}
           </div>
