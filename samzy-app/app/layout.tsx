@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Samzy — AI Supermarket Management",
-  description: "Real-time sales, inventory, staff, and finances — plus an AI advisor for your supermarket.",
+  title: "Samzy — Custom Business Software Agency",
+  description: "We build private, branded software for supermarkets and retail stores. Your business, your app, your rules.",
 };
 
 export default function RootLayout({
