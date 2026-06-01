@@ -295,67 +295,57 @@ export default function Landing() {
 
       </section>
 
-      {/* ── PRICING ── */}
+      {/* ── CUSTOM PRICING ── */}
       <section style={{ background: WARM_BG, padding: isMobile ? "60px 20px" : "100px 60px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 700, color: ORANGE, textTransform: "uppercase" as const, letterSpacing: 2, marginBottom: 12 }}>Simple Pricing</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 900, color: BLACK, margin: "0 0 16px", letterSpacing: -1 }}>
-            One monthly fee.<br />Everything included.
-          </h2>
-          <p style={{ fontSize: 16, color: MUTED, marginBottom: 48 }}>No setup fees. No hidden costs. Cancel anytime.</p>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
-            {[
-              {
-                name: "Starter",
-                price: "€49",
-                period: "/month",
-                desc: "Perfect for single-location stores",
-                features: ["Custom branded app", "Invoice scanning (50/month)", "Inventory management", "Sales tracking", "AI Advisor", "Email support"],
-                cta: "Get Started",
-                highlight: false,
-              },
-              {
-                name: "Professional",
-                price: "€99",
-                period: "/month",
-                desc: "For growing businesses",
-                features: ["Everything in Starter", "Unlimited invoice scanning", "Price history & supplier comparison", "WhatsApp notifications", "Priority support", "Custom integrations"],
-                cta: "Get Started",
-                highlight: true,
-              },
-            ].map((plan, i) => (
-              <div key={i} style={{
-                background: plan.highlight ? BLACK : CARD_BG,
-                borderRadius: 24, padding: "36px",
-                border: plan.highlight ? "none" : "1px solid " + BORDER,
-                position: "relative" as const,
-              }}>
-                {plan.highlight && (
-                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: ORANGE, color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 14px", borderRadius: 20 }}>MOST POPULAR</div>
-                )}
-                <div style={{ fontSize: 14, fontWeight: 700, color: plan.highlight ? "#888" : MUTED, marginBottom: 8 }}>{plan.name}</div>
-                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
-                  <span style={{ fontSize: 44, fontWeight: 900, color: plan.highlight ? "#fff" : BLACK }}>{plan.price}</span>
-                  <span style={{ fontSize: 16, color: plan.highlight ? "#888" : MUTED }}>{plan.period}</span>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row" as const, gap: 48, alignItems: "center" }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: ORANGE, textTransform: "uppercase" as const, letterSpacing: 2, marginBottom: 12 }}>Pricing</div>
+              <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 900, color: BLACK, margin: "0 0 16px", letterSpacing: -1 }}>
+                Priced around<br />your business.
+              </h2>
+              <p style={{ fontSize: 16, color: MUTED, lineHeight: 1.7, marginBottom: 28 }}>
+                Every business is different. We first understand your problems, then we build the right solution. Pricing is based on what we build for you — nothing more, nothing less.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 16 }}>
+                {[
+                  { icon: "🤝", title: "Discovery First", desc: "We have a call to understand your business, your problems, and your goals." },
+                  { icon: "🔨", title: "We Build the Solution", desc: "We build only what you need — no bloated features you'll never use." },
+                  { icon: "💬", title: "Transparent Pricing", desc: "You get a clear price before we start. No surprises, no hidden fees." },
+                ].map((item, i) => (
+                  <div key={i} style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, background: "#fff8f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 20, flexShrink: 0 }}>{item.icon}</div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: BLACK, marginBottom: 2 }}>{item.title}</div>
+                      <div style={{ fontSize: 13, color: MUTED, lineHeight: 1.5 }}>{item.desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ background: BLACK, borderRadius: 24, padding: "36px" }}>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", marginBottom: 8 }}>Ready to get started?</div>
+                <div style={{ fontSize: 14, color: "#888", marginBottom: 28 }}>Tell us about your business. We'll come back to you within 24 hours.</div>
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 12 }}>
+                  <a href="mailto:samzyaioperator@gmail.com" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: ORANGE, color: "#fff", padding: "15px", borderRadius: 12, textDecoration: "none", fontSize: 15, fontWeight: 700 }}>
+                    📧 Send us an Email
+                  </a>
+                  <a href="https://wa.me/351000000000" style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "#25D366", color: "#fff", padding: "15px", borderRadius: 12, textDecoration: "none", fontSize: 15, fontWeight: 700 }}>
+                    💬 WhatsApp Us
+                  </a>
                 </div>
-                <div style={{ fontSize: 13, color: plan.highlight ? "#888" : MUTED, marginBottom: 28 }}>{plan.desc}</div>
-                <div style={{ display: "flex", flexDirection: "column" as const, gap: 12, marginBottom: 32 }}>
-                  {plan.features.map(f => (
-                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ color: ORANGE, fontWeight: 700 }}>✓</span>
-                      <span style={{ fontSize: 14, color: plan.highlight ? "#ccc" : BLACK }}>{f}</span>
+                <div style={{ marginTop: 24, padding: "16px", background: "#1a1a1a", borderRadius: 12 }}>
+                  <div style={{ fontSize: 12, color: "#555", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 1 }}>What happens next</div>
+                  {["30-min discovery call", "We analyse your needs", "You get a custom proposal", "We start building"].map((step, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderTop: i > 0 ? "1px solid #2a2a2a" : "none" }}>
+                      <span style={{ color: ORANGE, fontWeight: 700, fontSize: 12 }}>{i + 1}.</span>
+                      <span style={{ fontSize: 13, color: "#888" }}>{step}</span>
                     </div>
                   ))}
                 </div>
-                <a href="#contact" style={{
-                  display: "block", textAlign: "center", padding: "14px",
-                  borderRadius: 12, background: plan.highlight ? ORANGE : BLACK,
-                  color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none",
-                }}>
-                  {plan.cta} →
-                </a>
               </div>
-            ))}
+            </div>
           </div>
         </div>
       </section>
