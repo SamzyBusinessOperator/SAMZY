@@ -130,7 +130,7 @@ function ProductSheet({ product, onClose, onUpdate }: {
   onClose: () => void;
   onUpdate: (updated: Product) => void;
 }) {
-  const [tab, setTab] = useState<"pricing" | "history" | "suppliers">("pricing");
+  const [tab, setTab] = useState<"history" | "suppliers">("history");
   const [history, setHistory] = useState<PriceHistoryEntry[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierPrice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -263,7 +263,7 @@ function ProductSheet({ product, onClose, onUpdate }: {
         </div>
         {/* Tabs */}
         <div style={{ display: "flex", padding: "8px 20px 0", gap: 4, background: CARD_BG }}>
-          {[{ id: "pricing", label: "💰 Pricing" }, { id: "history", label: "📊 History" }, { id: "suppliers", label: "🏪 Suppliers" }].map(t => (
+          {[{ id: "history", label: "📊 History" }, { id: "suppliers", label: "🏪 Suppliers" }].map(t => (
             <button key={t.id} onClick={() => setTab(t.id as any)}
               style={{ flex: 1, padding: "8px 4px", borderRadius: "10px 10px 0 0", border: "none", cursor: "pointer", fontSize: 12, fontWeight: tab === t.id ? 700 : 400, background: tab === t.id ? WARM_BG : "transparent", color: tab === t.id ? ORANGE : MUTED, borderBottom: tab === t.id ? `2px solid ${ORANGE}` : "2px solid transparent" }}>
               {t.label}
@@ -272,43 +272,6 @@ function ProductSheet({ product, onClose, onUpdate }: {
         </div>
         {/* Content */}
         <div style={{ flex: 1, overflowY: "auto", background: WARM_BG, padding: "16px 20px 40px" }}>
-
-          {/* PRICING TAB */}
-          {tab === "pricing" && (
-            <div>
-              <div style={{ background: CARD_BG, borderRadius: 14, padding: "14px 16px", border: "1px solid " + BORDER, marginBottom: 16 }}>
-                {[
-                  { label: "Cost S/IVA (Invoice)", value: `€${p.costSIVA.toFixed(3)}` },
-                  { label: "Item Cost (Working)", value: `€${r3(p.itemCost)}`, highlight: true },
-                  { label: "Per Unit Cost", value: `€${(p.itemCost / (p.packSize.match(/^(\d+)\s*[x×*]/i)?.[1] ? parseInt(p.packSize.match(/^(\d+)\s*[x×*]/i)![1]) : 1)).toFixed(3)}` },
-                  { label: "Item W/T (+" + (p.transportPct * 100).toFixed(2) + "% transport)", value: `€${p.itemWT.toFixed(3)}` },
-                  { label: "C/IVACP (+" + (p.ivaRate * 100).toFixed(0) + "% IVA)", value: `€${p.civacp.toFixed(2)}`, highlight: true },
-                  { label: "Shop Sem (+" + (p.shopSemPct * 100).toFixed(0) + "%)", value: `€${p.shopSem.toFixed(2)}` },
-                  { label: "Shop Com (+" + (p.shopComPct * 100).toFixed(0) + "%)", value: `€${p.shopCom.toFixed(2)}` },
-                  { label: "Special (+" + (p.specialPct * 100).toFixed(0) + "%)", value: `€${p.special.toFixed(2)}` },
-                  { label: "Wholesale (+" + (p.bigWholesalePct * 100).toFixed(0) + "%)", value: `€${p.bigWholesale.toFixed(2)}` },
-                  { label: "Rest Com (+" + (p.restComPct * 100).toFixed(0) + "%)", value: `€${p.restCom.toFixed(2)}` },
-                ].map((row, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderTop: i > 0 ? "1px solid " + BORDER : "none" }}>
-                    <span style={{ fontSize: 13, color: MUTED }}>{row.label}</span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: (row as any).highlight ? ORANGE : BLACK }}>{row.value}</span>
-                  </div>
-                ))}
-              </div>
-              <div style={{ background: WARM_BG, borderRadius: 14, padding: "14px 16px", border: "1px solid " + BORDER }}>
-                {[
-                  { label: "Total Cases", value: `${p.qty} cases` },
-                  { label: "Total Stock Units", value: `${p.totalUnits} units` },
-                  { label: "Total Invoice Cost", value: `€${r2(p.itemCost * p.qty).toFixed(2)}`, bold: true },
-                ].map((row, i) => (
-                  <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderTop: i > 0 ? "1px solid " + BORDER : "none" }}>
-                    <span style={{ fontSize: 13, color: MUTED }}>{row.label}</span>
-                    <span style={{ fontSize: 13, fontWeight: row.bold ? 800 : 600, color: row.bold ? ORANGE : BLACK }}>{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
 
           {/* HISTORY TAB */}
           {tab === "history" && (
@@ -975,7 +938,7 @@ export default function Scanner() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ background: BLACK, color: "#fff" }}>
-                  {["#", "PRODUCT", "S/IVA", "ITEM COST", "PER UNIT", "IVA%", "W/T", "C/IVACP", "SEM%", "SHOP SEM", "COM%", "SHOP COM", "SPL%", "SPECIAL", "WHL%", "WHOLESALE", "RST%", "REST COM", "QTY", "UNITS", "TOTAL"].map((h, i) => (
+                  {["#", "PRODUCT", "S/IVA", "ITEM COST", "PER UNIT", "TRPT%", "IVA%", "W/T", "C/IVACP", "SEM%", "SHOP SEM", "COM%", "SHOP COM", "SPL%", "SPECIAL", "WHL%", "WHOLESALE", "RST%", "REST COM", "QTY", "UNITS", "TOTAL"].map((h, i) => (
                     <th key={h} style={{ padding: "10px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap", color: h === "C/IVACP" || h === "ITEM COST" ? ORANGE : "#fff", minWidth: i === 1 ? 180 : i === 0 ? 32 : 80 }}>{h}</th>
                   ))}
                 </tr>
@@ -1003,6 +966,7 @@ export default function Scanner() {
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>€{p.costSIVA.toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.itemCost.toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{(p.itemCost / (p.packSize.match(/^(\d+)\s*[x×*]/i)?.[1] ? parseInt(p.packSize.match(/^(\d+)\s*[x×*]/i)![1]) : 1)).toFixed(3)}</td>
+                    <InlineEditCell value={p.transportPct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, transportPct: v/100}))} />
                     <InlineEditCell value={p.ivaRate * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, ivaRate: v/100}))} />
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.itemWT.toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.civacp.toFixed(2)}</td>
@@ -1025,7 +989,7 @@ export default function Scanner() {
               {/* Totals row */}
               <tfoot>
                 <tr style={{ background: "#0f0f0f", color: "#fff" }}>
-                  <td colSpan={18} style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>TOTALS</td>
+                  <td colSpan={19} style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>TOTALS</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>{products.reduce((s, p) => s + p.qty, 0)}</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>{products.reduce((s, p) => s + p.totalUnits, 0).toLocaleString()}</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12, color: ORANGE }}>€{products.reduce((s, p) => s + p.totalCost, 0).toFixed(2)}</td>
