@@ -571,15 +571,18 @@ export default function Scanner() {
   }
 
   async function saveSales() {
-    if (!storeId || saleItems.length === 0) return;
+    if (saleItems.length === 0) return;
     setReceiptSaving(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
       const email = session.user.email || "";
+      const { data: storeData } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+      const sid = storeData?.id || storeId;
+      if (!sid) { setReceiptMessage("Store not found."); setReceiptSaving(false); return; }
       for (const item of saleItems) {
         await supabase.from("sales").insert([{
-          store_id: storeId,
+          store_id: sid,
           store_email: email,
           product_name: item.name,
           category: item.category,
@@ -590,7 +593,7 @@ export default function Scanner() {
         }]);
         const { data: existing } = await supabase.from("products")
           .select("id, stock_quantity")
-          .eq("store_id", storeId)
+          .eq("store_id", sid)
           .ilike("name", `%${item.name.substring(0, 15)}%`)
           .maybeSingle();
         if (existing) {
