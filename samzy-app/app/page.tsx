@@ -1061,7 +1061,7 @@ function FloatingAI({ question, setQuestion, loading, chatHistory, onAsk }: {
     <>
       {/* Floating button */}
       <button onClick={() => setOpen(!open)}
-        style={{ position: "fixed", bottom: 80, right: 20, width: 52, height: 52, borderRadius: 26, background: BLACK, border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, zIndex: 200, boxShadow: "0 4px 20px rgba(0,0,0,0.25)" }}>
+        style={{ position: "fixed", bottom: 80, right: 20, width: 56, height: 56, borderRadius: 28, background: "#FC7800", border: "none", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, zIndex: 200, boxShadow: "0 4px 24px rgba(252,120,0,0.5)" }}>
         {open ? "✕" : "✦"}
       </button>
 
