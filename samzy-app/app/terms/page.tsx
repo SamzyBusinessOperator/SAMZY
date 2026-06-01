@@ -1,65 +1,95 @@
 "use client";
-import { useIsMobile } from "@/lib/useIsMobile";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import Link from "next/link";
+
+const BLACK = "#1d1d1f";
+const MID_GRAY = "#6e6e73";
+const BORDER = "#d2d2d7";
 const ORANGE = "#FC7800";
-const BLACK = "#0f0f0f";
-const WARM_BG = "#FAFAF8";
-const CARD_BG = "#FFFFFF";
-const BORDER = "#F0EEEB";
-const MUTED = "#6B6B6B";
+const WHITE = "#ffffff";
+
 export default function Terms() {
-  const isMobile = useIsMobile();
-  const sections = [
-    { title: "1. Acceptance of Terms", content: "By accessing or using Samzy, you agree to be bound by these Terms of Service. If you do not agree, please do not use the service." },
-    { title: "2. Description of Service", content: "Samzy is a SaaS platform for supermarket and retail store management. It includes tools for inventory, staff, finances, supplier management, and an AI-powered business advisor." },
-    { title: "3. Free Trial", content: "New users receive a 14-day free trial. No credit card is required to start. After the trial, a paid subscription is required to continue using Samzy." },
-    { title: "4. Payments & Subscriptions", content: "Samzy charges 29 euros per month per store. Payments are processed securely via Stripe. You can cancel at any time from your billing settings. Cancellations take effect at the end of the current billing period." },
-    { title: "5. User Responsibilities", content: "You are responsible for maintaining the confidentiality of your account credentials. You agree not to misuse the platform, attempt to reverse-engineer it, or use it for any unlawful purpose." },
-    { title: "6. Data & Privacy", content: "We collect and process data as described in our Privacy Policy. Your store data is private and will never be sold to third parties." },
-    { title: "7. AI Advisor", content: "The AI Advisor feature is powered by Claude (Anthropic). Responses are based on your store data and are for informational purposes only. Samzy is not liable for business decisions made based on AI recommendations." },
-    { title: "8. Termination", content: "We reserve the right to suspend or terminate accounts that violate these terms. You may cancel your account at any time." },
-    { title: "9. Limitation of Liability", content: "Samzy is provided as is. We are not liable for any indirect, incidental, or consequential damages arising from use of the platform." },
-    { title: "10. Changes to Terms", content: "We may update these terms from time to time. Continued use of Samzy after changes constitutes acceptance of the new terms." },
-    { title: "11. Contact", content: "For questions about these terms, contact us at legal@samzyai.com." },
-  ];
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", color: BLACK, background: WARM_BG, minHeight: "100vh" }}>
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: isMobile ? "16px 20px" : "20px 48px", borderBottom: "1px solid " + BORDER, background: WARM_BG }}>
-        <a href="/landing" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <Image src="/logo.png" alt="Samzy" width={32} height={32} />
-          <span style={{ fontSize: 16, fontWeight: 800, color: BLACK }}>Samzy</span>
-        </a>
-        <a href="/signup" style={{ background: ORANGE, color: "#fff", padding: "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: 14, fontWeight: 700 }}>Get Started</a>
+    <div style={{ fontFamily: "-apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif", background: WHITE, color: BLACK, minHeight: "100vh" }}>
+      {/* Nav */}
+      <nav style={{ borderBottom: "1px solid " + BORDER, padding: "0 40px", height: 52, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <Link href="/landing" style={{ display: "flex", alignItems: "center", gap: 6, textDecoration: "none" }}>
+          <Image src="/logo.png" alt="Samzy" width={22} height={22} />
+          <span style={{ fontSize: 17, fontWeight: 700, color: BLACK }}>Samzy</span>
+        </Link>
+        <Link href="/landing" style={{ fontSize: 13, color: MID_GRAY, textDecoration: "none" }}>← Back</Link>
       </nav>
-      <div style={{ maxWidth: 760, margin: "0 auto", padding: isMobile ? "40px 20px" : "80px 48px" }}>
-        <div style={{ marginBottom: 48 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: CARD_BG, border: "1px solid " + BORDER, padding: "6px 14px", borderRadius: 20, fontSize: 12, color: MUTED, marginBottom: 20 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: ORANGE, display: "inline-block" }} />
-            Last updated: January 2026
+
+      <div style={{ maxWidth: 720, margin: "0 auto", padding: "60px 24px 100px" }}>
+        <p style={{ fontSize: 13, fontWeight: 600, color: ORANGE, letterSpacing: 1, textTransform: "uppercase" as const, marginBottom: 12 }}>Legal</p>
+        <h1 style={{ fontSize: 48, fontWeight: 900, color: BLACK, letterSpacing: -2.5, margin: "0 0 8px" }}>Terms of Service</h1>
+        <p style={{ fontSize: 14, color: MID_GRAY, marginBottom: 48 }}>Last updated: 1 June 2026</p>
+
+        {[
+          {
+            title: "1. Agreement to Terms",
+            content: "By accessing samzyai.com or engaging Samzy for software development services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our website or services."
+          },
+          {
+            title: "2. Services",
+            content: "Samzy provides custom business software development services. We build private, branded software applications for retail businesses and supermarkets. Each client engagement is governed by a separate service agreement that outlines specific deliverables, timelines, and pricing. The samzyai.com website is a portfolio and contact platform only — no services are purchased directly through this website."
+          },
+          {
+            title: "3. Custom Software Development",
+            content: "Software built by Samzy for a client is custom-built for that client's specific needs. The client receives a fully operational software solution deployed on infrastructure in their name. Samzy retains ownership of the underlying codebase and framework, while the client owns their business data, their branding, and their specific configuration. Each client's software is entirely private and isolated from other clients."
+          },
+          {
+            title: "4. Payment Terms",
+            content: "Pricing for each project is agreed upon before work begins and outlined in a separate proposal or agreement. Monthly service fees (hosting, maintenance, and support) are due at the beginning of each month. Late payments may result in service suspension. All prices are in Euros (EUR) unless otherwise stated."
+          },
+          {
+            title: "5. Client Responsibilities",
+            content: "Clients are responsible for providing accurate business information required to build and configure their software, maintaining the security of their login credentials, ensuring their staff use the software appropriately, and notifying Samzy promptly of any issues or required changes."
+          },
+          {
+            title: "6. Intellectual Property",
+            content: "Samzy retains intellectual property rights over the software framework, codebase architecture, and development methodology. Clients own their business data, custom branding assets (logos, colors), and business-specific configurations. Clients may not reverse-engineer, resell, or redistribute the software built for them."
+          },
+          {
+            title: "7. Data Ownership & Privacy",
+            content: "All business data entered into a client's software application belongs entirely to that client. Samzy does not sell, share, or use client data for any purpose other than operating the client's software. Upon contract termination, clients may request a full export of their data. Data is deleted from our systems within 30 days of contract termination unless a longer retention period is legally required."
+          },
+          {
+            title: "8. Service Availability",
+            content: "We aim to maintain 99% uptime for all client applications. Scheduled maintenance will be communicated in advance. Samzy is not liable for downtime caused by third-party infrastructure providers (Vercel, Supabase) or events outside our reasonable control."
+          },
+          {
+            title: "9. Limitation of Liability",
+            content: "Samzy's liability to any client is limited to the monthly fees paid in the three months preceding any claim. We are not liable for indirect, incidental, or consequential damages, including loss of profits or business interruption, arising from use of our software."
+          },
+          {
+            title: "10. Termination",
+            content: "Either party may terminate a service agreement with 30 days written notice. Upon termination, the client's software will remain operational for the notice period. After termination, Samzy will provide a data export upon request and then permanently delete all client data from our systems."
+          },
+          {
+            title: "11. Governing Law",
+            content: "These Terms of Service are governed by the laws of Portugal. Any disputes arising from these terms or our services will be subject to the exclusive jurisdiction of the courts of Lisbon, Portugal."
+          },
+          {
+            title: "12. Changes to Terms",
+            content: "We may update these Terms of Service from time to time. Clients will be notified of material changes with at least 30 days notice. Continued use of our services after changes take effect constitutes acceptance of the updated terms."
+          },
+          {
+            title: "13. Contact",
+            content: "For any questions about these Terms of Service, please contact us at samzyaioperator@gmail.com."
+          },
+        ].map((section, i) => (
+          <div key={i} style={{ marginBottom: 40, paddingBottom: 40, borderBottom: i < 12 ? "1px solid " + BORDER : "none" }}>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: BLACK, letterSpacing: -0.5, margin: "0 0 12px" }}>{section.title}</h2>
+            <p style={{ fontSize: 15, color: MID_GRAY, lineHeight: 1.7, margin: 0 }}>{section.content}</p>
           </div>
-          <h1 style={{ fontSize: isMobile ? 32 : 48, fontWeight: 800, color: BLACK, margin: "0 0 16px", letterSpacing: -1 }}>Terms of Service</h1>
-          <p style={{ color: MUTED, fontSize: isMobile ? 15 : 17, lineHeight: 1.7, margin: 0 }}>Please read these terms carefully before using Samzy.</p>
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-          {sections.map((s, i) => (
-            <div key={i} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "20px" : "28px", border: "1px solid " + BORDER }}>
-              <h2 style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: BLACK, margin: "0 0 10px" }}>{s.title}</h2>
-              <p style={{ color: MUTED, fontSize: isMobile ? 14 : 15, lineHeight: 1.8, margin: 0 }}>{s.content}</p>
-            </div>
-          ))}
-        </div>
+        ))}
       </div>
-      <footer style={{ padding: isMobile ? "24px 20px" : "40px 48px", borderTop: "1px solid " + BORDER, background: WARM_BG, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: "center", gap: isMobile ? 12 : 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Image src="/logo.png" alt="Samzy" width={24} height={24} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>Samzy</span>
-        </div>
-        <div style={{ color: MUTED, fontSize: 12 }}>2026 Samzy. Built for supermarket owners.</div>
-        <div style={{ display: "flex", gap: 20 }}>
-          <a href="/terms" style={{ color: ORANGE, textDecoration: "none", fontSize: 13, fontWeight: 600 }}>Terms</a>
-          <a href="/privacy" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Privacy</a>
-        </div>
+
+      {/* Footer */}
+      <footer style={{ borderTop: "1px solid " + BORDER, padding: "24px 40px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <span style={{ fontSize: 12, color: MID_GRAY }}>© 2026 Samzy. Lisbon, Portugal.</span>
+        <Link href="/privacy" style={{ fontSize: 12, color: MID_GRAY, textDecoration: "none" }}>Privacy Policy</Link>
       </footer>
     </div>
   );

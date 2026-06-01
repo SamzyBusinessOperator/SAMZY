@@ -300,8 +300,8 @@ export default function Landing() {
             <span style={{ fontSize: 13, color: MID_GRAY }}>— Custom Business Software</span>
           </div>
           <div style={{ display: "flex", gap: 24 }}>
-            {["Privacy Policy", "Terms"].map(link => (
-              <a key={link} href="#" style={{ fontSize: 12, color: MID_GRAY, textDecoration: "none" }}>{link}</a>
+            {[["Privacy Policy", "/privacy"], ["Terms", "/terms"]].map(([link, href]) => (
+              <a key={link} href={href} style={{ fontSize: 12, color: MID_GRAY, textDecoration: "none" }}>{link}</a>
             ))}
           </div>
           <div style={{ fontSize: 12, color: MID_GRAY }}>© 2026 Samzy. Lisbon, Portugal.</div>
