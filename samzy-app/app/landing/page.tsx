@@ -257,7 +257,7 @@ export default function Landing() {
                     background: BLACK, color: WHITE, padding: "16px", borderRadius: 14,
                     textDecoration: "none", fontSize: 15, fontWeight: 600, letterSpacing: -0.3,
                   }}>📧 Send an Email</a>
-                  <a href="https://wa.me/351000000000" style={{
+                  <a href="https://wa.me/351920605697" style={{
                     display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
                     background: "#25D366", color: WHITE, padding: "16px", borderRadius: 14,
                     textDecoration: "none", fontSize: 15, fontWeight: 600, letterSpacing: -0.3,
