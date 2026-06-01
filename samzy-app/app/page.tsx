@@ -917,6 +917,14 @@ export default function Home() {
         </div>
       </main>
 
+      {/* FLOATING AI CHATBOT */}
+      <FloatingAI
+        question={question}
+        setQuestion={setQuestion}
+        loading={loading}
+        chatHistory={chatHistory}
+        onAsk={askAdvisor}
+      />
       {/* MOBILE BOTTOM NAV */}
       {isMobile && (
         <nav style={{ position: "fixed", bottom: 0, left: 0, right: 0, background: CARD_BG, borderTop: "1px solid " + BORDER, display: "flex", zIndex: 100 }}>
