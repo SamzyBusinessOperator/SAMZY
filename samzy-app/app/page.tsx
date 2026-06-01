@@ -321,6 +321,22 @@ export default function Home() {
     window.location.href = "/landing";
   }
 
+  function exportDashboard(format: "pdf" | "excel") {
+    const data = [
+      { Metric: "Today's Sales", Value: "€" + realStats.todaySales.toFixed(2) },
+      { Metric: "Monthly Revenue", Value: "€" + realStats.monthSales.toFixed(2) },
+      { Metric: "Cash Flow", Value: "€" + realStats.cashFlow.toFixed(2) },
+      { Metric: "Low Stock Items", Value: String(products.filter(p => p.stock_quantity <= p.reorder_threshold).length) },
+      { Metric: "Total Products", Value: String(products.length) },
+      { Metric: "Top Product", Value: topProducts[0]?.name || "N/A" },
+    ];
+    if (format === "excel") {
+      exportToExcel(data, "samzy_dashboard", "Dashboard");
+    } else {
+      exportToPDF("Dashboard Report", ["Metric", "Value"], data.map(d => [d.Metric, d.Value]), "samzy_dashboard");
+    }
+  }
+
   function exportInventory(format: "pdf" | "excel") {
     if (format === "excel") {
       exportToExcel(products.map(p => ({ Name: p.name, Category: p.category, Stock: p.stock_quantity, Price: "€" + p.price, "Reorder At": p.reorder_threshold })), "samzy_inventory", "Inventory");
@@ -539,6 +555,11 @@ export default function Home() {
           {/* DASHBOARD */}
           {activeNav === "dashboard" && (
             <div>
+              {/* Dashboard Export Buttons */}
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8, marginBottom: 16 }}>
+                <button onClick={() => exportDashboard("excel")} style={{ background: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ Excel</button>
+                <button onClick={() => exportDashboard("pdf")} style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", borderRadius: 8, padding: "8px 12px", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>⬇ PDF</button>
+              </div>
               {/* KPI Grid — 2 cols on mobile, 4 on desktop */}
               <div style={{ display: isMobile ? "flex" : "grid", gridTemplateColumns: "repeat(4,1fr)", overflowX: isMobile ? "auto" : "visible", gap: isMobile ? 10 : 16, marginBottom: isMobile ? 16 : 24, paddingBottom: isMobile ? 4 : 0 }}>
                 {[
