@@ -182,8 +182,8 @@ export default function Landing() {
           <div style={{ background: WHITE, borderRadius: 28, padding: isMobile ? "36px 28px" : "56px 64px" }}>
             <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row" as const, gap: 56, alignItems: isMobile ? "flex-start" : "center" }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 13, color: MID_GRAY, fontWeight: 500, marginBottom: 6 }}>Asian Supermarket · Intendente, Lisbon</div>
-                <h3 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 800, color: BLACK, letterSpacing: -1.2, margin: "0 0 20px" }}>Tranquilpolis LDA</h3>
+                <div style={{ fontSize: 13, color: MID_GRAY, fontWeight: 500, marginBottom: 6 }}>Asian Supermarket · Lisbon, Portugal</div>
+                <h3 style={{ fontSize: isMobile ? 26 : 36, fontWeight: 800, color: BLACK, letterSpacing: -1.2, margin: "0 0 20px" }}>Sher-E-Punjab</h3>
                 <p style={{ fontSize: 16, color: MID_GRAY, lineHeight: 1.65, margin: "0 0 32px" }}>
                   Processing supplier invoices from KRG Asian Food (Rotterdam, Netherlands) used to take hours of manual Excel work. Now it takes seconds — AI extracts every product, calculates all selling prices, and updates inventory automatically.
                 </p>
