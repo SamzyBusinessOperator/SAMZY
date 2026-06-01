@@ -907,6 +907,12 @@ export default function Home() {
               </div>
             </div>
           )}
+          {/* SALES HISTORY */}
+          {activeNav === "sales" && (
+            <div>
+              <SalesHistory storeId={storeId} />
+            </div>
+          )}
 
         </div>
       </main>
