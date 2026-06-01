@@ -967,7 +967,7 @@ function SalesHistory() {
         if (!session) return;
         const email = session.user.email || "";
         const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
-        const sid = store?.id || storeId;
+        const sid = store?.id;
         if (!sid) return;
         const { data } = await supabase.from("sales")
           .select("*")
