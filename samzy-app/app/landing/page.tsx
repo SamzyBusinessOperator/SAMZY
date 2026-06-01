@@ -292,13 +292,7 @@ export default function Landing() {
             </div>
           </div>
         ))}
-        <div style={{ marginTop: 20, background: WARM_BG, borderRadius: 16, padding: "20px 28px", border: "1px solid " + BORDER, display: "flex", alignItems: "center", gap: 16 }}>
-          <span style={{ fontSize: 24 }}>🤝</span>
-          <div>
-            <div style={{ fontSize: 15, fontWeight: 700, color: BLACK }}>Integration Partnership in Progress</div>
-            <div style={{ fontSize: 13, color: MUTED }}>We are in active discussions with <strong>ZoneSoft POS</strong> (Telheiras, Lisboa) for deep POS integration — connecting your point of sale directly with your inventory and pricing system.</div>
-          </div>
-        </div>
+
       </section>
 
       {/* ── PRICING ── */}
