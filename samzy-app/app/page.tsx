@@ -979,7 +979,7 @@ function SalesHistory() {
       setLoading(false);
     }
     load();
-  }, [storeId]);
+  }, []);
 
   const filtered = sales.filter(s => s.product_name?.toLowerCase().includes(search.toLowerCase()));
   const totalRevenue = sales.reduce((sum, s) => sum + (s.total || 0), 0);
