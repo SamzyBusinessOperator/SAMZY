@@ -910,7 +910,7 @@ export default function Home() {
           {/* SALES HISTORY */}
           {activeNav === "sales" && (
             <div>
-              <SalesHistory storeId={storeId} />
+              <SalesHistory />
             </div>
           )}
 
@@ -952,7 +952,7 @@ export default function Home() {
   );
 }
 // ─── Sales History Component ──────────────────────────────────────────────────
-function SalesHistory({ storeId }: { storeId: string | null }) {
+function SalesHistory() {
   const [sales, setSales] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
