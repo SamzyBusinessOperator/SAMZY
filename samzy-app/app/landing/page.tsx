@@ -1,7 +1,7 @@
 "use client";
 import { useIsMobile } from "@/lib/useIsMobile";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const ORANGE = "#FC7800";
 const BLACK = "#0f0f0f";
@@ -9,219 +9,417 @@ const WARM_BG = "#FAFAF8";
 const CARD_BG = "#FFFFFF";
 const BORDER = "#F0EEEB";
 const MUTED = "#6B6B6B";
-
+const DARK = "#111111";
 
 export default function Landing() {
   const isMobile = useIsMobile();
+  const [scrollY, setScrollY] = useState(0);
+  const [activeSection, setActiveSection] = useState(0);
 
-  const features = [
-    { icon: "📊", title: "See Your Business At a Glance", desc: "Every morning, know how much you sold, what's running low, and what needs attention." },
-    { icon: "⚠️", title: "Never Run Out of Stock Again", desc: "Real-time inventory alerts before products run out. No more emergency supplier calls." },
-    { icon: "✦", title: "Your Own AI Business Advisor", desc: "Ask anything. Get instant answers based on your real store data." },
-    { icon: "🚚", title: "Stay on Top of Invoices", desc: "See all supplier invoices in one place. Know what's due before it becomes a problem." },
-    { icon: "👥", title: "Manage Your Staff Easily", desc: "See who's working today, manage shifts — all from one simple screen." },
-    { icon: "💰", title: "Understand Your Finances", desc: "Daily revenue, monthly totals, and cash flow at a glance." },
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const services = [
+    {
+      icon: "📱",
+      title: "Custom Business App",
+      desc: "Your store, your brand, your app. We build a fully branded management system — with your logo, your colors, your business name. Installed on your phone like any app.",
+      features: ["Your logo & brand colors", "Your business name", "Installed on iOS & Android", "No technical knowledge needed"],
+    },
+    {
+      icon: "🧠",
+      title: "AI-Powered Intelligence",
+      desc: "Every morning you wake up knowing exactly what happened in your business yesterday. Sales, stock, cash flow — all summarized by AI in plain language.",
+      features: ["Daily business summary", "Ask AI anything", "Price change alerts", "Profit margin insights"],
+    },
+    {
+      icon: "📦",
+      title: "Smart Inventory & Pricing",
+      desc: "Upload a supplier invoice — AI reads it, extracts all products, calculates your selling prices using your exact formulas. What used to take hours takes seconds.",
+      features: ["Invoice scanning", "Auto price calculation", "Stock tracking", "Low stock alerts"],
+    },
+    {
+      icon: "📊",
+      title: "Supplier Intelligence",
+      desc: "Know which supplier gives you the best price for every product. See price history, compare suppliers, and make better purchasing decisions with real data.",
+      features: ["Price history tracking", "Supplier comparison", "Best deal alerts", "Purchase decision support"],
+    },
   ];
 
-  const problems = [
-    "You don't know how much you're really making each day",
-    "Products run out and you only notice when customers complain",
-    "Supplier invoices pile up and you lose track of what you owe",
-    "You make decisions based on gut feeling, not real data",
-    "Managing staff schedules takes too much time",
+  const process = [
+    { step: "01", title: "Discovery Call", desc: "We learn about your business — your suppliers, your products, how you currently manage pricing and inventory." },
+    { step: "02", title: "Custom Setup", desc: "We configure your branded app with your logo, colors, and business name. We upload your products and suppliers." },
+    { step: "03", title: "Training", desc: "We show you how to use the app in 30 minutes. Simple enough that any staff member can use it from day one." },
+    { step: "04", title: "Ongoing Support", desc: "We're always available. New features, fixes, questions — we handle everything. You focus on running your business." },
   ];
 
-  const testimonials = [
-    { name: "Carlos M.", store: "Minimarket Lisboa", text: "Before Samzy I had no idea which products were making me money. Now I know every morning." },
-    { name: "Ana R.", store: "Supermercado Barreiro", text: "The AI advisor told me to stop ordering a product just sitting on the shelf. Saved me 400 euros." },
-    { name: "Joao F.", store: "Mercado Central", text: "I used to spend 2 hours every Monday figuring out the week. Now it takes 5 minutes." },
+  const clients = [
+    { name: "Tranquilpolis LDA", type: "Asian Supermarket", location: "Intendente, Lisbon", result: "Processes KRG Asian Food invoices (€49,168) in seconds instead of hours", logo: "🏪" },
   ];
 
-  const p = isMobile ? "0 20px" : "0 48px";
+  const stats = [
+    { value: "95", label: "Products extracted from a single invoice", suffix: "" },
+    { value: "€49K", label: "Invoice processed in one scan", suffix: "" },
+    { value: "3", label: "Seconds to calculate all selling prices", suffix: "s" },
+    { value: "100%", label: "Branded with your business identity", suffix: "" },
+  ];
 
   return (
-    <div style={{ fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", color: BLACK, background: WARM_BG }}>
+    <div style={{ fontFamily: "'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif", color: BLACK, background: WARM_BG, overflowX: "hidden" }}>
 
-      {/* Nav */}
-      <nav style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: isMobile ? "16px 20px" : "20px 48px", borderBottom: "1px solid " + BORDER, position: "sticky", top: 0, background: WARM_BG, zIndex: 100 }}>
+      {/* ── NAV ── */}
+      <nav style={{
+        display: "flex", justifyContent: "space-between", alignItems: "center",
+        padding: isMobile ? "16px 20px" : "20px 60px",
+        position: "sticky", top: 0, zIndex: 100,
+        background: scrollY > 50 ? "rgba(250,250,248,0.95)" : "transparent",
+        backdropFilter: scrollY > 50 ? "blur(20px)" : "none",
+        borderBottom: scrollY > 50 ? "1px solid " + BORDER : "none",
+        transition: "all 0.3s ease",
+      }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Image src="/logo.png" alt="Samzy" width={32} height={32} />
           <span style={{ fontSize: 16, fontWeight: 800, color: BLACK }}>Samzy</span>
         </div>
-        <div style={{ display: "flex", gap: isMobile ? 8 : 24, alignItems: "center" }}>
-          {!isMobile && (
-            <>
-              <a href="#features" style={{ color: MUTED, textDecoration: "none", fontSize: 14 }}>Features</a>
-              <a href="#pricing" style={{ color: MUTED, textDecoration: "none", fontSize: 14 }}>Pricing</a>
-              <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 14 }}>Sign In</a>
-            </>
-          )}
-          {isMobile && <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign In</a>}
-          <a href="/signup" style={{ background: ORANGE, color: "#fff", padding: isMobile ? "9px 16px" : "10px 22px", borderRadius: 10, textDecoration: "none", fontSize: isMobile ? 13 : 14, fontWeight: 700 }}>Get Started</a>
-        </div>
+        {!isMobile && (
+          <div style={{ display: "flex", alignItems: "center", gap: 32 }}>
+            {["Services", "How it Works", "Clients", "Contact"].map(item => (
+              <a key={item} href={`#${item.toLowerCase().replace(" ", "-")}`}
+                style={{ fontSize: 14, color: MUTED, textDecoration: "none", fontWeight: 500 }}>
+                {item}
+              </a>
+            ))}
+          </div>
+        )}
+        <a href="/login" style={{
+          background: ORANGE, color: "#fff", padding: "10px 20px", borderRadius: 10,
+          textDecoration: "none", fontSize: 14, fontWeight: 700,
+        }}>
+          Client Login →
+        </a>
       </nav>
 
-      {/* Hero */}
-      <section style={{ padding: isMobile ? "60px 20px 50px" : "120px 48px 100px", textAlign: "center" }}>
-        <div style={{ maxWidth: 860, margin: "0 auto" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: CARD_BG, border: "1px solid " + BORDER, padding: "6px 14px", borderRadius: 20, fontSize: 12, color: MUTED, marginBottom: 24 }}>
-            <span style={{ width: 7, height: 7, borderRadius: "50%", background: ORANGE, display: "inline-block" }} />
-            Built for independent supermarket owners
+      {/* ── HERO ── */}
+      <section style={{ padding: isMobile ? "60px 20px 80px" : "100px 60px 120px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: isMobile ? 40 : 80, alignItems: "center" }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#fff8f0", border: "1px solid #fde8cc", borderRadius: 20, padding: "6px 14px", marginBottom: 24 }}>
+              <span style={{ width: 8, height: 8, borderRadius: "50%", background: ORANGE, display: "inline-block" }} />
+              <span style={{ fontSize: 12, fontWeight: 600, color: ORANGE }}>Custom Business Software Agency</span>
+            </div>
+            <h1 style={{ fontSize: isMobile ? 36 : 56, fontWeight: 900, color: BLACK, margin: "0 0 20px", lineHeight: 1.1, letterSpacing: -1.5 }}>
+              Your Business.<br />
+              <span style={{ color: ORANGE }}>Your Brand.</span><br />
+              Your App.
+            </h1>
+            <p style={{ fontSize: isMobile ? 16 : 18, color: MUTED, lineHeight: 1.7, margin: "0 0 36px", maxWidth: 480 }}>
+              We build custom-branded business management software for supermarkets and retail stores. AI-powered. Mobile-first. Ready in days, not months.
+            </p>
+            <div style={{ display: "flex", gap: 12, flexWrap: "wrap" as const }}>
+              <a href="#contact" style={{
+                background: BLACK, color: "#fff", padding: "15px 28px", borderRadius: 12,
+                textDecoration: "none", fontSize: 15, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8,
+              }}>
+                Get Your Custom App →
+              </a>
+              <a href="#services" style={{
+                background: CARD_BG, color: BLACK, padding: "15px 28px", borderRadius: 12, border: "1px solid " + BORDER,
+                textDecoration: "none", fontSize: 15, fontWeight: 600,
+              }}>
+                See What We Build
+              </a>
+            </div>
           </div>
-          <h1 style={{ fontSize: isMobile ? 38 : 64, fontWeight: 800, color: BLACK, lineHeight: 1.1, margin: "0 0 20px", letterSpacing: isMobile ? -1 : -2 }}>
-            Run your supermarket<br />
-            <span style={{ color: ORANGE }}>smarter, not harder.</span>
-          </h1>
-          <p style={{ fontSize: isMobile ? 16 : 20, color: MUTED, lineHeight: 1.7, marginBottom: 36, maxWidth: 520, margin: "0 auto 36px" }}>
-            Real-time sales, inventory, staff, and finances — plus an AI advisor that tells you exactly what to do to grow.
-          </p>
-          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 12, justifyContent: "center", alignItems: "center" }}>
-            <a href="/signup" style={{ background: ORANGE, color: "#fff", padding: "15px 36px", borderRadius: 12, textDecoration: "none", fontSize: 16, fontWeight: 700, display: "block", width: isMobile ? "100%" : "auto", textAlign: "center", boxSizing: "border-box" as const }}>
-              Start Free Today →
-            </a>
-            <a href="#features" style={{ background: CARD_BG, color: BLACK, padding: "15px 36px", borderRadius: 12, textDecoration: "none", fontSize: 16, fontWeight: 600, border: "1px solid " + BORDER, display: "block", width: isMobile ? "100%" : "auto", textAlign: "center", boxSizing: "border-box" as const }}>
-              See How It Works
-            </a>
+          {/* App preview mockup */}
+          <div style={{ flex: 1, display: "flex", justifyContent: "center", position: "relative" }}>
+            <div style={{
+              width: isMobile ? 280 : 320, background: BLACK, borderRadius: 36, padding: "10px",
+              boxShadow: "0 40px 80px rgba(0,0,0,0.25)",
+            }}>
+              <div style={{ background: WARM_BG, borderRadius: 28, overflow: "hidden", aspectRatio: "9/19" }}>
+                {/* Fake phone screen */}
+                <div style={{ background: BLACK, padding: "12px 20px 8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <Image src="/logo.png" alt="" width={20} height={20} />
+                  <span style={{ color: "#fff", fontSize: 11, fontWeight: 700 }}>Your Store</span>
+                  <span style={{ color: ORANGE, fontSize: 10, fontWeight: 700 }}>LIVE</span>
+                </div>
+                <div style={{ padding: "16px" }}>
+                  <div style={{ fontSize: 12, color: MUTED, marginBottom: 4 }}>Good morning 👋</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: BLACK, marginBottom: 16 }}>Your Business</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 12 }}>
+                    {[
+                      { label: "Today's Sales", value: "€2,144", color: ORANGE },
+                      { label: "Monthly Revenue", value: "€51,313", color: "#0071e3" },
+                      { label: "Cash Flow", value: "€51,313", color: "#16a34a" },
+                      { label: "Low Stock", value: "29 items", color: "#dc2626" },
+                    ].map(k => (
+                      <div key={k.label} style={{ background: CARD_BG, borderRadius: 10, padding: "10px", border: "1px solid " + BORDER }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, color: k.color }}>{k.value}</div>
+                        <div style={{ fontSize: 9, color: MUTED, marginTop: 2 }}>{k.label}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ background: CARD_BG, borderRadius: 10, padding: "10px", border: "1px solid " + BORDER }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: BLACK, marginBottom: 6 }}>Top Products</div>
+                    {["Aashirvaad Atta 2x10kg", "Khanum Butter Ghee", "MDH Kasori Methi"].map((p, i) => (
+                      <div key={p} style={{ display: "flex", justifyContent: "space-between", padding: "3px 0", borderTop: i > 0 ? "1px solid " + BORDER : "none" }}>
+                        <span style={{ fontSize: 9, color: MUTED }}>{p}</span>
+                        <span style={{ fontSize: 9, fontWeight: 700, color: ORANGE }}>€{[13853, 1043, 930][i]}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Floating badges */}
+            <div style={{ position: "absolute", top: 20, right: isMobile ? -10 : -20, background: CARD_BG, borderRadius: 12, padding: "10px 14px", boxShadow: "0 8px 24px rgba(0,0,0,0.1)", border: "1px solid " + BORDER }}>
+              <div style={{ fontSize: 10, color: MUTED }}>Invoice scanned</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: BLACK }}>95 products</div>
+              <div style={{ fontSize: 10, color: ORANGE, fontWeight: 600 }}>in 3 seconds ✓</div>
+            </div>
+            <div style={{ position: "absolute", bottom: 40, left: isMobile ? -10 : -20, background: CARD_BG, borderRadius: 12, padding: "10px 14px", boxShadow: "0 8px 24px rgba(0,0,0,0.1)", border: "1px solid " + BORDER }}>
+              <div style={{ fontSize: 10, color: MUTED }}>Price calculated</div>
+              <div style={{ fontSize: 13, fontWeight: 800, color: BLACK }}>€43.61</div>
+              <div style={{ fontSize: 10, color: "#16a34a", fontWeight: 600 }}>C/IVACP ✓</div>
+            </div>
           </div>
-          <p style={{ color: MUTED, fontSize: 12, marginTop: 16 }}>No credit card required · Setup in 5 minutes</p>
         </div>
       </section>
 
-      {/* Stats */}
-      <section style={{ background: ORANGE, padding: isMobile ? "40px 20px" : "60px 48px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 0 }}>
-          {[{ number: "2 min", label: "To set up your store" }, { number: "24/7", label: "AI watching your store" }, { number: "€0", label: "To get started today" }].map((stat, i) => (
-            <div key={i} style={{ textAlign: "center", padding: isMobile ? "16px 8px" : "20px", borderRight: i < 2 ? "1px solid rgba(255,255,255,0.2)" : "none" }}>
-              <div style={{ fontSize: isMobile ? 28 : 36, fontWeight: 800, color: "#fff", letterSpacing: -1, marginBottom: 6 }}>{stat.number}</div>
-              <div style={{ fontSize: isMobile ? 11 : 14, color: "#fff" }}>{stat.label}</div>
+      {/* ── STATS ── */}
+      <section style={{ background: BLACK, padding: isMobile ? "48px 20px" : "60px 60px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: isMobile ? 24 : 40 }}>
+          {stats.map((s, i) => (
+            <div key={i} style={{ textAlign: "center" }}>
+              <div style={{ fontSize: isMobile ? 32 : 44, fontWeight: 900, color: ORANGE, marginBottom: 8 }}>{s.value}{s.suffix}</div>
+              <div style={{ fontSize: 13, color: "#888", lineHeight: 1.4 }}>{s.label}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Problems */}
-      <section style={{ padding: isMobile ? "60px 20px" : "100px 48px" }}>
-        <div style={{ maxWidth: 720, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
-            <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, margin: "0 0 12px", letterSpacing: -1 }}>Sound familiar?</h2>
-            <p style={{ color: MUTED, fontSize: isMobile ? 15 : 17, lineHeight: 1.6 }}>Most supermarket owners deal with these problems every day.</p>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {problems.map((p, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "center", gap: 14, background: CARD_BG, padding: "16px 20px", borderRadius: 12, border: "1px solid " + BORDER }}>
-                <span style={{ fontSize: 16, flexShrink: 0 }}>❌</span>
-                <span style={{ fontSize: isMobile ? 13 : 15, color: BLACK }}>{p}</span>
-              </div>
-            ))}
-          </div>
-          <div style={{ marginTop: 24, padding: "24px", background: ORANGE, borderRadius: 14, textAlign: "center" }}>
-            <p style={{ color: "#fff", fontSize: isMobile ? 15 : 18, fontWeight: 700, margin: 0 }}>Samzy solves all of this. In one app.</p>
-          </div>
+      {/* ── WHAT WE BUILD ── */}
+      <section id="services" style={{ padding: isMobile ? "60px 20px" : "100px 60px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 40 : 60 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: ORANGE, textTransform: "uppercase" as const, letterSpacing: 2, marginBottom: 12 }}>What We Build</div>
+          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 900, color: BLACK, margin: "0 0 16px", letterSpacing: -1 }}>
+            Everything your store needs.<br />Nothing you don't.
+          </h2>
+          <p style={{ fontSize: 16, color: MUTED, maxWidth: 500, margin: "0 auto" }}>
+            One app. Your brand. All the tools to run a modern retail business.
+          </p>
         </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: CARD_BG, borderTop: "1px solid " + BORDER }}>
-        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: isMobile ? 36 : 56 }}>
-            <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, margin: "0 0 12px", letterSpacing: -1 }}>Everything you need</h2>
-            <p style={{ color: MUTED, fontSize: isMobile ? 15 : 17 }}>All in one place. No spreadsheets. No headaches.</p>
-          </div>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: isMobile ? 12 : 24 }}>
-            {features.map((f, i) => (
-              <div key={i} style={{ background: WARM_BG, borderRadius: 14, padding: isMobile ? "18px" : "28px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
-                <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: i === 2 ? ORANGE : BORDER }} />
-                <div style={{ fontSize: isMobile ? 24 : 32, marginBottom: 10 }}>{f.icon}</div>
-                <h3 style={{ fontSize: isMobile ? 13 : 16, fontWeight: 700, marginBottom: 8, margin: "0 0 8px", color: BLACK }}>{f.title}</h3>
-                {!isMobile && <p style={{ color: MUTED, fontSize: 14, lineHeight: 1.7, margin: 0 }}>{f.desc}</p>}
+        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
+          {services.map((s, i) => (
+            <div key={i} style={{
+              background: CARD_BG, borderRadius: 20, padding: "32px",
+              border: "1px solid " + BORDER,
+              transition: "transform 0.2s, box-shadow 0.2s",
+            }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>{s.icon}</div>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: BLACK, margin: "0 0 10px" }}>{s.title}</h3>
+              <p style={{ fontSize: 14, color: MUTED, lineHeight: 1.6, margin: "0 0 20px" }}>{s.desc}</p>
+              <div style={{ display: "flex", flexDirection: "column" as const, gap: 8 }}>
+                {s.features.map(f => (
+                  <div key={f} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <span style={{ color: ORANGE, fontWeight: 700, fontSize: 14 }}>✓</span>
+                    <span style={{ fontSize: 13, color: BLACK, fontWeight: 500 }}>{f}</span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* AI Section */}
-      <section style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: ORANGE }}>
-        <div style={{ maxWidth: 800, margin: "0 auto", textAlign: "center" }}>
-          <div style={{ fontSize: 32, color: "#fff", marginBottom: 16, fontWeight: 700 }}>✦</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, color: "#fff", marginBottom: 14, letterSpacing: -1 }}>Meet your AI Business Advisor</h2>
-          <p style={{ color: "#fff", fontSize: isMobile ? 15 : 17, lineHeight: 1.7, marginBottom: 36 }}>Ask anything and get instant answers based on your real store data.</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12, textAlign: "left" }}>
-            {[
-              { q: "What should I reorder this week?", a: "Reorder Whole Milk 1L (4 left), Eggs 12pk (3 left), and White Bread (6 left). Order from Dairy Direct today." },
-              { q: "Why are my sales low on Tuesdays?", a: "Tuesday sales are 22% below average. Try a promotion on near-expiry items from 3-5 PM." },
-            ].map((item, i) => (
-              <div key={i} style={{ background: "#fff", borderRadius: 12, padding: "16px 20px", border: "2px solid " + ORANGE }}>
-                <p style={{ color: BLACK, fontSize: 12, margin: "0 0 8px" }}>You: {item.q}</p>
-                <p style={{ color: BLACK, fontSize: 13, margin: 0, lineHeight: 1.6, borderLeft: "3px solid " + ORANGE, paddingLeft: 12 }}>✦ {item.a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section style={{ padding: isMobile ? "60px 20px" : "100px 48px" }}>
-        <div style={{ maxWidth: 900, margin: "0 auto" }}>
-          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, textAlign: "center", marginBottom: isMobile ? 32 : 52, letterSpacing: -1 }}>What owners are saying</h2>
-          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)", gap: isMobile ? 14 : 24 }}>
-            {testimonials.map((t, i) => (
-              <div key={i} style={{ background: CARD_BG, borderRadius: 14, padding: "24px", border: "1px solid " + BORDER }}>
-                <div style={{ fontSize: 20, color: ORANGE, marginBottom: 12, fontWeight: 700 }}>"</div>
-                <p style={{ color: BLACK, fontSize: 14, lineHeight: 1.7, marginBottom: 18 }}>{t.text}</p>
-                <div style={{ borderTop: "1px solid " + BORDER, paddingTop: 14 }}>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: BLACK }}>{t.name}</div>
-                  <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{t.store}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: CARD_BG, borderTop: "1px solid " + BORDER }}>
-        <div style={{ maxWidth: 460, margin: "0 auto", textAlign: "center" }}>
-          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 800, marginBottom: 12, letterSpacing: -1 }}>Simple pricing</h2>
-          <p style={{ color: MUTED, fontSize: isMobile ? 15 : 17, marginBottom: 40 }}>One plan. Everything included.</p>
-          <div style={{ background: "#fff", border: "2px solid " + ORANGE, borderRadius: 18, padding: isMobile ? "32px 24px" : "48px", position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 4, background: ORANGE }} />
-            <div style={{ fontSize: 12, color: BLACK, marginBottom: 8, fontWeight: 600, letterSpacing: 1, textTransform: "uppercase" as const }}>Samzy Pro</div>
-            <div style={{ fontSize: isMobile ? 48 : 60, fontWeight: 800, color: BLACK, marginBottom: 4, letterSpacing: -2 }}>29<span style={{ fontSize: 24 }}>€</span><span style={{ fontSize: 18, fontWeight: 400, color: "#555" }}>/mo</span></div>
-            <p style={{ color: MUTED, fontSize: 13, marginBottom: 28 }}>Per store. Everything included.</p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 28, textAlign: "left" }}>
-              {["Full dashboard", "AI Advisor powered by Claude", "Inventory alerts", "Staff management", "Supplier tracking", "Financial overview"].map((item, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                  <span style={{ color: ORANGE, fontWeight: 700 }}>✓</span>
-                  <span style={{ color: BLACK, fontSize: 14 }}>{item}</span>
-                </div>
-              ))}
             </div>
-            <a href="/signup" style={{ display: "block", background: ORANGE, color: "#fff", padding: "15px", borderRadius: 10, textDecoration: "none", fontSize: 15, fontWeight: 700 }}>Start Free - 14 Day Trial</a>
-            <p style={{ color: MUTED, fontSize: 12, marginTop: 12 }}>No credit card required</p>
+          ))}
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section id="how-it-works" style={{ background: BLACK, padding: isMobile ? "60px 20px" : "100px 60px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: isMobile ? 40 : 60 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, color: ORANGE, textTransform: "uppercase" as const, letterSpacing: 2, marginBottom: 12 }}>How It Works</div>
+            <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: -1 }}>
+              From call to live app<br />in days, not months.
+            </h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(4,1fr)", gap: 24 }}>
+            {process.map((p, i) => (
+              <div key={i} style={{ position: "relative" }}>
+                {!isMobile && i < process.length - 1 && (
+                  <div style={{ position: "absolute", top: 24, right: -12, width: 24, height: 1, background: "#333" }} />
+                )}
+                <div style={{ background: "#1a1a1a", borderRadius: 16, padding: "28px", border: "1px solid #2a2a2a" }}>
+                  <div style={{ fontSize: 32, fontWeight: 900, color: ORANGE, marginBottom: 12, opacity: 0.6 }}>{p.step}</div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: "#fff", margin: "0 0 10px" }}>{p.title}</h3>
+                  <p style={{ fontSize: 13, color: "#888", lineHeight: 1.6, margin: 0 }}>{p.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section style={{ padding: isMobile ? "60px 20px" : "100px 48px", background: ORANGE, textAlign: "center" }}>
-        <h2 style={{ fontSize: isMobile ? 28 : 44, fontWeight: 800, color: "#fff", marginBottom: 14, letterSpacing: -1 }}>Ready to take control?</h2>
-        <p style={{ color: "#fff", fontSize: isMobile ? 15 : 18, marginBottom: 32, opacity: 0.9 }}>Join supermarket owners already using Samzy.</p>
-        <a href="/signup" style={{ background: "#fff", color: ORANGE, padding: isMobile ? "15px 32px" : "18px 52px", borderRadius: 12, textDecoration: "none", fontSize: isMobile ? 15 : 16, fontWeight: 800 }}>Get Started Free →</a>
+      {/* ── CLIENTS ── */}
+      <section id="clients" style={{ padding: isMobile ? "60px 20px" : "100px 60px", maxWidth: 1200, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 40 : 60 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: ORANGE, textTransform: "uppercase" as const, letterSpacing: 2, marginBottom: 12 }}>Our Clients</div>
+          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 900, color: BLACK, margin: "0 0 16px", letterSpacing: -1 }}>
+            Real businesses.<br />Real results.
+          </h2>
+        </div>
+        {clients.map((c, i) => (
+          <div key={i} style={{
+            background: CARD_BG, borderRadius: 24, padding: isMobile ? "28px" : "40px",
+            border: "1px solid " + BORDER, display: "flex",
+            flexDirection: isMobile ? "column" : "row" as const,
+            gap: 32, alignItems: isMobile ? "flex-start" : "center",
+          }}>
+            <div style={{ width: 80, height: 80, borderRadius: 20, background: WARM_BG, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 40, flexShrink: 0 }}>{c.logo}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 20, fontWeight: 800, color: BLACK, marginBottom: 4 }}>{c.name}</div>
+              <div style={{ fontSize: 13, color: MUTED, marginBottom: 12 }}>{c.type} · {c.location}</div>
+              <div style={{ background: "#f0fdf4", borderRadius: 10, padding: "12px 16px", display: "inline-flex", alignItems: "center", gap: 8 }}>
+                <span style={{ color: "#16a34a", fontSize: 14 }}>✓</span>
+                <span style={{ fontSize: 14, color: "#16a34a", fontWeight: 600 }}>{c.result}</span>
+              </div>
+            </div>
+            <div style={{ background: WARM_BG, borderRadius: 16, padding: "20px 24px", textAlign: "center", flexShrink: 0 }}>
+              <div style={{ fontSize: 32, fontWeight: 900, color: ORANGE }}>€49K</div>
+              <div style={{ fontSize: 12, color: MUTED }}>invoice processed</div>
+              <div style={{ fontSize: 12, color: MUTED }}>in one scan</div>
+            </div>
+          </div>
+        ))}
+        <div style={{ marginTop: 20, background: WARM_BG, borderRadius: 16, padding: "20px 28px", border: "1px solid " + BORDER, display: "flex", alignItems: "center", gap: 16 }}>
+          <span style={{ fontSize: 24 }}>🤝</span>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: BLACK }}>Integration Partnership in Progress</div>
+            <div style={{ fontSize: 13, color: MUTED }}>We are in active discussions with <strong>ZoneSoft POS</strong> (Telheiras, Lisboa) for deep POS integration — connecting your point of sale directly with your inventory and pricing system.</div>
+          </div>
+        </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ padding: isMobile ? "24px 20px" : "40px 48px", borderTop: "1px solid " + BORDER, background: WARM_BG, display: "flex", flexDirection: isMobile ? "column" : "row", justifyContent: "space-between", alignItems: "center", gap: isMobile ? 12 : 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Image src="/logo.png" alt="Samzy" width={24} height={24} />
-          <span style={{ fontWeight: 700, fontSize: 14, color: BLACK }}>Samzy</span>
+      {/* ── PRICING ── */}
+      <section style={{ background: WARM_BG, padding: isMobile ? "60px 20px" : "100px 60px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: ORANGE, textTransform: "uppercase" as const, letterSpacing: 2, marginBottom: 12 }}>Simple Pricing</div>
+          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 900, color: BLACK, margin: "0 0 16px", letterSpacing: -1 }}>
+            One monthly fee.<br />Everything included.
+          </h2>
+          <p style={{ fontSize: 16, color: MUTED, marginBottom: 48 }}>No setup fees. No hidden costs. Cancel anytime.</p>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 20 }}>
+            {[
+              {
+                name: "Starter",
+                price: "€49",
+                period: "/month",
+                desc: "Perfect for single-location stores",
+                features: ["Custom branded app", "Invoice scanning (50/month)", "Inventory management", "Sales tracking", "AI Advisor", "Email support"],
+                cta: "Get Started",
+                highlight: false,
+              },
+              {
+                name: "Professional",
+                price: "€99",
+                period: "/month",
+                desc: "For growing businesses",
+                features: ["Everything in Starter", "Unlimited invoice scanning", "Price history & supplier comparison", "WhatsApp notifications", "Priority support", "Custom integrations"],
+                cta: "Get Started",
+                highlight: true,
+              },
+            ].map((plan, i) => (
+              <div key={i} style={{
+                background: plan.highlight ? BLACK : CARD_BG,
+                borderRadius: 24, padding: "36px",
+                border: plan.highlight ? "none" : "1px solid " + BORDER,
+                position: "relative" as const,
+              }}>
+                {plan.highlight && (
+                  <div style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", background: ORANGE, color: "#fff", fontSize: 11, fontWeight: 700, padding: "4px 14px", borderRadius: 20 }}>MOST POPULAR</div>
+                )}
+                <div style={{ fontSize: 14, fontWeight: 700, color: plan.highlight ? "#888" : MUTED, marginBottom: 8 }}>{plan.name}</div>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 8 }}>
+                  <span style={{ fontSize: 44, fontWeight: 900, color: plan.highlight ? "#fff" : BLACK }}>{plan.price}</span>
+                  <span style={{ fontSize: 16, color: plan.highlight ? "#888" : MUTED }}>{plan.period}</span>
+                </div>
+                <div style={{ fontSize: 13, color: plan.highlight ? "#888" : MUTED, marginBottom: 28 }}>{plan.desc}</div>
+                <div style={{ display: "flex", flexDirection: "column" as const, gap: 12, marginBottom: 32 }}>
+                  {plan.features.map(f => (
+                    <div key={f} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span style={{ color: ORANGE, fontWeight: 700 }}>✓</span>
+                      <span style={{ fontSize: 14, color: plan.highlight ? "#ccc" : BLACK }}>{f}</span>
+                    </div>
+                  ))}
+                </div>
+                <a href="#contact" style={{
+                  display: "block", textAlign: "center", padding: "14px",
+                  borderRadius: 12, background: plan.highlight ? ORANGE : BLACK,
+                  color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none",
+                }}>
+                  {plan.cta} →
+                </a>
+              </div>
+            ))}
+          </div>
         </div>
-        <div style={{ color: MUTED, fontSize: 12 }}>2026 Samzy. Built for supermarket owners.</div>
-        <div style={{ display: "flex", gap: 20 }}>
-          <a href="/terms" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Terms</a>
-          <a href="/privacy" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Privacy</a>
-          <a href="/login" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign In</a>
-          <a href="/signup" style={{ color: MUTED, textDecoration: "none", fontSize: 13 }}>Sign Up</a>
+      </section>
+
+      {/* ── CONTACT ── */}
+      <section id="contact" style={{ background: BLACK, padding: isMobile ? "60px 20px" : "100px 60px" }}>
+        <div style={{ maxWidth: 700, margin: "0 auto", textAlign: "center" }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: ORANGE, textTransform: "uppercase" as const, letterSpacing: 2, marginBottom: 12 }}>Get In Touch</div>
+          <h2 style={{ fontSize: isMobile ? 28 : 44, fontWeight: 900, color: "#fff", margin: "0 0 16px", letterSpacing: -1 }}>
+            Ready to transform<br />your business?
+          </h2>
+          <p style={{ fontSize: 16, color: "#888", marginBottom: 48 }}>
+            We'll have a 30-minute call to understand your business. No commitment required.
+          </p>
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row" as const, gap: 12, justifyContent: "center" }}>
+            <a href="mailto:samzyaioperator@gmail.com" style={{
+              background: ORANGE, color: "#fff", padding: "16px 32px", borderRadius: 12,
+              textDecoration: "none", fontSize: 16, fontWeight: 700,
+            }}>
+              📧 Email Us
+            </a>
+            <a href="https://wa.me/351000000000" style={{
+              background: "#25D366", color: "#fff", padding: "16px 32px", borderRadius: 12,
+              textDecoration: "none", fontSize: 16, fontWeight: 700,
+            }}>
+              💬 WhatsApp
+            </a>
+          </div>
+          <div style={{ marginTop: 48, display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)", gap: 20 }}>
+            {[
+              { icon: "📍", label: "Based in", value: "Lisbon, Portugal" },
+              { icon: "🌍", label: "Serving", value: "Portugal & Europe" },
+              { icon: "⚡", label: "Setup time", value: "Ready in days" },
+            ].map(item => (
+              <div key={item.label} style={{ background: "#1a1a1a", borderRadius: 14, padding: "20px", border: "1px solid #2a2a2a" }}>
+                <div style={{ fontSize: 24, marginBottom: 8 }}>{item.icon}</div>
+                <div style={{ fontSize: 11, color: "#666", textTransform: "uppercase" as const, letterSpacing: 1, marginBottom: 4 }}>{item.label}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#fff" }}>{item.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer style={{ background: "#080808", padding: isMobile ? "32px 20px" : "40px 60px", borderTop: "1px solid #1a1a1a" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", flexDirection: isMobile ? "column" : "row" as const, justifyContent: "space-between", alignItems: isMobile ? "flex-start" : "center", gap: 16 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Image src="/logo.png" alt="Samzy" width={24} height={24} />
+            <span style={{ fontSize: 14, fontWeight: 700, color: "#fff" }}>Samzy</span>
+            <span style={{ fontSize: 12, color: "#555" }}>— Custom Business Software</span>
+          </div>
+          <div style={{ display: "flex", gap: 24 }}>
+            {["Privacy Policy", "Terms of Service", "Client Login"].map(link => (
+              <a key={link} href="#" style={{ fontSize: 12, color: "#555", textDecoration: "none" }}>{link}</a>
+            ))}
+          </div>
+          <div style={{ fontSize: 12, color: "#555" }}>© 2026 Samzy. All rights reserved.</div>
         </div>
       </footer>
 
