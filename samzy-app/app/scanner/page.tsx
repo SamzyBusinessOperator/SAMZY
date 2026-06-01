@@ -948,7 +948,7 @@ export default function Scanner() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ background: BLACK, color: "#fff" }}>
-                  {["#", "PRODUCT", "S/IVA", "ITEM COST", "IVA", "W/T", "C/IVACP", "SHOP SEM", "SHOP COM", "SPECIAL", "WHOLESALE", "REST COM", "QTY", "UNITS", "TOTAL"].map((h, i) => (
+                  {["#", "PRODUCT", "S/IVA", "ITEM COST", "PER UNIT", "IVA%", "W/T", "C/IVACP", "SEM%", "SHOP SEM", "COM%", "SHOP COM", "SPL%", "SPECIAL", "WHL%", "WHOLESALE", "RST%", "REST COM", "QTY", "UNITS", "TOTAL"].map((h, i) => (
                     <th key={h} style={{ padding: "10px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap", color: h === "C/IVACP" || h === "ITEM COST" ? ORANGE : "#fff", minWidth: i === 1 ? 180 : i === 0 ? 32 : 80 }}>{h}</th>
                   ))}
                 </tr>
@@ -975,13 +975,19 @@ export default function Scanner() {
                     </td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>€{p.costSIVA.toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.itemCost.toFixed(3)}</td>
+                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{(p.itemCost / (getUnitsFromPackSize(p.packSize) || 1)).toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{(p.ivaRate * 100).toFixed(0)}%</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.itemWT.toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.civacp.toFixed(2)}</td>
+                    <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{(p.shopSemPct * 100).toFixed(0)}%</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.shopSem.toFixed(2)}</td>
+                    <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{(p.shopComPct * 100).toFixed(0)}%</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.shopCom.toFixed(2)}</td>
+                    <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{(p.specialPct * 100).toFixed(0)}%</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.special.toFixed(2)}</td>
+                    <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{(p.bigWholesalePct * 100).toFixed(0)}%</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.bigWholesale.toFixed(2)}</td>
+                    <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{(p.restComPct * 100).toFixed(0)}%</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.restCom.toFixed(2)}</td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{p.qty}</td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{p.totalUnits}</td>
@@ -992,7 +998,7 @@ export default function Scanner() {
               {/* Totals row */}
               <tfoot>
                 <tr style={{ background: "#0f0f0f", color: "#fff" }}>
-                  <td colSpan={12} style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>TOTALS</td>
+                  <td colSpan={18} style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>TOTALS</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>{products.reduce((s, p) => s + p.qty, 0)}</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>{products.reduce((s, p) => s + p.totalUnits, 0).toLocaleString()}</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12, color: ORANGE }}>€{products.reduce((s, p) => s + p.totalCost, 0).toFixed(2)}</td>
