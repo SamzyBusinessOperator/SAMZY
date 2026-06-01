@@ -975,7 +975,7 @@ export default function Scanner() {
                     </td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>€{p.costSIVA.toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.itemCost.toFixed(3)}</td>
-                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{(p.itemCost / (getUnitsFromPackSize(p.packSize) || 1)).toFixed(3)}</td>
+                    <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{(p.itemCost / (p.packSize.match(/^(\d+)\s*[x×*]/i)?.[1] ? parseInt(p.packSize.match(/^(\d+)\s*[x×*]/i)![1]) : 1)).toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{(p.ivaRate * 100).toFixed(0)}%</td>
                     <td style={{ padding: "10px 10px", color: BLACK, whiteSpace: "nowrap" }}>€{p.itemWT.toFixed(3)}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 700, color: ORANGE, whiteSpace: "nowrap" }}>€{p.civacp.toFixed(2)}</td>
