@@ -40,6 +40,7 @@ interface Product {
   totalCost: number;
   priceChange?: number;
   priceDirection?: "up" | "down" | "same" | "new";
+  publicPrice?: number;
 }
 
 
@@ -438,6 +439,8 @@ export default function Scanner() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [storeId, setStoreId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [history, setHistory] = useState<Product[][]>([]);
+  const [copySource, setCopySource] = useState<number | null>(null);
   const [saved, setSaved] = useState(false);
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
@@ -670,8 +673,15 @@ export default function Scanner() {
   }
 
   function updateProduct(index: number, updated: Product) {
+    setHistory(prev => [...prev.slice(-19), [...products]]); // keep last 20
     setProducts(prev => prev.map((p, i) => i === index ? updated : p));
     if (selectedProduct) setSelectedProduct(updated);
+  }
+
+  function undoLast() {
+    if (history.length === 0) return;
+    setProducts(history[history.length - 1]);
+    setHistory(prev => prev.slice(0, -1));
   }
 
   const filtered = products.filter(p => p.name.toLowerCase().includes(search.toLowerCase()));
@@ -914,7 +924,12 @@ export default function Scanner() {
               <div style={{ fontWeight: 700, fontSize: 15, color: BLACK }}>{invoiceInfo?.supplier}</div>
               <div style={{ fontSize: 12, color: MUTED }}>{products.length} products · €{invoiceInfo?.total.toFixed(2)} · {invoiceInfo?.date}</div>
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {history.length > 0 && (
+                <button onClick={undoLast} style={{ display: "flex", alignItems: "center", gap: 4, padding: "5px 12px", borderRadius: 8, background: "#fffbeb", border: "1px solid #fde68a", color: "#d97706", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+                  ↩ Undo ({history.length})
+                </button>
+              )}
               {priceUps > 0 && <div style={{ background: "#fef2f2", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 700, color: RED }}>↑{priceUps} up</div>}
               {priceDowns > 0 && <div style={{ background: "#f0fdf4", borderRadius: 8, padding: "4px 10px", fontSize: 12, fontWeight: 700, color: GREEN }}>↓{priceDowns} down</div>}
             </div>
@@ -944,7 +959,7 @@ export default function Scanner() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
               <thead>
                 <tr style={{ background: BLACK, color: "#fff" }}>
-                  {["#", "PRODUCT", "S/IVA", "ITEM COST", "PER UNIT", "TRPT%", "IVA%", "W/T", "C/IVACP", "SEM%", "SHOP SEM", "COM%", "SHOP COM", "SPL%", "SPECIAL", "WHL%", "WHOLESALE", "RST%", "REST COM", "QTY", "UNITS", "TOTAL"].map((h, i) => (
+                  {["#", "PRODUCT", "S/IVA", "ITEM COST", "PER UNIT", "TRPT%", "IVA%", "W/T", "C/IVACP", "SEM%", "SHOP SEM", "COM%", "SHOP COM", "SPL%", "SPECIAL", "WHL%", "BIG WHOLESALE", "RST%", "REST COM", "PUBLIC", "QTY", "UNITS", "TOTAL"].map((h, i) => (
                     <th key={h} style={{ padding: "10px 10px", textAlign: "left", fontSize: 10, fontWeight: 700, whiteSpace: "nowrap", color: h === "C/IVACP" || h === "ITEM COST" ? ORANGE : "#fff", minWidth: i === 1 ? 180 : i === 0 ? 32 : 80 }}>{h}</th>
                   ))}
                 </tr>
@@ -957,7 +972,33 @@ export default function Scanner() {
                     onMouseEnter={e => (e.currentTarget.style.background = "#fff8f0")}
                     onMouseLeave={e => (e.currentTarget.style.background = i % 2 === 0 ? CARD_BG : WARM_BG)}
                   >
-                    <td style={{ padding: "10px 10px", color: MUTED, fontWeight: 600 }}>{i + 1}</td>
+                    <td style={{ padding: "10px 10px", color: MUTED, fontWeight: 600 }}>
+                      <div style={{ display: "flex", flexDirection: "column" as const, alignItems: "center", gap: 2 }}>
+                        <span>{i + 1}</span>
+                        <button
+                          onClick={e => { e.stopPropagation(); setCopySource(copySource === i ? null : i); }}
+                          title={copySource === i ? "Cancel copy" : "Copy rates from this row"}
+                          style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, border: "1px solid " + (copySource === i ? ORANGE : BORDER), background: copySource === i ? ORANGE : WARM_BG, color: copySource === i ? "#fff" : MUTED, cursor: "pointer", fontWeight: 700 }}>
+                          {copySource === i ? "✓" : "⬇"}
+                        </button>
+                        {copySource !== null && copySource !== i && (
+                          <button
+                            onClick={e => {
+                              e.stopPropagation();
+                              const src = products[copySource];
+                              setHistory(prev => [...prev.slice(-19), [...products]]);
+                              setProducts(prev => prev.map((p, idx) => {
+                                if (idx !== i) return p;
+                                return recalcProduct({...p, shopSemPct: src.shopSemPct, shopComPct: src.shopComPct, specialPct: src.specialPct, bigWholesalePct: src.bigWholesalePct, restComPct: src.restComPct, ivaRate: src.ivaRate, transportPct: src.transportPct});
+                              }));
+                            }}
+                            title="Paste rates here"
+                            style={{ fontSize: 9, padding: "1px 4px", borderRadius: 3, border: "1px solid #16a34a", background: "#f0fdf4", color: "#16a34a", cursor: "pointer", fontWeight: 700 }}>
+                            paste
+                          </button>
+                        )}
+                      </div>
+                    </td>
                     <td style={{ padding: "10px 10px", minWidth: 180 }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                         {p.priceDirection === "up" && <span style={{ background: "#fef2f2", color: RED, fontSize: 9, fontWeight: 700, padding: "1px 5px", borderRadius: 4, flexShrink: 0 }}>↑{p.priceChange?.toFixed(0)}%</span>}
@@ -986,6 +1027,7 @@ export default function Scanner() {
                     <InlineEditCell value={p.bigWholesale} unit="" decimals={2} onSave={(v: number) => { const pct = p.civacp > 0 ? (v/p.civacp)-1 : p.bigWholesalePct; updateProduct(products.indexOf(p), recalcProduct({...p, bigWholesalePct: pct})); }} />
                     <InlineEditCell value={p.restComPct * 100} unit="%" onSave={(v: number) => updateProduct(products.indexOf(p), recalcProduct({...p, restComPct: v/100}))} />
                     <InlineEditCell value={p.restCom} unit="" decimals={2} onSave={(v: number) => { const pct = p.civacp > 0 ? (v/p.civacp)-1 : p.restComPct; updateProduct(products.indexOf(p), recalcProduct({...p, restComPct: pct})); }} />
+                    <InlineEditCell value={p.publicPrice || 0} unit="" decimals={2} onSave={(v: number) => updateProduct(products.indexOf(p), {...p, publicPrice: v})} />
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{p.qty}</td>
                     <td style={{ padding: "10px 10px", color: MUTED, whiteSpace: "nowrap" }}>{p.totalUnits}</td>
                     <td style={{ padding: "10px 10px", fontWeight: 600, color: BLACK, whiteSpace: "nowrap" }}>€{p.totalCost.toFixed(2)}</td>
@@ -995,7 +1037,7 @@ export default function Scanner() {
               {/* Totals row */}
               <tfoot>
                 <tr style={{ background: "#0f0f0f", color: "#fff" }}>
-                  <td colSpan={19} style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>TOTALS</td>
+                  <td colSpan={20} style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>TOTALS</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>{products.reduce((s, p) => s + p.qty, 0)}</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12 }}>{products.reduce((s, p) => s + p.totalUnits, 0).toLocaleString()}</td>
                   <td style={{ padding: "10px 10px", fontWeight: 700, fontSize: 12, color: ORANGE }}>€{products.reduce((s, p) => s + p.totalCost, 0).toFixed(2)}</td>
