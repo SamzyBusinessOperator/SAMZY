@@ -955,14 +955,21 @@ function SalesHistory({ storeId }: { storeId: string | null }) {
 
   useEffect(() => {
     async function load() {
-      if (!storeId) return;
       setLoading(true);
-      const { data } = await supabase.from("sales")
-        .select("*")
-        .eq("store_id", storeId)
-        .order("sale_date", { ascending: false })
-        .limit(200);
-      setSales(data || []);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        const email = session.user.email || "";
+        const { data: store } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
+        const sid = store?.id || storeId;
+        if (!sid) return;
+        const { data } = await supabase.from("sales")
+          .select("*")
+          .eq("store_id", sid)
+          .order("sale_date", { ascending: false })
+          .limit(500);
+        setSales(data || []);
+      } catch(e) { console.error(e); }
       setLoading(false);
     }
     load();
