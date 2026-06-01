@@ -20,6 +20,8 @@ export default function Landing() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  if (isMobile === undefined) return null;
+
   const navBlurred = scrollY > 40;
 
   return (
@@ -52,7 +54,6 @@ export default function Landing() {
             ))}
           </div>
         )}
-<div />
       </nav>
 
       {/* HERO */}
@@ -132,7 +133,12 @@ export default function Landing() {
             ].map((s, i) => (
               <div key={i} style={{
                 background: WHITE, padding: isMobile ? "36px 32px" : "52px 48px",
-                borderRadius: [20, 0, 0, 0].map((_, j) => j === i ? "20px" : "0px")[0] + " " + (i === 1 ? "20px" : "0") + " " + (i === 3 ? "20px" : "0") + " " + (i === 2 ? "20px" : "0"),
+                borderRadius: isMobile ? 20 : (
+                  i === 0 ? "20px 0 0 0" :
+                  i === 1 ? "0 20px 0 0" :
+                  i === 2 ? "0 0 0 20px" :
+                           "0 0 20px 0"
+                ),
               }}>
                 <div style={{ fontSize: 11, fontWeight: 700, color: ORANGE, letterSpacing: 1.5, textTransform: "uppercase" as const, marginBottom: 20 }}>{s.tag}</div>
                 <div style={{ fontSize: 44, marginBottom: 20 }}>{s.icon}</div>
@@ -286,7 +292,6 @@ export default function Landing() {
               background: ORANGE, color: WHITE, padding: "18px 40px", borderRadius: 30,
               fontSize: 17, fontWeight: 700, textDecoration: "none", letterSpacing: -0.3,
             }}>Get in Touch</a>
-
           </div>
         </div>
       </section>
