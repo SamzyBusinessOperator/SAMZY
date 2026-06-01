@@ -539,14 +539,14 @@ export default function Home() {
           {activeNav === "dashboard" && (
             <div>
               {/* KPI Grid — 2 cols on mobile, 4 on desktop */}
-              <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4,1fr)", gap: isMobile ? 12 : 16, marginBottom: isMobile ? 16 : 24 }}>
+              <div style={{ display: isMobile ? "flex" : "grid", gridTemplateColumns: "repeat(4,1fr)", overflowX: isMobile ? "auto" : "visible", gap: isMobile ? 10 : 16, marginBottom: isMobile ? 16 : 24, paddingBottom: isMobile ? 4 : 0 }}>
                 {[
                   { title: tr.todaySales, value: "€" + realStats.todaySales.toFixed(2), sub: realStats.yesterdaySales > 0 ? (((realStats.todaySales - realStats.yesterdaySales) / realStats.yesterdaySales) * 100).toFixed(1) + "% vs yesterday" : tr.noSalesYet, accent: ORANGE, icon: "💵" },
                   { title: tr.monthlyRevenue, value: "€" + realStats.monthSales.toFixed(2), sub: new Date().toLocaleString("default", { month: "long", year: "numeric" }), accent: "#0071e3", icon: "📊" },
                   { title: tr.cashFlow, value: "€" + Math.max(0, realStats.cashFlow).toFixed(2), sub: realStats.cashFlow < 0 ? tr.invoicesExceedRevenue : tr.afterPendingInvoices, accent: realStats.cashFlow < 0 ? "#dc2626" : "#16a34a", icon: "🏦" },
                   { title: tr.lowStock, value: String(products.filter(p => p.stock_quantity !== null && p.reorder_threshold !== null && p.stock_quantity <= p.reorder_threshold).length), sub: tr.itemsNeedReorder, accent: "#dc2626", icon: "⚠️" },
                 ].map((k) => (
-                  <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
+                  <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden", minWidth: isMobile ? 140 : "auto", flexShrink: 0 }}>
                     <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: k.accent }} />
                     <div style={{ fontSize: isMobile ? 18 : 22, marginBottom: isMobile ? 8 : 12 }}>{k.icon}</div>
                     <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 700, color: BLACK, letterSpacing: -1, marginBottom: 2 }}>{k.value}</div>
@@ -841,7 +841,7 @@ export default function Home() {
                 { title: "Cash Available", value: "€" + realStats.cashFlow.toFixed(2), color: "#16a34a", icon: "🏦" },
                 { title: "Pending Invoices", value: "€" + (realStats.monthSales - realStats.cashFlow).toFixed(2), color: "#dc2626", icon: "📄" },
               ].map(k => (
-                <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden" }}>
+                <div key={k.title} style={{ background: CARD_BG, borderRadius: 14, padding: isMobile ? "16px" : "24px", border: "1px solid " + BORDER, position: "relative", overflow: "hidden", minWidth: isMobile ? 140 : "auto", flexShrink: 0 }}>
                   <div style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 3, background: k.color }} />
                   <div style={{ fontSize: isMobile ? 18 : 22, marginBottom: 8 }}>{k.icon}</div>
                   <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 700, color: BLACK, letterSpacing: -1 }}>{k.value}</div>
