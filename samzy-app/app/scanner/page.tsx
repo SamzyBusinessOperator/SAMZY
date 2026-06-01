@@ -393,7 +393,7 @@ function InlineEditCell({ value, unit = "", onSave }: { value: number; unit?: st
     setEditing(false);
   }
   if (editing) return (
-    <td style={{ padding: "6px 6px", whiteSpace: "nowrap" }}>
+    <td style={{ padding: "6px 6px", whiteSpace: "nowrap" }} onClick={e => e.stopPropagation()}>
       <input ref={ref} type="number" step="any" value={draft}
         onChange={e => setDraft(e.target.value)}
         onBlur={commit}
@@ -403,10 +403,10 @@ function InlineEditCell({ value, unit = "", onSave }: { value: number; unit?: st
     </td>
   );
   return (
-    <td onClick={() => { setDraft(value.toFixed(1)); setEditing(true); }}
+    <td onClick={(e) => { e.stopPropagation(); setDraft(value.toFixed(1)); setEditing(true); }}
       style={{ padding: "10px 10px", color: "#6B6B6B", whiteSpace: "nowrap", cursor: "pointer" }}
       title="Click to edit">
-      {value.toFixed(1)}{unit} ✏
+      {value.toFixed(1)}{unit}
     </td>
   );
 }

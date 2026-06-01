@@ -49,7 +49,7 @@ Rules:
 - ivaRate: 0.06 for food/spices/grains, 0.13 for oils/ghee, 0.23 for cosmetics/hygiene/drinks/default
 - category: Beverages, Dairy, Bakery, Cleaning, Spices, Oils, Snacks, or Other
 - Extract EVERY product line with quantity > 0
-- Also extract: transportCharge (the transport/freight/delivery/clearance line item total in €, 0 if not found) and invoiceSubtotal (total invoice amount before transport, or total amount if no separate transport line)
+- Also extract: transportCharge (look for lines like "TRANSPORT", "FREIGHT", "DELIVERY", "CLEARANCE", "PALLETS" - return that line's amount, 0 if not found) and invoiceSubtotal (the GRAND TOTAL of the entire invoice including transport)
 - Return ONLY the JSON, nothing else`
             }
           ]
@@ -76,12 +76,12 @@ Rules:
     const invoiceSubtotal = parseFloat(parsed.invoiceSubtotal) || 0;
     let autoTransportPct = transportPct / 100; // default 4.15%
     if (transportCharge > 0 && invoiceSubtotal > 0) {
-      // transport% = transportCharge / (invoiceTotal - transportCharge)
-      const productSubtotal = invoiceSubtotal - transportCharge > 0 
-        ? invoiceSubtotal - transportCharge 
-        : invoiceSubtotal;
-      autoTransportPct = Math.round((transportCharge / productSubtotal) * 10000) / 10000;
-      console.log(`[pricing-scan] Auto transport: €${transportCharge} / €${productSubtotal} = ${(autoTransportPct*100).toFixed(2)}%`);
+      // transport% = transportCharge / (grandTotal - transportCharge)
+      const productSubtotal = invoiceSubtotal - transportCharge;
+      if (productSubtotal > 0) {
+        autoTransportPct = Math.round((transportCharge / productSubtotal) * 10000) / 10000;
+        console.log(`[pricing-scan] Auto transport: €${transportCharge} / €${productSubtotal} = ${(autoTransportPct*100).toFixed(2)}%`);
+      }
     }
     const transport = autoTransportPct;
 
