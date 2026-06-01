@@ -637,6 +637,24 @@ export default function Scanner() {
           iva_pct: p.ivaRate,
         }))
       );
+      // Save supplier if not exists
+      const { data: existingSupplier } = await supabase
+        .from("suppliers")
+        .select("id")
+        .ilike("name", `%${supplier}%`)
+        .maybeSingle();
+      if (!existingSupplier) {
+        const { data: { session: supSession } } = await supabase.auth.getSession();
+        const supEmail = supSession?.user?.email || "";
+        await supabase.from("suppliers").insert({
+          store_email: supEmail,
+          name: supplier,
+          invoice_amount: `€${invoiceInfo?.total.toFixed(2) || "0"}`,
+          due_date: "",
+          status: "pending",
+          notes: `Auto-added from invoice scan on ${new Date().toLocaleDateString("en-GB")}`,
+        });
+      }
       for (const p of products) {
         const { data: existing } = await supabase.from("products").select("id, stock_quantity").eq("store_id", storeId).ilike("name", `%${p.name.substring(0, 15)}%`).maybeSingle();
         if (existing) {
