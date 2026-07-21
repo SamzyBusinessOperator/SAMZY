@@ -1,120 +1,163 @@
 "use client";
+
 import Image from "next/image";
-import { useState } from "react";
-import { supabase } from "../../lib/supabase";
+import Link from "next/link";
+import { FormEvent, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
-const ORANGE = "#FC7800";
-const BLACK = "#0f0f0f";
-const WARM_BG = "#FAFAF8";
-const BORDER = "#F0EEEB";
-const MUTED = "#6B6B6B";
-
-export default function Signup() {
-  const [storeName, setStoreName] = useState("");
+export default function SignupPage() {
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [consent, setConsent] = useState(false);
+  const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  async function handleSignup() {
-    if (!storeName || !email || !password) { setError("Please fill in all fields."); return; }
-    if (!consent) { setError("Please agree to the Terms and Privacy Policy to continue."); return; }
-    if (password.length < 6) { setError("Password must be at least 6 characters."); return; }
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
     setLoading(true);
-    setError("");
-    const { error } = await supabase.auth.signUp({
-      email, password,
-      options: { data: { store_name: storeName } },
-    });
-    if (error) {
-      setError(error.message);
-    } else {
-      const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 14);
-      const { data: existingStore } = await supabase.from("stores").select("id").ilike("owner_email", email).single();
-      if (!existingStore) {
-        await supabase.from("stores").insert([{ name: storeName, owner_email: email, subscription_status: "trial", trial_ends_at: trialEnd.toISOString() }]);
-      }
-      setSuccess(true);
-      // Send welcome email
-      fetch("/api/email/welcome", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, storeName }),
+    setMessage("");
+
+    try {
+      const supabase = createClient();
+
+      const callbackUrl = `${window.location.origin}/auth/callback?next=/onboarding`;
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: callbackUrl,
+          data: {
+            full_name: fullName.trim(),
+          },
+        },
       });
+
+      if (error) {
+        setMessage(error.message);
+        return;
+      }
+
+      setSuccess(true);
+    } catch {
+      setMessage("Unable to create your account. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }
 
-  const inputStyle = {
-    width: "100%", padding: "13px 16px", borderRadius: 10,
-    border: "1px solid " + BORDER, fontSize: 15, outline: "none",
-    color: BLACK, background: WARM_BG, boxSizing: "border-box" as const,
-    fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
-  };
-
-  if (success) return (
-    <div style={{ minHeight: "100vh", background: WARM_BG, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
-      <div style={{ textAlign: "center", maxWidth: 400, padding: 24 }}>
-        <div style={{ width: 64, height: 64, background: ORANGE, borderRadius: 16, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 28, margin: "0 auto 24px" }}>🎉</div>
-        <h2 style={{ fontSize: 24, fontWeight: 700, color: BLACK, margin: "0 0 12px", letterSpacing: -0.5 }}>Welcome to Samzy!</h2>
-        <p style={{ color: MUTED, fontSize: 15, marginBottom: 32, lineHeight: 1.6 }}>Your account is ready. Click below to set up your store.</p>
-        <a href="/onboarding" style={{ display: "block", padding: "14px", borderRadius: 10, background: ORANGE, color: "#fff", fontWeight: 700, fontSize: 15, textDecoration: "none" }}>
-          Start Your Setup →
-        </a>
-      </div>
-    </div>
-  );
-
   return (
-    <div style={{ minHeight: "100vh", background: WARM_BG, display: "flex", flexDirection: "column", fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif" }}>
-      <div style={{ padding: "20px 40px", display: "flex", alignItems: "center", gap: 10 }}>
-        <Image src="/logo.png" alt="Samzy" width={32} height={32} />
-        <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
-      </div>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ width: "100%", maxWidth: 400 }}>
-          <div style={{ marginBottom: 36 }}>
-            <h1 style={{ fontSize: 28, fontWeight: 700, color: BLACK, margin: 0, letterSpacing: -0.5 }}>Create your store</h1>
-            <p style={{ color: MUTED, fontSize: 15, marginTop: 8 }}>Get started with Samzy in minutes</p>
-          </div>
-          {error && (
-            <div style={{ background: "#fef2f2", color: "#dc2626", padding: "12px 16px", borderRadius: 10, marginBottom: 20, fontSize: 14, borderLeft: "3px solid #dc2626" }}>
-              {error}
+    <main className="min-h-screen bg-[#f7f8fa] px-6 py-12 text-[#101828]">
+      <div className="mx-auto flex min-h-[80vh] max-w-md items-center">
+        <section className="w-full rounded-3xl border border-black/5 bg-white p-8 shadow-[0_20px_70px_rgba(16,24,40,0.08)]">
+          <Link href="/" className="mb-10 flex items-center gap-3">
+            <Image
+              src="/logo.png"
+              alt="SAMZY"
+              width={42}
+              height={42}
+              className="rounded-xl"
+            />
+            <span className="text-xl font-semibold">SAMZY</span>
+          </Link>
+
+          {success ? (
+            <div>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Check your email
+              </h1>
+
+              <p className="mt-4 leading-7 text-[#667085]">
+                We sent a confirmation link to{" "}
+                <strong className="text-[#101828]">{email}</strong>. Open that
+                link to verify your account and create your SAMZY workspace.
+              </p>
+
+              <Link
+                href="/login"
+                className="mt-8 flex h-12 items-center justify-center rounded-xl bg-[#101828] font-semibold text-white"
+              >
+                Return to sign in
+              </Link>
             </div>
+          ) : (
+            <>
+              <h1 className="text-3xl font-semibold tracking-tight">
+                Create your account
+              </h1>
+
+              <p className="mt-2 text-sm text-[#667085]">
+                Start building your intelligent business workspace.
+              </p>
+
+              <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium">
+                    Full name
+                  </span>
+                  <input
+                    required
+                    value={fullName}
+                    onChange={(event) => setFullName(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-[#d0d5dd] px-4 outline-none focus:border-[#101828]"
+                    placeholder="Your full name"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium">Email</span>
+                  <input
+                    required
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-[#d0d5dd] px-4 outline-none focus:border-[#101828]"
+                    placeholder="you@company.com"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-2 block text-sm font-medium">
+                    Password
+                  </span>
+                  <input
+                    required
+                    minLength={8}
+                    type="password"
+                    autoComplete="new-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-[#d0d5dd] px-4 outline-none focus:border-[#101828]"
+                    placeholder="At least 8 characters"
+                  />
+                </label>
+
+                {message ? (
+                  <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {message}
+                  </p>
+                ) : null}
+
+                <button
+                  disabled={loading}
+                  className="h-12 w-full rounded-xl bg-[#101828] font-semibold text-white hover:bg-black disabled:opacity-60"
+                >
+                  {loading ? "Creating account..." : "Create account"}
+                </button>
+              </form>
+
+              <p className="mt-6 text-center text-sm text-[#667085]">
+                Already registered?{" "}
+                <Link href="/login" className="font-semibold text-[#101828]">
+                  Sign in
+                </Link>
+              </p>
+            </>
           )}
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Store Name</label>
-            <input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="e.g. Mercado Central" style={inputStyle} />
-          </div>
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Email</label>
-            <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@example.com" style={inputStyle} />
-          </div>
-          <div style={{ marginBottom: 28 }}>
-            <label style={{ color: MUTED, fontSize: 11, fontWeight: 700, display: "block", marginBottom: 8, textTransform: "uppercase" as const, letterSpacing: 0.5 }}>Password</label>
-            <input value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === "Enter" && handleSignup()} type="password" placeholder="Min. 6 characters" style={inputStyle} />
-          </div>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 20, padding: "14px 16px", background: "#fff", borderRadius: 10, border: "1px solid " + BORDER }}>
-            <input type="checkbox" id="consent" checked={consent} onChange={e => setConsent(e.target.checked)} style={{ marginTop: 2, accentColor: ORANGE, width: 16, height: 16, cursor: "pointer", flexShrink: 0 }} />
-            <label htmlFor="consent" style={{ fontSize: 13, color: MUTED, lineHeight: 1.6, cursor: "pointer" }}>
-              I agree to Samzy's{" "}
-              <a href="/terms" target="_blank" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Terms of Service</a>{" "}and{" "}
-              <a href="/privacy" target="_blank" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Privacy Policy</a>.
-              I understand my data will be processed as described.
-            </label>
-          </div>
-          <button onClick={handleSignup} disabled={loading} style={{ width: "100%", padding: "14px", borderRadius: 10, background: loading ? MUTED : ORANGE, border: "none", color: "#fff", fontWeight: 700, fontSize: 15, cursor: loading ? "not-allowed" : "pointer", letterSpacing: -0.2 }}>
-            {loading ? "Creating account..." : "Create Account →"}
-          </button>
-          <p style={{ textAlign: "center", color: MUTED, fontSize: 14, marginTop: 24 }}>
-            Already have an account?{" "}
-            <a href="/login" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Sign in</a>
-          </p>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
