@@ -1,42 +1,51 @@
-"use client";
-import Image from "next/image";
-import { useEffect, useState } from "react";
-const ORANGE = "#FC7800";
-const BLACK = "#0f0f0f";
-const WARM_BG = "#FAFAF8";
-const BORDER = "#F0EEEB";
-const MUTED = "#6B6B6B";
+import Link from "next/link";
+import { ArrowLeft, Home } from "lucide-react";
+
 export default function NotFound() {
-  const [count, setCount] = useState(10);
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCount(prev => {
-        if (prev <= 1) { clearInterval(timer); window.location.href = "/"; return 0; }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
   return (
-    <div style={{ minHeight: "100vh", background: WARM_BG, fontFamily: "-apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif", display: "flex", flexDirection: "column" }}>
-      <nav style={{ padding: "20px 40px", display: "flex", alignItems: "center", gap: 10, borderBottom: "1px solid " + BORDER, background: WARM_BG }}>
-        <a href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none" }}>
-          <Image src="/logo.png" alt="Samzy" width={32} height={32} />
-          <span style={{ color: BLACK, fontWeight: 700, fontSize: 16 }}>Samzy</span>
-        </a>
-      </nav>
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-        <div style={{ textAlign: "center", maxWidth: 480 }}>
-          <div style={{ fontSize: 80, fontWeight: 800, color: ORANGE, letterSpacing: -4, marginBottom: 8, lineHeight: 1 }}>404</div>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: BLACK, margin: "0 0 12px", letterSpacing: -0.5 }}>Page not found</h1>
-          <p style={{ color: MUTED, fontSize: 16, lineHeight: 1.7, marginBottom: 36 }}>Looks like this shelf is empty. The page you are looking for does not exist or has been moved.</p>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" as const }}>
-            <a href="/" style={{ background: ORANGE, color: "#fff", padding: "13px 28px", borderRadius: 10, textDecoration: "none", fontSize: 15, fontWeight: 700 }}>Go to Dashboard</a>
-            <a href="/landing" style={{ background: "#fff", color: BLACK, padding: "13px 28px", borderRadius: 10, textDecoration: "none", fontSize: 15, fontWeight: 600, border: "1px solid " + BORDER }}>Back to Home</a>
-          </div>
-          <p style={{ color: MUTED, fontSize: 13, marginTop: 28 }}>Redirecting to dashboard in <span style={{ color: ORANGE, fontWeight: 700 }}>{count}s</span></p>
+    <main className="flex min-h-screen items-center justify-center bg-[#fbfcff] px-6">
+      <div className="mx-auto max-w-xl text-center">
+        <div className="mb-8 inline-flex h-24 w-24 items-center justify-center rounded-full bg-[#eef3ff]">
+          <span className="text-5xl font-bold text-[#07113b]">404</span>
+        </div>
+
+        <h1 className="text-5xl font-bold tracking-tight text-[#07113b]">
+          Page not found
+        </h1>
+
+        <p className="mt-6 text-lg leading-8 text-[#667085]">
+          Sorry, the page you&apos;re looking for doesn&apos;t exist or has been
+          moved.
+        </p>
+
+        <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#07113b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#0d1a52]"
+          >
+            <Home size={18} />
+            Go Home
+          </Link>
+
+          <Link
+            href="/landing"
+            className="inline-flex items-center gap-2 rounded-xl border border-[#d9def2] bg-white px-6 py-3 text-sm font-semibold text-[#07113b] transition hover:bg-[#f7f9ff]"
+          >
+            <ArrowLeft size={18} />
+            Back to Landing
+          </Link>
+        </div>
+
+        <div className="mt-12 rounded-2xl border border-[#e8ecf5] bg-white p-6 shadow-sm">
+          <p className="text-sm text-[#98a2b3]">
+            Need help?
+          </p>
+
+          <p className="mt-2 font-semibold text-[#07113b]">
+            Contact the SAMZY team if you believe this is an error.
+          </p>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

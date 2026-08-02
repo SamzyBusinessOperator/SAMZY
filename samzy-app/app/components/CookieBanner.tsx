@@ -1,62 +1,73 @@
 "use client";
-import { useState, useEffect } from "react";
-import Image from "next/image";
-const ORANGE = "#FC7800";
-const BLACK = "#0f0f0f";
-const MUTED = "#6B6B6B";
+
+import Link from "next/link";
+import { useState } from "react";
+
+const CONSENT_KEY = "samzy_cookie_consent";
+
+function getInitialVisibility() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return !window.localStorage.getItem(CONSENT_KEY);
+}
+
 export default function CookieBanner() {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const consent = localStorage.getItem("samzy_cookie_consent");
-    if (!consent) setVisible(true);
-  }, []);
+  const [visible, setVisible] = useState(getInitialVisibility);
+
   function accept() {
-    localStorage.setItem("samzy_cookie_consent", "accepted");
+    window.localStorage.setItem(CONSENT_KEY, "accepted");
     setVisible(false);
   }
+
   function decline() {
-    localStorage.setItem("samzy_cookie_consent", "declined");
+    window.localStorage.setItem(CONSENT_KEY, "declined");
     setVisible(false);
   }
-  if (!visible) return null;
+
+  if (!visible) {
+    return null;
+  }
+
   return (
-    <div style={{
-      position: "fixed", bottom: 24, left: "50%", transform: "translateX(-50%)",
-      width: "calc(100% - 48px)", maxWidth: 600, zIndex: 9999,
-      background: "#111", borderRadius: 18, padding: "20px 28px",
-      display: "flex", alignItems: "center", justifyContent: "space-between",
-      gap: 20, flexWrap: "wrap" as const,
-      boxShadow: "0 12px 48px rgba(0,0,0,0.22), 0 2px 8px rgba(0,0,0,0.12)",
-      border: "1px solid rgba(255,255,255,0.07)",
-    }}>
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 14, flex: 1, minWidth: 200 }}>
-        <Image src="/logo.png" alt="Samzy" width={36} height={36} style={{ flexShrink: 0 }} />
-        <div>
-          <p style={{ color: "#fff", fontSize: 14, margin: "0 0 4px", fontWeight: 700, fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
+    <div className="fixed inset-x-4 bottom-4 z-[100] mx-auto max-w-2xl rounded-2xl border border-white/10 bg-[#111111] p-5 text-white shadow-[0_24px_70px_rgba(0,0,0,0.35)] sm:p-6">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <div className="max-w-md">
+          <p className="text-sm font-semibold">
             We use cookies
           </p>
-          <p style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, margin: 0, lineHeight: 1.6, fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif" }}>
-            Essential cookies keep you signed in and improve your experience.{" "}
-            <a href="/privacy" style={{ color: ORANGE, textDecoration: "none", fontWeight: 600 }}>Privacy Policy</a>
+
+          <p className="mt-2 text-xs leading-5 text-white/65">
+            Essential cookies keep you signed in and help improve your
+            experience. Read our{" "}
+            <Link
+              href="/privacy"
+              className="font-semibold text-orange-400 hover:text-orange-300"
+            >
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
-      </div>
-      <div style={{ display: "flex", gap: 10, flexShrink: 0 }}>
-        <button onClick={decline} style={{
-          background: "rgba(255,255,255,0.08)",
-          border: "1px solid rgba(255,255,255,0.12)",
-          color: "rgba(255,255,255,0.7)", padding: "9px 20px", borderRadius: 10,
-          fontSize: 13, cursor: "pointer", fontWeight: 600,
-          fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
-          transition: "all 0.2s",
-        }}>Decline</button>
-        <button onClick={accept} style={{
-          background: ORANGE, border: "none",
-          color: "#fff", padding: "9px 20px", borderRadius: 10,
-          fontSize: 13, cursor: "pointer", fontWeight: 700,
-          fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
-          boxShadow: "0 4px 12px rgba(252,120,0,0.35)",
-        }}>Accept All</button>
+
+        <div className="flex shrink-0 gap-3">
+          <button
+            type="button"
+            onClick={decline}
+            className="h-10 rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white/80 transition hover:bg-white/10"
+          >
+            Decline
+          </button>
+
+          <button
+            type="button"
+            onClick={accept}
+            className="h-10 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white transition hover:bg-orange-600"
+          >
+            Accept All
+          </button>
+        </div>
       </div>
     </div>
   );

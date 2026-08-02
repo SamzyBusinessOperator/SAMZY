@@ -1,49 +1,92 @@
 import * as XLSX from "xlsx";
 
-export function exportToExcel(data: any[], filename: string, sheetName: string) {
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, sheetName);
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+type ExcelRow = Record<string, unknown>;
+
+type PdfCell = string | number | boolean | null;
+
+export function exportToExcel(
+  data: ExcelRow[],
+  filename: string,
+  sheetName: string,
+) {
+  const worksheet = XLSX.utils.json_to_sheet(data);
+  const workbook = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  XLSX.writeFile(workbook, `${filename}.xlsx`);
 }
 
-export function exportToPDF(title: string, headers: string[], rows: any[][], filename: string) {
-  import("jspdf").then(({ default: jsPDF }) => {
-    import("jspdf-autotable").then(({ default: autoTable }) => {
-      const doc = new jsPDF() as any;
+export async function exportToPDF(
+  title: string,
+  headers: string[],
+  rows: PdfCell[][],
+  filename: string,
+) {
+  const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+    import("jspdf"),
+    import("jspdf-autotable"),
+  ]);
 
-      // Orange header bar
-      doc.setFillColor(252, 120, 0);
-      doc.rect(0, 0, 210, 28, "F");
-      doc.setTextColor(255, 255, 255);
-      doc.setFontSize(16);
-      doc.setFont("helvetica", "bold");
-      doc.text("Samzy — " + title, 14, 16);
-      doc.setFontSize(9);
-      doc.setFont("helvetica", "normal");
-      doc.text("Generated: " + new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }), 14, 24);
+  const document = new jsPDF();
 
-      // Table using autoTable directly
-      autoTable(doc, {
-        head: [headers],
-        body: rows,
-        startY: 34,
-        headStyles: { fillColor: [15, 15, 15], textColor: 255, fontStyle: "bold", fontSize: 9 },
-        bodyStyles: { fontSize: 8 },
-        alternateRowStyles: { fillColor: [250, 250, 248] },
-        styles: { cellPadding: 4 },
-      });
+  document.setFillColor(252, 120, 0);
+  document.rect(0, 0, 210, 28, "F");
 
-      // Footer
-      const pageCount = doc.internal.getNumberOfPages();
-      for (let i = 1; i <= pageCount; i++) {
-        doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(150);
-        doc.text(`samzyai.com — Page ${i} of ${pageCount}`, 14, doc.internal.pageSize.height - 8);
-      }
+  document.setTextColor(255, 255, 255);
+  document.setFontSize(16);
+  document.setFont("helvetica", "bold");
+  document.text(`SAMZY — ${title}`, 14, 16);
 
-      doc.save(`${filename}.pdf`);
-    });
+  document.setFontSize(9);
+  document.setFont("helvetica", "normal");
+
+  const generatedDate = new Date().toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
   });
+
+  document.text(`Generated: ${generatedDate}`, 14, 24);
+
+  const normalizedRows = rows.map((row) =>
+    row.map((cell) => cell ?? ""),
+  );
+
+  autoTable(document, {
+    head: [headers],
+    body: normalizedRows,
+    startY: 34,
+    headStyles: {
+      fillColor: [15, 15, 15],
+      textColor: 255,
+      fontStyle: "bold",
+      fontSize: 9,
+    },
+    bodyStyles: {
+      fontSize: 8,
+    },
+    alternateRowStyles: {
+      fillColor: [250, 250, 248],
+    },
+    styles: {
+      cellPadding: 4,
+    },
+  });
+
+  const pageCount = document.getNumberOfPages();
+  const pageHeight = document.internal.pageSize.getHeight();
+
+  for (let page = 1; page <= pageCount; page += 1) {
+    document.setPage(page);
+    document.setFontSize(8);
+    document.setTextColor(150);
+
+    document.text(
+      `samzyai.com — Page ${page} of ${pageCount}`,
+      14,
+      pageHeight - 8,
+    );
+  }
+
+  document.save(`${filename}.pdf`);
 }
