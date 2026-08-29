@@ -1,32 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const CONSENT_KEY = "samzy_cookie_consent";
+const CONSENT_EVENT = "samzy-cookie-consent-change";
 
-function getInitialVisibility() {
-  if (typeof window === "undefined") {
-    return false;
-  }
+function subscribe(callback: () => void) {
+  window.addEventListener("storage", callback);
+  window.addEventListener(CONSENT_EVENT, callback);
 
-  return !window.localStorage.getItem(CONSENT_KEY);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener(CONSENT_EVENT, callback);
+  };
+}
+
+function getClientSnapshot() {
+  return window.localStorage.getItem(CONSENT_KEY);
+}
+
+function getServerSnapshot() {
+  return "server";
 }
 
 export default function CookieBanner() {
-  const [visible, setVisible] = useState(getInitialVisibility);
+  const consent = useSyncExternalStore(
+    subscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
-  function accept() {
-    window.localStorage.setItem(CONSENT_KEY, "accepted");
-    setVisible(false);
+  function saveConsent(value: "accepted" | "declined") {
+    window.localStorage.setItem(CONSENT_KEY, value);
+
+    window.dispatchEvent(
+      new Event(CONSENT_EVENT),
+    );
   }
 
-  function decline() {
-    window.localStorage.setItem(CONSENT_KEY, "declined");
-    setVisible(false);
+  if (consent === "server") {
+    return null;
   }
 
-  if (!visible) {
+  if (consent === "accepted" || consent === "declined") {
     return null;
   }
 
@@ -43,7 +60,7 @@ export default function CookieBanner() {
             experience. Read our{" "}
             <Link
               href="/privacy"
-              className="font-semibold text-orange-400 hover:text-orange-300"
+              className="font-semibold text-orange-400 transition hover:text-orange-300"
             >
               Privacy Policy
             </Link>
@@ -54,7 +71,7 @@ export default function CookieBanner() {
         <div className="flex shrink-0 gap-3">
           <button
             type="button"
-            onClick={decline}
+            onClick={() => saveConsent("declined")}
             className="h-10 rounded-xl border border-white/15 bg-white/5 px-5 text-sm font-semibold text-white/80 transition hover:bg-white/10"
           >
             Decline
@@ -62,7 +79,7 @@ export default function CookieBanner() {
 
           <button
             type="button"
-            onClick={accept}
+            onClick={() => saveConsent("accepted")}
             className="h-10 rounded-xl bg-orange-500 px-5 text-sm font-semibold text-white transition hover:bg-orange-600"
           >
             Accept All
