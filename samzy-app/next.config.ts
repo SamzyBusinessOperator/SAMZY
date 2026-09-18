@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: [
-    "organic-space-parakeet-jr56pwpxr4wg25jrv-3000.app.github.dev",
+    "improved-acorn-5vq67p7wvxx7cpjw-3000.app.github.dev",
     "*.app.github.dev",
   ],
 
@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       allowedOrigins: [
         "localhost:3000",
         "127.0.0.1:3000",
-        "organic-space-parakeet-jr56pwpxr4wg25jrv-3000.app.github.dev",
+        "improved-acorn-5vq67p7wvxx7cpjw-3000.app.github.dev",
       ],
     },
   },

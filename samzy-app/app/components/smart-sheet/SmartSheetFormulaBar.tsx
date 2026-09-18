@@ -17,7 +17,11 @@ type CellType =
   | "text"
   | "number"
   | "money"
-  | "percent";
+  | "percent"
+  | "boolean"
+  | "date"
+  | "datetime"
+  | "time";
 
 type FormulaSelection = {
   rowId: string;
@@ -72,8 +76,30 @@ export default function SmartSheetFormulaBar({
           FormulaSelection | null
         >;
 
-      const nextSelection =
+      const incomingSelection =
         customEvent.detail ?? null;
+
+      const nextSelection =
+        incomingSelection &&
+        isTemporalCellType(
+          incomingSelection.type,
+        )
+          ? {
+              ...incomingSelection,
+              displayValue:
+                canonicalTemporalValue(
+                  incomingSelection.displayValue,
+                  incomingSelection.type,
+                ) ||
+                incomingSelection.displayValue,
+              editValue:
+                canonicalTemporalValue(
+                  incomingSelection.editValue,
+                  incomingSelection.type,
+                ) ||
+                incomingSelection.editValue,
+            }
+          : incomingSelection;
 
       setSelection(nextSelection);
 
@@ -107,10 +133,24 @@ export default function SmartSheetFormulaBar({
             return current;
           }
 
-          const nextEditValue =
+          const incomingValue =
             customEvent.detail?.editValue ??
             customEvent.detail?.displayValue ??
             "";
+
+          const nextEditValue =
+            isTemporalCellType(current.type)
+              ? canonicalTemporalValue(
+                  incomingValue,
+                  current.type,
+                )
+              : incomingValue;
+
+          const nextDisplayValue =
+            isTemporalCellType(current.type)
+              ? nextEditValue
+              : customEvent.detail
+                  ?.displayValue ?? "";
 
           setDraftValue(
             nextEditValue,
@@ -119,8 +159,7 @@ export default function SmartSheetFormulaBar({
           return {
             ...current,
             displayValue:
-              customEvent.detail
-                ?.displayValue ?? "",
+              nextDisplayValue,
             editValue:
               nextEditValue,
           };
@@ -243,6 +282,41 @@ export default function SmartSheetFormulaBar({
           ) {
             actionValue =
               cleanedValue;
+          } else if (
+            isTemporalCellType(
+              selection.type,
+            )
+          ) {
+            if (
+              cleanedValue === ""
+            ) {
+              setError(
+                "Enter a date/time value.",
+              );
+
+              return;
+            }
+
+            const temporalValue =
+              canonicalTemporalValue(
+                cleanedValue,
+                selection.type,
+              );
+
+            if (!temporalValue) {
+              setError(
+                selection.type === "date"
+                  ? "Enter a valid date."
+                  : selection.type === "datetime"
+                    ? "Enter a valid date and time."
+                    : "Enter a valid time.",
+              );
+
+              return;
+            }
+
+            actionValue =
+              temporalValue;
           } else {
             if (
               cleanedValue === ""
@@ -594,6 +668,95 @@ export default function SmartSheetFormulaBar({
     </div>
   );
 }
+
+
+function isTemporalCellType(
+  type: CellType,
+): type is "date" | "datetime" | "time" {
+  return (
+    type === "date" ||
+    type === "datetime" ||
+    type === "time"
+  );
+}
+
+function canonicalTemporalValue(
+  value: string,
+  type: "date" | "datetime" | "time",
+) {
+  const raw = value.trim();
+
+  if (!raw) {
+    return "";
+  }
+
+  if (type === "date") {
+    const iso =
+      raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})$/,
+      );
+
+    if (iso) {
+      return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    }
+
+    const local =
+      raw.match(
+        /^(\d{2})\/(\d{2})\/(\d{4})$/,
+      );
+
+    return local
+      ? `${local[3]}-${local[2]}-${local[1]}`
+      : "";
+  }
+
+  if (type === "datetime") {
+    const iso =
+      raw.match(
+        /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})$/,
+      );
+
+    if (iso) {
+      return `${iso[1]}-${iso[2]}-${iso[3]}T${iso[4]}:${iso[5]}`;
+    }
+
+    const local =
+      raw.match(
+        /^(\d{2})\/(\d{2})\/(\d{4})[ T](\d{2}):(\d{2})$/,
+      );
+
+    return local
+      ? `${local[3]}-${local[2]}-${local[1]}T${local[4]}:${local[5]}`
+      : "";
+  }
+
+  const time =
+    raw.match(
+      /^(\d{2}):(\d{2})(?::(\d{2}))?$/,
+    );
+
+  if (!time) {
+    return "";
+  }
+
+  const hours = Number(time[1]);
+  const minutes = Number(time[2]);
+  const seconds = Number(time[3] ?? "0");
+
+  if (
+    hours < 0 ||
+    hours > 23 ||
+    minutes < 0 ||
+    minutes > 59 ||
+    seconds < 0 ||
+    seconds > 59
+  ) {
+    return "";
+  }
+
+  return `${time[1]}:${time[2]}:${String(seconds).padStart(2, "0")}`;
+}
+
 
 function LegendDot({
   color,

@@ -6,13 +6,9 @@ import { createClient } from "@/lib/supabase/server";
 
 const navigation = [
   ["Dashboard", "/app/dashboard", "⌂"],
-  ["Sales", "/app/sales", "↗"],
-  ["Purchases", "/app/purchases", "↙"],
+  ["Smart Sheets", "/app/smart-sheets", "▦"],
   ["Inventory", "/app/inventory", "▦"],
-  ["Products", "/app/products", "□"],
-  ["Customers", "/app/customers", "○"],
   ["Suppliers", "/app/suppliers", "◇"],
-  ["Reports", "/app/reports", "▤"],
   ["AI Assistant", "/app/ai-assistant", "✦"],
   ["Settings", "/app/settings", "⚙"],
 ];

@@ -2,6 +2,8 @@ import { notFound, redirect } from "next/navigation";
 
 import SmartSheetGrid from "@/app/components/smart-sheet/SmartSheetGrid";
 import SmartSheetFormulaBar from "@/app/components/smart-sheet/SmartSheetFormulaBar";
+import SmartSheetDocumentUpload from "@/app/components/smart-sheet/SmartSheetDocumentUpload";
+import SmartSheetDocumentAIReview from "@/app/components/smart-sheet/SmartSheetDocumentAIReview";
 
 import type {
   SmartSheet,
@@ -144,6 +146,209 @@ export default async function SmartSheetPage({ params }: PageProps) {
   }
 
   const cellStates = (cellStatesData ?? []) as SmartSheetCellState[];
+
+  // ========================================================
+  // SPREADSHEET CELL OVERLAY LAYER
+  // ========================================================
+  //
+  // V1 reader only:
+  // - smart_sheet_rows remains the business-data source of truth.
+  // - smart_sheet_cells is loaded alongside it for future Excel-style
+  //   horizontal movement.
+  // - The grid does not apply overlay values visually yet, so this step
+  //   cannot change any existing Smart Sheet value or calculation.
+
+  const { data: cellOverlaysData, error: cellOverlaysError } = await supabase
+    .from("smart_sheet_cells")
+    .select(`
+      row_id,
+      column_key,
+      value,
+      is_blank,
+      source,
+      source_column_key,
+      source_row_id
+    `)
+    .eq("smart_sheet_id", id)
+    .eq("organization_id", membership.organization_id);
+
+  if (cellOverlaysError) {
+    throw new Error(cellOverlaysError.message);
+  }
+
+  const cellOverlays = cellOverlaysData ?? [];
+
+  // ========================================================
+  // DYNAMIC COLUMN METADATA
+  // ========================================================
+  //
+  // V1 compatibility reader:
+  // - smart_sheet_columns is the persistent metadata layer.
+  // - The current hard-coded grid definitions remain the behavioral fallback.
+  // - Reading this table must not change business rows, overlays, calculations,
+  //   history, or the sheet total.
+
+  const { data: sheetColumnsData, error: sheetColumnsError } = await supabase
+    .from("smart_sheet_columns")
+    .select(`
+      id,
+      column_key,
+      label,
+      position,
+      width,
+      hidden,
+      data_type,
+      number_format,
+      decimal_places,
+      semantic_role,
+      formula_definition,
+      business_mapping,
+      metadata,
+      is_system
+    `)
+    .eq("smart_sheet_id", id)
+    .eq("organization_id", membership.organization_id)
+    .order("position", { ascending: true });
+
+  if (sheetColumnsError) {
+    throw new Error(sheetColumnsError.message);
+  }
+
+  const sheetColumns = sheetColumnsData ?? [];
+
+  // ========================================================
+  // PRESERVED SOURCE DOCUMENTS
+  // ========================================================
+  //
+  // V4.11b only counts preserved originals for the attachment badge.
+  // OCR / AI processing is intentionally not started from this page yet.
+
+  const documentTable = (supabase as any).from("smart_sheet_documents");
+  const { count: attachmentCount, error: attachmentCountError } =
+    await documentTable
+      .select("id", { count: "exact", head: true })
+      .eq("smart_sheet_id", id)
+      .eq("organization_id", membership.organization_id);
+
+  if (attachmentCountError) {
+    throw new Error(attachmentCountError.message);
+  }
+
+  // ========================================================
+  // LATEST DOCUMENT + CURRENT AI REVIEW
+  // ========================================================
+  // V4.11c reads review data only. Nothing extracted is written to the grid.
+
+  const { data: latestDocumentData, error: latestDocumentError } =
+    await documentTable
+      .select(`
+        id,
+        original_filename,
+        mime_type,
+        document_type,
+        detected_language,
+        detected_currency,
+        processing_status,
+        created_at
+      `)
+      .eq("smart_sheet_id", id)
+      .eq("organization_id", membership.organization_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+  if (latestDocumentError) {
+    throw new Error(latestDocumentError.message);
+  }
+
+  let latestExtractionData: any = null;
+  let latestExtractionFields: any[] = [];
+  let latestExtractionLineItems: any[] = [];
+
+  if (latestDocumentData?.id) {
+    const extractionTable = (supabase as any).from(
+      "smart_sheet_document_extractions",
+    );
+
+    const { data: extractionData, error: extractionError } =
+      await extractionTable
+        .select(`
+          id,
+          extraction_version,
+          status,
+          provider,
+          model,
+          detected_language,
+          detected_document_type,
+          confidence,
+          normalized_payload,
+          created_at
+        `)
+        .eq("document_id", latestDocumentData.id)
+        .eq("organization_id", membership.organization_id)
+        .eq("is_current", true)
+        .maybeSingle();
+
+    if (extractionError) {
+      throw new Error(extractionError.message);
+    }
+
+    latestExtractionData = extractionData;
+
+    if (extractionData?.id) {
+      const fieldTable = (supabase as any).from(
+        "smart_sheet_document_fields",
+      );
+
+      const { data: fieldData, error: fieldError } = await fieldTable
+        .select(`
+          id,
+          field_scope,
+          line_item_index,
+          canonical_role,
+          original_label,
+          raw_value,
+          normalized_value,
+          language,
+          confidence,
+          review_status,
+          created_at
+        `)
+        .eq("extraction_id", extractionData.id)
+        .eq("organization_id", membership.organization_id)
+        .order("created_at", { ascending: true });
+
+      if (fieldError) {
+        throw new Error(fieldError.message);
+      }
+
+      latestExtractionFields = fieldData ?? [];
+
+      const lineItemTable = (supabase as any).from(
+        "smart_sheet_document_line_items",
+      );
+
+      const { data: lineItemData, error: lineItemError } =
+        await lineItemTable
+          .select(`
+            id,
+            line_index,
+            raw_payload,
+            normalized_payload,
+            confidence,
+            review_status
+          `)
+          .eq("extraction_id", extractionData.id)
+          .eq("organization_id", membership.organization_id)
+          .order("line_index", { ascending: true });
+
+      if (lineItemError) {
+        throw new Error(lineItemError.message);
+      }
+
+      latestExtractionLineItems = lineItemData ?? [];
+    }
+  }
 
   // ========================================================
   // DERIVED DISPLAY VALUES
@@ -362,6 +567,15 @@ export default async function SmartSheetPage({ params }: PageProps) {
               strong
             />
 
+            <SmartSheetDocumentUpload sheetId={sheet.id} />
+            <SmartSheetDocumentAIReview
+              sheetId={sheet.id}
+              document={latestDocumentData}
+              extraction={latestExtractionData}
+              fields={latestExtractionFields}
+              lineItems={latestExtractionLineItems}
+            />
+
             <button type="button" style={secondaryButtonStyle}>
               Actions
               <span
@@ -406,7 +620,7 @@ export default async function SmartSheetPage({ params }: PageProps) {
         <DocumentTab label="Products" />
         <DocumentTab label="Summary" />
         <DocumentTab label="History" />
-        <DocumentTab label="Attachments" badge="0" />
+        <DocumentTab label="Attachments" badge={String(attachmentCount ?? 0)} />
       </nav>
 
       {/* ====================================================
@@ -462,9 +676,7 @@ export default async function SmartSheetPage({ params }: PageProps) {
           FORMULA / VALUE BAR
       ==================================================== */}
 
-      <SmartSheetFormulaBar
-        sheetId={sheet.id}
-      />
+      <SmartSheetFormulaBar sheetId={sheet.id} />
 
       {/* ====================================================
           GRID WORKSPACE
@@ -488,6 +700,8 @@ export default async function SmartSheetPage({ params }: PageProps) {
             sheet={sheet}
             rows={rows}
             cellStates={cellStates}
+            cellOverlays={cellOverlays}
+            sheetColumns={sheetColumns}
           />
         </div>
       </section>
@@ -824,40 +1038,6 @@ function ToolbarDivider() {
         margin: "0 2px",
       }}
     />
-  );
-}
-
-// ==========================================================
-// LEGEND
-// ==========================================================
-
-function LegendDot({
-  color,
-  label,
-}: {
-  color: string;
-  label: string;
-}) {
-  return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "5px",
-        whiteSpace: "nowrap",
-      }}
-    >
-      <span
-        style={{
-          width: "7px",
-          height: "7px",
-          borderRadius: "999px",
-          background: color,
-        }}
-      />
-
-      {label}
-    </span>
   );
 }
 
