@@ -87,7 +87,8 @@ export type SmartSheet = {
   organization_id: string;
   sheet_type:
     | "supplier_invoice"
-    | "sales_receipt";
+    | "sales_receipt"
+    | null;
 
   supplier_id: string | null;
   purchase_id: string | null;
