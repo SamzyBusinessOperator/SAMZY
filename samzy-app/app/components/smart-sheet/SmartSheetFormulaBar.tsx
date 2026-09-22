@@ -36,10 +36,12 @@ type FormulaSelection = {
 
 type Props = {
   sheetId: string;
+  generalSheet?: boolean;
 };
 
 export default function SmartSheetFormulaBar({
   sheetId,
+  generalSheet = false,
 }: Props) {
   const router = useRouter();
 
@@ -459,8 +461,8 @@ export default function SmartSheetFormulaBar({
     <div
       style={{
         flex: "0 0 auto",
-        minHeight: "42px",
-        padding: "5px 16px",
+        minHeight: generalSheet ? "46px" : "42px",
+        padding: generalSheet ? "5px 16px" : "5px 16px",
         display: "flex",
         alignItems: "center",
         gap: "8px",
@@ -490,7 +492,7 @@ export default function SmartSheetFormulaBar({
         }}
       >
         <span>
-          {selection?.address ?? "—"}
+          {selection?.address ?? (generalSheet ? "A1" : "—")}
         </span>
 
         <span
@@ -544,7 +546,9 @@ export default function SmartSheetFormulaBar({
           placeholder={
             selection
               ? ""
-              : "Select a cell to view or edit its value"
+              : generalSheet
+                ? "Enter a value or formula..."
+                : "Select a cell to view or edit its value"
           }
           disabled={
             !selection ||
@@ -592,9 +596,11 @@ export default function SmartSheetFormulaBar({
                 : "1px solid #dfe3e8",
             borderRadius: "6px",
             background:
-              !selection || !canEdit
-                ? "#fafafa"
-                : "#ffffff",
+              generalSheet && !selection
+                ? "#ffffff"
+                : !selection || !canEdit
+                  ? "#fafafa"
+                  : "#ffffff",
             color:
               selection
                 ? "#101828"
@@ -634,37 +640,24 @@ export default function SmartSheetFormulaBar({
         ) : null}
       </div>
 
-      <div
-        style={{
-          flex: "0 0 auto",
-          display: "flex",
-          alignItems: "center",
-          gap: "14px",
-          padding: "0 10px",
-          fontSize: "11px",
-          color: "#475467",
-        }}
-      >
-        <LegendDot
-          color="#2e90fa"
-          label="OCR Data"
-        />
-
-        <LegendDot
-          color="#12b76a"
-          label="Calculated"
-        />
-
-        <LegendDot
-          color="#f79009"
-          label="Manual"
-        />
-
-        <LegendDot
-          color="#7f56d9"
-          label="SAME"
-        />
-      </div>
+      {!generalSheet ? (
+        <div
+          style={{
+            flex: "0 0 auto",
+            display: "flex",
+            alignItems: "center",
+            gap: "14px",
+            padding: "0 10px",
+            fontSize: "11px",
+            color: "#475467",
+          }}
+        >
+          <LegendDot color="#2e90fa" label="OCR Data" />
+          <LegendDot color="#12b76a" label="Calculated" />
+          <LegendDot color="#f79009" label="Manual" />
+          <LegendDot color="#7f56d9" label="SAME" />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -359,6 +359,7 @@ export default async function SmartSheetPage({ params }: PageProps) {
   ).length;
 
   const ocrConfidence = formatConfidence(sheet.ocr_confidence);
+  const isGeneralSmartSheet = sheet.sheet_type === null;
 
   // ========================================================
   // FULL-SCREEN SMART SHEET WORKSPACE
@@ -380,6 +381,203 @@ export default async function SmartSheetPage({ params }: PageProps) {
           TOP WORKSPACE HEADER
       ==================================================== */}
 
+      {isGeneralSmartSheet ? (
+        <header
+          style={{
+            flex: "0 0 auto",
+            background: "#ffffff",
+            borderBottom: "1px solid #e5e7eb",
+          }}
+        >
+          <div
+            style={{
+              minHeight: "58px",
+              padding: "6px 24px 0",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: "24px",
+            }}
+          >
+            <div
+              style={{
+                minWidth: 0,
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+              }}
+            >
+              <img
+                src="/samzy-logo.png"
+                alt="SAMZY"
+                width={48}
+                height={48}
+                style={{
+                  width: "48px",
+                  height: "48px",
+                  objectFit: "contain",
+                  flex: "0 0 auto",
+                }}
+              />
+
+              <div
+                style={{
+                  minWidth: 0,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                }}
+              >
+                <h1
+                  style={{
+                    margin: 0,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    fontSize: "18px",
+                    lineHeight: 1.25,
+                    fontWeight: 750,
+                    letterSpacing: "-0.015em",
+                    color: "#111827",
+                  }}
+                >
+                  {sheet.title}
+                </h1>
+
+                <button
+                  type="button"
+                  aria-label="Rename Smart Sheet"
+                  title="Rename Smart Sheet"
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    padding: 0,
+                    border: 0,
+                    borderRadius: "6px",
+                    background: "transparent",
+                    color: "#344054",
+                    fontSize: "16px",
+                    cursor: "default",
+                  }}
+                >
+                  ✎
+                </button>
+
+                <StatusBadge status={sheet.status} />
+              </div>
+            </div>
+
+            <div
+              style={{
+                flex: "0 0 auto",
+                display: "flex",
+                alignItems: "center",
+                gap: "10px",
+              }}
+            >
+              <button
+                type="button"
+                style={{
+                  height: "36px",
+                  padding: "0 16px",
+                  border: "1px solid #fed7c3",
+                  borderRadius: "999px",
+                  background: "#fff7ed",
+                  color: "#f0440a",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  cursor: "default",
+                }}
+              >
+                ♙＋ Share
+              </button>
+
+              <button
+                type="button"
+                style={{
+                  height: "36px",
+                  padding: "0 16px",
+                  border: "1px solid #e4e7ec",
+                  borderRadius: "999px",
+                  background: "#ffffff",
+                  color: "#101828",
+                  fontSize: "12px",
+                  fontWeight: 650,
+                  cursor: "default",
+                }}
+              >
+                ▢ Comments
+              </button>
+
+              <button
+                type="button"
+                aria-label="More Smart Sheet actions"
+                title="More"
+                style={{
+                  width: "38px",
+                  height: "36px",
+                  padding: 0,
+                  border: "1px solid #e4e7ec",
+                  borderRadius: "999px",
+                  background: "#ffffff",
+                  color: "#344054",
+                  fontSize: "15px",
+                  fontWeight: 800,
+                  cursor: "default",
+                }}
+              >
+                •••
+              </button>
+            </div>
+          </div>
+
+          <nav
+            aria-label="Smart Sheet menus"
+            style={{
+              minHeight: "34px",
+              padding: "0 24px 0 86px",
+              display: "flex",
+              alignItems: "center",
+              gap: "2px",
+              overflowX: "auto",
+              overflowY: "hidden",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {[
+              "File",
+              "Edit",
+              "View",
+              "Insert",
+              "Format",
+              "Data",
+              "Tools",
+              "Extensions",
+              "Help",
+            ].map((label) => (
+              <button
+                key={label}
+                type="button"
+                style={{
+                  height: "28px",
+                  padding: "0 8px",
+                  border: 0,
+                  borderRadius: "5px",
+                  background: "transparent",
+                  color: "#344054",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  cursor: "default",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
+        </header>
+      ) : (
       <header
         style={{
           flex: "0 0 auto",
@@ -599,11 +797,13 @@ export default async function SmartSheetPage({ params }: PageProps) {
           </div>
         </div>
       </header>
+      )}
 
       {/* ====================================================
           DOCUMENT NAVIGATION
       ==================================================== */}
 
+      {!isGeneralSmartSheet ? (
       <nav
         style={{
           flex: "0 0 auto",
@@ -622,61 +822,68 @@ export default async function SmartSheetPage({ params }: PageProps) {
         <DocumentTab label="History" />
         <DocumentTab label="Attachments" badge={String(attachmentCount ?? 0)} />
       </nav>
+      ) : null}
 
       {/* ====================================================
-          SPREADSHEET TOOLBAR
+          SPREADSHEET MENU / LEGACY TOOLBAR
       ==================================================== */}
 
-      <div
-        style={{
-          flex: "0 0 auto",
-          minHeight: "52px",
-          padding: "8px 16px",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          overflowX: "auto",
-          background: "#ffffff",
-          borderBottom: "1px solid #e5e7eb",
-          whiteSpace: "nowrap",
-        }}
-      >
-        <ToolbarButton label="↶ Undo" />
-        <ToolbarButton label="↷ Redo" muted />
+      {!isGeneralSmartSheet ? (
+        <div
+          style={{
+            flex: "0 0 auto",
+            minHeight: "52px",
+            padding: "8px 16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            overflowX: "auto",
+            background: "#ffffff",
+            borderBottom: "1px solid #e5e7eb",
+            whiteSpace: "nowrap",
+          }}
+        >
+          <ToolbarButton label="↶ Undo" />
+          <ToolbarButton label="↷ Redo" muted />
 
-        <ToolbarDivider />
+          <ToolbarDivider />
 
-        <ToolbarButton label="Formatting⌄" wide />
-        <ToolbarButton label="Inter⌄" wide />
-        <ToolbarButton label="11⌄" />
+          <ToolbarButton label="Formatting⌄" wide />
+          <ToolbarButton label="Inter⌄" wide />
+          <ToolbarButton label="11⌄" />
 
-        <ToolbarButton label="B" strong />
-        <ToolbarButton label="I" italic />
-        <ToolbarButton label="U" underline />
+          <ToolbarButton label="B" strong />
+          <ToolbarButton label="I" italic />
+          <ToolbarButton label="U" underline />
 
-        <ToolbarDivider />
+          <ToolbarDivider />
 
-        <ToolbarButton label="☷⌄" />
-        <ToolbarButton label="≡⌄" />
-        <ToolbarButton label="%⌄" />
+          <ToolbarButton label="☷⌄" />
+          <ToolbarButton label="≡⌄" />
+          <ToolbarButton label="%⌄" />
 
-        <ToolbarDivider />
+          <ToolbarDivider />
 
-        <ToolbarButton label="Freeze" />
-        <ToolbarButton label="Filter" />
-        <ToolbarButton label="Sort" />
-        <ToolbarButton label="Columns" />
-        <ToolbarButton label="ƒx Formulas" />
-        <ToolbarButton label="✦ AI Assist" accent />
+          <ToolbarButton label="Freeze" />
+          <ToolbarButton label="Filter" />
+          <ToolbarButton label="Sort" />
+          <ToolbarButton label="Columns" />
+          <ToolbarButton label="ƒx Formulas" />
+          <ToolbarButton label="✦ AI Assist" accent />
 
-        <ToolbarButton label="•••" />
-      </div>
+          <ToolbarButton label="•••" />
+        </div>
+      ) : null}
 
       {/* ====================================================
           FORMULA / VALUE BAR
       ==================================================== */}
 
-      <SmartSheetFormulaBar sheetId={sheet.id} />
+      {!isGeneralSmartSheet ? (
+        <SmartSheetFormulaBar
+          sheetId={sheet.id}
+        />
+      ) : null}
 
       {/* ====================================================
           GRID WORKSPACE
@@ -710,6 +917,161 @@ export default async function SmartSheetPage({ params }: PageProps) {
           BOTTOM STATUS / SHEET BAR
       ==================================================== */}
 
+      {isGeneralSmartSheet ? (
+        <footer
+          style={{
+            flex: "0 0 auto",
+            minHeight: "46px",
+            padding: "0 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "16px",
+            background: "#ffffff",
+            borderTop: "1px solid #e5e7eb",
+            fontSize: "11px",
+            color: "#667085",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              height: "100%",
+            }}
+          >
+            <button
+              type="button"
+              aria-label="Add sheet"
+              title="Add sheet"
+              style={{
+                width: "34px",
+                height: "34px",
+                padding: 0,
+                border: "none",
+                background: "transparent",
+                color: "#101828",
+                fontSize: "24px",
+                lineHeight: 1,
+                cursor: "default",
+              }}
+            >
+              +
+            </button>
+
+            <button
+              type="button"
+              aria-label="All sheets"
+              title="All sheets"
+              style={{
+                width: "34px",
+                height: "34px",
+                padding: 0,
+                border: "none",
+                background: "transparent",
+                color: "#101828",
+                fontSize: "20px",
+                lineHeight: 1,
+                cursor: "default",
+              }}
+            >
+              ≡
+            </button>
+
+            <div
+              style={{
+                height: "34px",
+                padding: "0 14px",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "10px",
+                border: "none",
+                borderRadius: "7px",
+                background: "#fff3e8",
+                color: "#f04400",
+                fontSize: "12px",
+                fontWeight: 700,
+              }}
+            >
+              <span>Sheet1</span>
+              <span
+                aria-hidden="true"
+                style={{
+                  fontSize: "10px",
+                }}
+              >
+                ▾
+              </span>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "18px",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "7px",
+              }}
+            >
+              <span
+                style={{
+                  width: "7px",
+                  height: "7px",
+                  borderRadius: "999px",
+                  background: "#12b76a",
+                }}
+              />
+              Auto calculations
+            </span>
+
+            <span>
+              {cellStates.length} tracked cell state
+              {cellStates.length === 1 ? "" : "s"}
+            </span>
+
+            <span
+              aria-hidden="true"
+              style={{
+                width: "1px",
+                height: "18px",
+                background: "#d0d5dd",
+              }}
+            />
+
+            <span>Last saved: {formatTime(sheet.last_edited_at)}</span>
+
+            <button
+              type="button"
+              aria-label="Fullscreen"
+              title="Fullscreen"
+              style={{
+                width: "34px",
+                height: "34px",
+                padding: 0,
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                border: "none",
+                background: "transparent",
+                color: "#101828",
+                fontSize: "20px",
+                lineHeight: 1,
+                cursor: "default",
+              }}
+            >
+              ⛶
+            </button>
+          </div>
+        </footer>
+      ) : (
       <footer
         style={{
           flex: "0 0 auto",
@@ -800,6 +1162,7 @@ export default async function SmartSheetPage({ params }: PageProps) {
           <span>Last saved: {formatTime(sheet.last_edited_at)}</span>
         </div>
       </footer>
+      )}
     </main>
   );
 }

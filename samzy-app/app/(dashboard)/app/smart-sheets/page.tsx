@@ -144,6 +144,57 @@ export default async function SmartSheetsPage({
     return matchesSearch && matchesStatus;
   });
 
+  async function createSmartSheet() {
+    "use server";
+
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      redirect("/login");
+    }
+
+    const {
+      data: membership,
+      error: membershipError,
+    } = await supabase
+      .from("organization_members")
+      .select("organization_id")
+      .eq("user_id", user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (membershipError || !membership) {
+      redirect("/onboarding");
+    }
+
+    const {
+      data: smartSheet,
+      error: createError,
+    } = await supabase
+      .from("smart_sheets")
+      .insert({
+        organization_id: membership.organization_id,
+        created_by: user.id,
+        title: "Untitled Smart Sheet",
+        sheet_type: null,
+        status: "draft",
+      })
+      .select("id")
+      .single();
+
+    if (createError || !smartSheet) {
+      throw new Error(
+        createError?.message || "Unable to create Smart Sheet.",
+      );
+    }
+
+    redirect(`/app/smart-sheets/${smartSheet.id}`);
+  }
+
   const totalSheets = smartSheets.length;
   const activeSheets = smartSheets.filter(
     (sheet) => sheet.status?.toLowerCase() === "active",
@@ -180,12 +231,14 @@ export default async function SmartSheetsPage({
             </div>
           </div>
 
-          <button
-            type="button"
-            className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
-          >
-            + New Smart Sheet
-          </button>
+          <form action={createSmartSheet}>
+            <button
+              type="submit"
+              className="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
+            >
+              + New Smart Sheet
+            </button>
+          </form>
         </div>
 
         {/* ==================================================

@@ -1,5 +1,6 @@
 "use client";
 
+import SmartSheetFormulaBar from "@/app/components/smart-sheet/SmartSheetFormulaBar";
 import {
   DragEvent,
   MouseEvent,
@@ -450,6 +451,17 @@ type FindMatch = {
 const ROW_NUMBER_WIDTH = 38;
 const PRODUCT_ROW_HEIGHT = 22;
 const LETTER_ROW_HEIGHT = 24;
+
+/*
+ * General Smart Sheet blank-canvas presentation.
+ *
+ * These coordinates are visual placeholders only. They are deliberately
+ * separate from runtimeAllColumns, columnOrder, persisted rows, formulas,
+ * semantic mappings, history, and server actions.
+ */
+const GENERAL_BLANK_COLUMN_COUNT = 12;
+const GENERAL_BLANK_ROW_COUNT = 500;
+const GENERAL_BLANK_COLUMN_WIDTH = 120;
 const GROUP_ROW_HEIGHT = 22;
 const COLUMN_HEADER_HEIGHT = 38;
 
@@ -542,7 +554,7 @@ export default function SmartSheetGrid({
    */
   const runtimeAllColumns = useMemo<ColumnDefinition[]>(() => {
     if (sheetColumns.length === 0) {
-      return ALL_COLUMNS;
+      return sheet.sheet_type === null ? [] : ALL_COLUMNS;
     }
 
     const legacyByKey = new Map(
@@ -673,18 +685,23 @@ export default function SmartSheetGrid({
 
     return mapped.length > 0
       ? mapped
-      : ALL_COLUMNS;
+      : sheet.sheet_type === null
+        ? []
+        : ALL_COLUMNS;
   }, [
     columnLabelOverrides,
     columnPresentationOverrides,
     columnValidationOverrides,
     columnConditionalFormatOverrides,
+    sheet.sheet_type,
     sheetColumns,
   ]);
 
   const initialColumnOrder = useMemo(() => {
     if (sheetColumns.length === 0) {
-      return CORE_COLUMNS.map((column) => column.key);
+      return sheet.sheet_type === null
+        ? []
+        : CORE_COLUMNS.map((column) => column.key);
     }
 
     const hiddenKeys = new Set(
@@ -700,8 +717,10 @@ export default function SmartSheetGrid({
 
     return metadataVisibleOrder.length > 0
       ? metadataVisibleOrder
-      : CORE_COLUMNS.map((column) => column.key);
-  }, [runtimeAllColumns, sheetColumns]);
+      : sheet.sheet_type === null
+        ? []
+        : CORE_COLUMNS.map((column) => column.key);
+  }, [runtimeAllColumns, sheet.sheet_type, sheetColumns]);
 
   /*
    * Spreadsheet Cell Layer V1 reader.
@@ -739,45 +758,69 @@ export default function SmartSheetGrid({
     ),
   );
 
-  const [pendingCustomColumnKey, setPendingCustomColumnKey] =
-    useState<string | null>(null);
+  const [pendingCustomColumnKeys, setPendingCustomColumnKeys] =
+    useState<string[]>([]);
 
   useEffect(() => {
-    if (!pendingCustomColumnKey) {
+    if (pendingCustomColumnKeys.length === 0) {
       return;
     }
 
-    const definition =
-      runtimeAllColumns.find(
-        (column) =>
-          column.key === pendingCustomColumnKey,
+    const definitions =
+      pendingCustomColumnKeys
+        .map((key) =>
+          runtimeAllColumns.find(
+            (column) => column.key === key,
+          ),
+        )
+        .filter(
+          (
+            column,
+          ): column is ColumnDefinition =>
+            Boolean(column),
+        );
+
+    if (definitions.length === 0) {
+      return;
+    }
+
+    const resolvedKeys =
+      definitions.map(
+        (column) => column.key,
       );
 
-    if (!definition) {
-      return;
-    }
+    setColumnOrder((current) => {
+      const next = [...current];
 
-    setColumnOrder((current) =>
-      current.includes(
-        pendingCustomColumnKey,
-      )
-        ? current
-        : [
-            ...current,
-            pendingCustomColumnKey,
-          ],
+      for (const key of resolvedKeys) {
+        if (!next.includes(key)) {
+          next.push(key);
+        }
+      }
+
+      return next;
+    });
+
+    setColumnWidths((current) => {
+      const next = { ...current };
+
+      for (const definition of definitions) {
+        next[definition.key] =
+          next[definition.key] ??
+          definition.width;
+      }
+
+      return next;
+    });
+
+    setPendingCustomColumnKeys((current) =>
+      current.filter(
+        (key) =>
+          !resolvedKeys.includes(key),
+      ),
     );
-
-    setColumnWidths((current) => ({
-      ...current,
-      [pendingCustomColumnKey]:
-        current[pendingCustomColumnKey] ??
-        definition.width,
-    }));
-
-    setPendingCustomColumnKey(null);
   }, [
-    pendingCustomColumnKey,
+    pendingCustomColumnKeys,
     runtimeAllColumns,
   ]);
 
@@ -1721,6 +1764,19 @@ export default function SmartSheetGrid({
     useState<string | null>(null);
   const [pendingSelectedRowId, setPendingSelectedRowId] =
     useState<string | null>(null);
+
+  /*
+   * General Smart Sheet lazy materialization target.
+   *
+   * Virtual blank coordinates never enter the spreadsheet engine as fake
+   * row/column IDs. Once the required real structure has been persisted,
+   * this coordinate tells the client which real cell should be selected.
+   */
+  const [pendingMaterializedCell, setPendingMaterializedCell] =
+    useState<{
+      rowIndex: number;
+      columnIndex: number;
+    } | null>(null);
 
   // V1 row-range selection: click a row number, then Shift+click another.
   // Structural multi-row actions are intentionally not enabled yet.
@@ -6721,6 +6777,232 @@ export default function SmartSheetGrid({
     }
   }
 
+  async function materializeGeneralCell(
+    rowIndex: number,
+    columnIndex: number,
+  ) {
+    if (
+      sheet.sheet_type !== null ||
+      rowIndex < 0 ||
+      rowIndex >= GENERAL_BLANK_ROW_COUNT ||
+      columnIndex < 0 ||
+      columnIndex >= GENERAL_BLANK_COLUMN_COUNT ||
+      activeFilterCount > 0 ||
+      isRowOperation ||
+      isCreatingColumn ||
+      isPasting ||
+      isClearing ||
+      isApplyingFill
+    ) {
+      return;
+    }
+
+    const requiredColumnCount =
+      columnIndex + 1;
+
+    const requiredRowCount =
+      rowIndex + 1;
+
+    const missingColumnCount =
+      Math.max(
+        0,
+        requiredColumnCount -
+          visibleColumns.length,
+      );
+
+    const missingRowCount =
+      Math.max(
+        0,
+        requiredRowCount -
+          rows.length,
+      );
+
+    if (
+      missingColumnCount === 0 &&
+      missingRowCount === 0
+    ) {
+      const targetRow =
+        filteredRows[rowIndex];
+
+      const targetColumn =
+        visibleColumns[columnIndex];
+
+      if (targetRow && targetColumn) {
+        selectCell(
+          targetRow,
+          rowIndex,
+          targetColumn.key,
+          columnIndex,
+        );
+      }
+
+      return;
+    }
+
+    setIsRowOperation(true);
+    setIsCreatingColumn(true);
+    setPasteMessage(null);
+
+    try {
+      /*
+       * Virtual coordinates are presentation-only. Persist every required
+       * column/row first, then let the normal spreadsheet engine select the
+       * real target after router.refresh(). No placeholder identities enter
+       * selection, formulas, clipboard, formatting, or history.
+       */
+      const createdColumnKeys: string[] =
+        [];
+
+      for (
+        let offset = 0;
+        offset < missingColumnCount;
+        offset += 1
+      ) {
+        const nextColumnIndex =
+          visibleColumns.length +
+          offset;
+
+        const result =
+          await addSmartSheetColumn({
+            sheetId: sheet.id,
+            label: `Column ${columnLetter(
+              nextColumnIndex,
+            )}`,
+            dataType: "text",
+          });
+
+        if (
+          !result.ok ||
+          !result.column
+        ) {
+          if (createdColumnKeys.length > 0) {
+            setPendingCustomColumnKeys((current) => [
+              ...current,
+              ...createdColumnKeys.filter(
+                (key) => !current.includes(key),
+              ),
+            ]);
+          }
+
+          setPasteMessage(
+            result.message ??
+              `Unable to create column ${columnLetter(
+                nextColumnIndex,
+              )}.`,
+          );
+
+          router.refresh();
+          return;
+        }
+
+        createdColumnKeys.push(
+          result.column.column_key,
+        );
+      }
+
+      if (createdColumnKeys.length > 0) {
+        setPendingCustomColumnKeys((current) => [
+          ...current,
+          ...createdColumnKeys.filter(
+            (key) => !current.includes(key),
+          ),
+        ]);
+      }
+
+      let remainingRows =
+        missingRowCount;
+
+      let anchorRowId =
+        rows.length > 0
+          ? rows[rows.length - 1]?.id
+          : undefined;
+
+      if (
+        remainingRows > 0 &&
+        !anchorRowId
+      ) {
+        const firstRowResult =
+          await insertFirstSmartSheetRow({
+            sheetId: sheet.id,
+          });
+
+        if (
+          !firstRowResult.ok ||
+          !firstRowResult.rowId
+        ) {
+          setPasteMessage(
+            firstRowResult.message ??
+              "Unable to create the first row.",
+          );
+
+          router.refresh();
+          return;
+        }
+
+        anchorRowId =
+          firstRowResult.rowId;
+
+        remainingRows -= 1;
+      }
+
+      while (
+        remainingRows > 0 &&
+        anchorRowId
+      ) {
+        const batchCount =
+          Math.min(
+            remainingRows,
+            100,
+          );
+
+        const result =
+          await insertSmartSheetRows({
+            sheetId: sheet.id,
+            anchorRowId,
+            count: batchCount,
+            position: "below",
+          });
+
+        if (!result.ok) {
+          setPasteMessage(
+            result.message ??
+              "Unable to create Smart Sheet rows.",
+          );
+
+          router.refresh();
+          return;
+        }
+
+        remainingRows -=
+          result.insertedCount ??
+          batchCount;
+      }
+
+      setPendingMaterializedCell({
+        rowIndex,
+        columnIndex,
+      });
+
+      setPasteMessage(
+        `${columnLetter(
+          columnIndex,
+        )}${rowIndex + 1} ready.`,
+      );
+
+      router.refresh();
+    } catch (error) {
+      setPasteMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to prepare Smart Sheet cell.",
+      );
+    } finally {
+      setIsRowOperation(false);
+      setIsCreatingColumn(false);
+    }
+  }
+
+
   async function insertRow(
     position: "above" | "below",
   ) {
@@ -7817,6 +8099,57 @@ export default function SmartSheetGrid({
       );
     };
   }, [columnMenu]);
+
+
+  useEffect(() => {
+    if (!pendingMaterializedCell) {
+      return;
+    }
+
+    const {
+      rowIndex,
+      columnIndex,
+    } = pendingMaterializedCell;
+
+    const targetRow =
+      filteredRows[rowIndex];
+
+    const targetColumn =
+      visibleColumns[columnIndex];
+
+    if (!targetRow || !targetColumn) {
+      return;
+    }
+
+    selectCell(
+      targetRow,
+      rowIndex,
+      targetColumn.key,
+      columnIndex,
+    );
+
+    setPendingMaterializedCell(null);
+
+    requestAnimationFrame(() => {
+      const element =
+        gridRef.current?.querySelector(
+          `[data-sheet-cell="${targetRow.id}:${targetColumn.key}"]`,
+        ) as HTMLElement | null;
+
+      element?.scrollIntoView({
+        block: "nearest",
+        inline: "nearest",
+      });
+
+      gridRef.current?.focus({
+        preventScroll: true,
+      });
+    });
+  }, [
+    pendingMaterializedCell,
+    filteredRows,
+    visibleColumns,
+  ]);
 
 
   useEffect(() => {
@@ -9779,9 +10112,9 @@ export default function SmartSheetGrid({
         return;
       }
 
-      setPendingCustomColumnKey(
+      setPendingCustomColumnKeys([
         result.column.column_key,
-      );
+      ]);
 
       setNewColumnLabel("");
       setNewColumnDataType("text");
@@ -10240,17 +10573,27 @@ export default function SmartSheetGrid({
 
       <div
         style={{
-          minHeight: 38,
+          minHeight: sheet.sheet_type === null ? 42 : 38,
           display: "flex",
           alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 6,
-          padding: "4px 6px",
+          justifyContent:
+            sheet.sheet_type === null ? "flex-start" : "flex-end",
+          gap: sheet.sheet_type === null ? 4 : 6,
+          padding:
+            sheet.sheet_type === null ? "5px 8px" : "4px 6px",
           overflowX: "auto",
           overflowY: "hidden",
-          border: "1px solid #aeb6c2",
+          border:
+            sheet.sheet_type === null
+              ? "1px solid #e5e7eb"
+              : "1px solid #aeb6c2",
           borderBottom: 0,
-          background: "#f8fafc",
+          background:
+            sheet.sheet_type === null ? "#ffffff" : "#f8fafc",
+          boxShadow:
+            sheet.sheet_type === null
+              ? "0 1px 2px rgba(15, 23, 42, 0.04)"
+              : "none",
         }}
       >
         <button
@@ -10258,9 +10601,21 @@ export default function SmartSheetGrid({
           onClick={() => void runUndo()}
           disabled={isHistoryBusy || !canUndo}
           title="Undo (Ctrl+Z)"
+          aria-label="Undo"
           style={{
             ...toolbarButtonStyle,
-            minWidth: 58,
+            minWidth: sheet.sheet_type === null ? 34 : 58,
+            width: sheet.sheet_type === null ? 34 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            border:
+              sheet.sheet_type === null
+                ? "1px solid transparent"
+                : toolbarButtonStyle.border,
+            background:
+              sheet.sheet_type === null
+                ? "transparent"
+                : toolbarButtonStyle.background,
+            fontSize: sheet.sheet_type === null ? 19 : undefined,
             opacity:
               isHistoryBusy || !canUndo
                 ? 0.45
@@ -10270,9 +10625,10 @@ export default function SmartSheetGrid({
                 ? "default"
                 : "pointer",
             flexShrink: 0,
+              order: sheet.sheet_type === null ? 10 : undefined,
           }}
         >
-          ↶ Undo
+          {sheet.sheet_type === null ? "↶" : "↶ Undo"}
         </button>
 
         <button
@@ -10280,9 +10636,21 @@ export default function SmartSheetGrid({
           onClick={() => void runRedo()}
           disabled={isHistoryBusy || !canRedo}
           title="Redo (Ctrl+Y)"
+          aria-label="Redo"
           style={{
             ...toolbarButtonStyle,
-            minWidth: 58,
+            minWidth: sheet.sheet_type === null ? 34 : 58,
+            width: sheet.sheet_type === null ? 34 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            border:
+              sheet.sheet_type === null
+                ? "1px solid transparent"
+                : toolbarButtonStyle.border,
+            background:
+              sheet.sheet_type === null
+                ? "transparent"
+                : toolbarButtonStyle.background,
+            fontSize: sheet.sheet_type === null ? 19 : undefined,
             opacity:
               isHistoryBusy || !canRedo
                 ? 0.45
@@ -10292,15 +10660,17 @@ export default function SmartSheetGrid({
                 ? "default"
                 : "pointer",
             flexShrink: 0,
+              order: sheet.sheet_type === null ? 20 : undefined,
           }}
         >
-          ↷ Redo
+          {sheet.sheet_type === null ? "↷" : "↷ Redo"}
         </button>
 
         <div
           style={{
             position: "relative",
             flexShrink: 0,
+            order: sheet.sheet_type === null ? 300 : undefined,
           }}
         >
           <button
@@ -10329,9 +10699,21 @@ export default function SmartSheetGrid({
               isFormatting
             }
             title="Paste Special"
+            aria-label="Paste Special"
             style={{
               ...toolbarButtonStyle,
-              minWidth: 82,
+              minWidth: sheet.sheet_type === null ? 34 : 82,
+              width: sheet.sheet_type === null ? 34 : undefined,
+              padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+              border:
+                sheet.sheet_type === null
+                  ? "1px solid transparent"
+                  : toolbarButtonStyle.border,
+              background:
+                sheet.sheet_type === null
+                  ? "transparent"
+                  : toolbarButtonStyle.background,
+              fontSize: sheet.sheet_type === null ? 15 : undefined,
               opacity:
                 !internalClipboardRef.current ||
                 internalClipboardRef.current.mode === "cut" ||
@@ -10348,7 +10730,7 @@ export default function SmartSheetGrid({
                   : "pointer",
             }}
           >
-            Paste ▾
+            {sheet.sheet_type === null ? "▾" : "Paste ▾"}
           </button>
 
           {showPasteSpecial &&
@@ -10417,6 +10799,7 @@ export default function SmartSheetGrid({
           style={{
             position: "relative",
             flexShrink: 0,
+            order: sheet.sheet_type === null ? 310 : undefined,
           }}
         >
           <button
@@ -10446,9 +10829,21 @@ export default function SmartSheetGrid({
               isApplyingFill
             }
             title="Insert or delete selected cells"
+            aria-label="Insert or delete cells"
             style={{
               ...toolbarButtonStyle,
-              minWidth: 72,
+              minWidth: sheet.sheet_type === null ? 34 : 72,
+              width: sheet.sheet_type === null ? 34 : undefined,
+              padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+              border:
+                sheet.sheet_type === null
+                  ? "1px solid transparent"
+                  : toolbarButtonStyle.border,
+              background:
+                sheet.sheet_type === null
+                  ? "transparent"
+                  : toolbarButtonStyle.background,
+              fontSize: sheet.sheet_type === null ? 15 : undefined,
               opacity:
                 !selectedCell ||
                 isPasting ||
@@ -10459,7 +10854,7 @@ export default function SmartSheetGrid({
                   : 1,
             }}
           >
-            Cells ▾
+            {sheet.sheet_type === null ? "▦" : "Cells ▾"}
           </button>
 
           {showCellShiftMenu &&
@@ -10565,10 +10960,11 @@ export default function SmartSheetGrid({
             height: 22,
             background: "#d0d5dd",
             flexShrink: 0,
+              order: sheet.sheet_type === null ? 320 : undefined,
           }}
         />
 
-        {!formatPainterSource ? (
+        {!formatPainterSource && sheet.sheet_type !== null ? (
           <span
             style={{
               marginRight: "auto",
@@ -10589,6 +10985,7 @@ export default function SmartSheetGrid({
               fontSize: 10,
               fontWeight: 650,
               whiteSpace: "nowrap",
+                order: sheet.sheet_type === null ? 330 : undefined,
             }}
           >
             {isHistoryBusy
@@ -10611,7 +11008,8 @@ export default function SmartSheetGrid({
           <span
             title="Format Painter is active"
             style={{
-              marginRight: "auto",
+                marginRight: sheet.sheet_type === null ? 0 : "auto",
+                order: sheet.sheet_type === null ? 331 : undefined,
               height: 26,
               display: "inline-flex",
               alignItems: "center",
@@ -10637,7 +11035,8 @@ export default function SmartSheetGrid({
               display: "flex",
               alignItems: "center",
               gap: 6,
-              marginLeft: "auto",
+                marginLeft: sheet.sheet_type === null ? 0 : "auto",
+                order: sheet.sheet_type === null ? 332 : undefined,
               fontSize: 10,
               fontWeight: 700,
               color: "#175cd3",
@@ -10684,21 +11083,51 @@ export default function SmartSheetGrid({
           }
           style={{
             ...toolbarButtonStyle,
-            width: formatPainterSource ? 76 : 42,
-            minWidth: formatPainterSource ? 76 : 42,
-            padding: "0 6px",
+            width:
+              sheet.sheet_type === null
+                ? formatPainterSource
+                  ? 54
+                  : 34
+                : formatPainterSource
+                  ? 76
+                  : 42,
+            minWidth:
+              sheet.sheet_type === null
+                ? formatPainterSource
+                  ? 54
+                  : 34
+                : formatPainterSource
+                  ? 76
+                  : 42,
+            padding:
+              sheet.sheet_type === null
+                ? 0
+                : "0 6px",
             whiteSpace: "nowrap",
             flexShrink: 0,
             border: formatPainterSource
-              ? "1px solid #2563eb"
-              : toolbarButtonStyle.border,
+              ? sheet.sheet_type === null
+                ? "1px solid #f97316"
+                : "1px solid #2563eb"
+              : sheet.sheet_type === null
+                ? "1px solid transparent"
+                : toolbarButtonStyle.border,
             background: formatPainterSource
-              ? "#eff6ff"
-              : toolbarButtonStyle.background,
+              ? sheet.sheet_type === null
+                ? "#fff3e8"
+                : "#eff6ff"
+              : sheet.sheet_type === null
+                ? "transparent"
+                : toolbarButtonStyle.background,
             fontWeight: 700,
+              order: sheet.sheet_type === null ? 110 : undefined,
           }}
         >
-          {formatPainterSource ? "Apply" : "🖌"}
+          {formatPainterSource
+            ? sheet.sheet_type === null
+              ? "Apply"
+              : "Apply"
+            : "🖌"}
         </button>
 
         {formatPainterSource ? (
@@ -10713,6 +11142,7 @@ export default function SmartSheetGrid({
               minWidth: 28,
               padding: 0,
               flexShrink: 0,
+                order: sheet.sheet_type === null ? 111 : undefined,
             }}
           >
             ×
@@ -10726,51 +11156,202 @@ export default function SmartSheetGrid({
           title="Clear all formatting from selected cells"
           style={{
             ...toolbarButtonStyle,
-            minWidth: 38,
-            padding: "0 7px",
+            width: sheet.sheet_type === null ? 34 : undefined,
+            minWidth: sheet.sheet_type === null ? 34 : 38,
+            padding:
+              sheet.sheet_type === null
+                ? 0
+                : "0 7px",
             flexShrink: 0,
             fontWeight: 700,
+            border:
+              sheet.sheet_type === null
+                ? "1px solid transparent"
+                : toolbarButtonStyle.border,
+            background:
+              sheet.sheet_type === null
+                ? "transparent"
+                : toolbarButtonStyle.background,
+              order: sheet.sheet_type === null ? 112 : undefined,
           }}
         >
           A×
         </button>
 
-        <select
-          value={selectionNumberFormat() ?? ""}
-          onChange={(event) => {
-            const value = event.target.value as "general" | "number" | "currency" | "percentage";
-            if (value) void applySelectionNumberFormat(value);
-          }}
-          disabled={isFormatting}
-          title="Number format"
-          style={{ ...toolbarButtonStyle, width: 92, padding: "0 5px" }}
-        >
-          {selectionNumberFormat() === null ? <option value="">Mixed</option> : null}
-          <option value="general">General</option>
-          <option value="number">Number</option>
-          <option value="currency">€ Currency</option>
-          <option value="percentage">Percentage</option>
-        </select>
+        {sheet.sheet_type === null ? (
+          <>
+            <button
+              type="button"
+              onClick={() => void applySelectionNumberFormat("currency")}
+              disabled={isFormatting}
+              title="Currency format"
+              aria-label="Currency format"
+              style={{
+                ...toolbarButtonStyle,
+                width: 32,
+                minWidth: 32,
+                padding: 0,
+                border:
+                  selectionNumberFormat() === "currency"
+                    ? "1px solid #f97316"
+                    : "1px solid transparent",
+                background:
+                  selectionNumberFormat() === "currency"
+                    ? "#fff3e8"
+                    : "transparent",
+                fontSize: 14,
+                flexShrink: 0,
+                  order: 40,
+              }}
+            >
+              €
+            </button>
 
-        <button
-          type="button"
-          onClick={() => void adjustSelectionDecimals(-1)}
-          disabled={isFormatting}
-          title="Decrease decimal"
-          style={{ ...toolbarButtonStyle, width: 34, padding: 0 }}
-        >
-          .0←
-        </button>
+            <button
+              type="button"
+              onClick={() => void applySelectionNumberFormat("percentage")}
+              disabled={isFormatting}
+              title="Percentage format"
+              aria-label="Percentage format"
+              style={{
+                ...toolbarButtonStyle,
+                width: 32,
+                minWidth: 32,
+                padding: 0,
+                border:
+                  selectionNumberFormat() === "percentage"
+                    ? "1px solid #f97316"
+                    : "1px solid transparent",
+                background:
+                  selectionNumberFormat() === "percentage"
+                    ? "#fff3e8"
+                    : "transparent",
+                fontSize: 13,
+                flexShrink: 0,
+                  order: 41,
+              }}
+            >
+              %
+            </button>
 
-        <button
-          type="button"
-          onClick={() => void adjustSelectionDecimals(1)}
-          disabled={isFormatting}
-          title="Increase decimal"
-          style={{ ...toolbarButtonStyle, width: 34, padding: 0 }}
-        >
-          .00→
-        </button>
+            <button
+              type="button"
+              onClick={() => void adjustSelectionDecimals(-1)}
+              disabled={isFormatting}
+              title="Decrease decimal"
+              aria-label="Decrease decimal"
+              style={{
+                ...toolbarButtonStyle,
+                width: 38,
+                minWidth: 38,
+                padding: 0,
+                border: "1px solid transparent",
+                background: "transparent",
+                flexShrink: 0,
+                  order: 42,
+              }}
+            >
+              ←.0
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void adjustSelectionDecimals(1)}
+              disabled={isFormatting}
+              title="Increase decimal"
+              aria-label="Increase decimal"
+              style={{
+                ...toolbarButtonStyle,
+                width: 42,
+                minWidth: 42,
+                padding: 0,
+                border: "1px solid transparent",
+                background: "transparent",
+                flexShrink: 0,
+                  order: 43,
+              }}
+            >
+              .00→
+            </button>
+
+            <select
+              value={selectionNumberFormat() ?? ""}
+              onChange={(event) => {
+                const value = event.target.value as
+                  | "general"
+                  | "number"
+                  | "currency"
+                  | "percentage";
+
+                if (value) void applySelectionNumberFormat(value);
+              }}
+              disabled={isFormatting}
+              title="Number format"
+              aria-label="Number format"
+              style={{
+                ...toolbarButtonStyle,
+                width: 58,
+                minWidth: 58,
+                padding: "0 4px",
+                border: "1px solid transparent",
+                background: "transparent",
+                flexShrink: 0,
+                  order: 44,
+              }}
+            >
+              {selectionNumberFormat() === null ? (
+                <option value="">123</option>
+              ) : null}
+              <option value="general">123</option>
+              <option value="number">0.00</option>
+              <option value="currency">€</option>
+              <option value="percentage">%</option>
+            </select>
+          </>
+        ) : (
+          <>
+            <select
+              value={selectionNumberFormat() ?? ""}
+              onChange={(event) => {
+                const value = event.target.value as "general" | "number" | "currency" | "percentage";
+                if (value) void applySelectionNumberFormat(value);
+              }}
+              disabled={isFormatting}
+              title="Number format"
+              style={{
+                ...toolbarButtonStyle,
+                width: 92,
+                padding: "0 5px",
+              }}
+            >
+              {selectionNumberFormat() === null ? <option value="">Mixed</option> : null}
+              <option value="general">General</option>
+              <option value="number">Number</option>
+              <option value="currency">€ Currency</option>
+              <option value="percentage">Percentage</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => void adjustSelectionDecimals(-1)}
+              disabled={isFormatting}
+              title="Decrease decimal"
+              style={{ ...toolbarButtonStyle, width: 34, padding: 0 }}
+            >
+              .0←
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void adjustSelectionDecimals(1)}
+              disabled={isFormatting}
+              title="Increase decimal"
+              style={{ ...toolbarButtonStyle, width: 34, padding: 0 }}
+            >
+              .00→
+            </button>
+          </>
+        )}
 
         <div
           title="Text color"
@@ -10778,6 +11359,7 @@ export default function SmartSheetGrid({
             position: "relative",
             width: 34,
             height: 28,
+              order: sheet.sheet_type === null ? 80 : undefined,
           }}
         >
           <input
@@ -10795,10 +11377,16 @@ export default function SmartSheetGrid({
               inset: 0,
               width: 34,
               height: 28,
-              padding: 3,
-              border: "1px solid #cbd5e1",
+              padding: sheet.sheet_type === null ? 1 : 3,
+              border:
+                sheet.sheet_type === null
+                  ? "1px solid transparent"
+                  : "1px solid #cbd5e1",
               borderRadius: 4,
-              background: "#ffffff",
+              background:
+                sheet.sheet_type === null
+                  ? "transparent"
+                  : "#ffffff",
               cursor: "pointer",
             }}
           />
@@ -10814,9 +11402,20 @@ export default function SmartSheetGrid({
           style={{
             ...toolbarButtonStyle,
             width: 34,
+            minWidth: 34,
             padding: 0,
             fontSize: 12,
             fontWeight: 700,
+            border:
+              sheet.sheet_type === null
+                ? "1px solid transparent"
+                : toolbarButtonStyle.border,
+            background:
+              sheet.sheet_type === null
+                ? "transparent"
+                : toolbarButtonStyle.background,
+            flexShrink: 0,
+              order: sheet.sheet_type === null ? 81 : undefined,
           }}
         >
           A⊘
@@ -10828,6 +11427,7 @@ export default function SmartSheetGrid({
             position: "relative",
             width: 34,
             height: 28,
+              order: sheet.sheet_type === null ? 82 : undefined,
           }}
         >
           <input
@@ -10845,10 +11445,16 @@ export default function SmartSheetGrid({
               inset: 0,
               width: 34,
               height: 28,
-              padding: 3,
-              border: "1px solid #cbd5e1",
+              padding: sheet.sheet_type === null ? 1 : 3,
+              border:
+                sheet.sheet_type === null
+                  ? "1px solid transparent"
+                  : "1px solid #cbd5e1",
               borderRadius: 4,
-              background: "#ffffff",
+              background:
+                sheet.sheet_type === null
+                  ? "transparent"
+                  : "#ffffff",
               cursor: "pointer",
             }}
           />
@@ -10864,8 +11470,19 @@ export default function SmartSheetGrid({
           style={{
             ...toolbarButtonStyle,
             width: 34,
+            minWidth: 34,
             padding: 0,
             fontSize: 15,
+            border:
+              sheet.sheet_type === null
+                ? "1px solid transparent"
+                : toolbarButtonStyle.border,
+            background:
+              sheet.sheet_type === null
+                ? "transparent"
+                : toolbarButtonStyle.background,
+            flexShrink: 0,
+              order: sheet.sheet_type === null ? 83 : undefined,
           }}
         >
           ⊘
@@ -10881,9 +11498,16 @@ export default function SmartSheetGrid({
           disabled={isFormatting}
           title="Borders"
           aria-label="Borders"
-          style={{ ...toolbarButtonStyle, width: 76, padding: "0 5px" }}
+          style={{
+            ...toolbarButtonStyle,
+            width: sheet.sheet_type === null ? 48 : 76,
+            padding: "0 5px",
+            border: sheet.sheet_type === null ? "1px solid transparent" : toolbarButtonStyle.border,
+            background: sheet.sheet_type === null ? "transparent" : toolbarButtonStyle.background,
+              order: sheet.sheet_type === null ? 100 : undefined,
+          }}
         >
-          <option value="">Borders</option>
+          <option value="">{sheet.sheet_type === null ? "▦" : "Borders"}</option>
           <option value="all">All</option>
           <option value="outer">Outer</option>
           <option value="top">Top</option>
@@ -10903,9 +11527,12 @@ export default function SmartSheetGrid({
           title="Font size"
           style={{
             ...toolbarButtonStyle,
-            width: 52,
+            width: sheet.sheet_type === null ? 46 : 52,
             padding: "0 5px",
             textAlign: "center",
+            border: sheet.sheet_type === null ? "1px solid transparent" : toolbarButtonStyle.border,
+            background: sheet.sheet_type === null ? "transparent" : toolbarButtonStyle.background,
+              order: sheet.sheet_type === null ? 60 : undefined,
           }}
         >
           {selectionFontSize() === null ? <option value="">—</option> : null}
@@ -10921,8 +11548,24 @@ export default function SmartSheetGrid({
           style={{
             ...toolbarButtonStyle,
             fontWeight: 800,
-            background: selectionHasFormat("bold") ? "#eaf2ff" : "#ffffff",
-            border: `1px solid ${selectionHasFormat("bold") ? "#2e90fa" : "#cbd5e1"}`,
+            width: sheet.sheet_type === null ? 32 : undefined,
+            minWidth: sheet.sheet_type === null ? 32 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            background: selectionHasFormat("bold")
+              ? "#fff3e8"
+              : sheet.sheet_type === null
+                ? "transparent"
+                : "#ffffff",
+            border: `1px solid ${
+              selectionHasFormat("bold")
+                ? sheet.sheet_type === null
+                  ? "#f97316"
+                  : "#2e90fa"
+                : sheet.sheet_type === null
+                  ? "transparent"
+                  : "#cbd5e1"
+            }`,
+              order: sheet.sheet_type === null ? 70 : undefined,
           }}
           title="Bold (Ctrl+B)"
         >
@@ -10935,8 +11578,24 @@ export default function SmartSheetGrid({
           style={{
             ...toolbarButtonStyle,
             fontStyle: "italic",
-            background: selectionHasFormat("italic") ? "#eaf2ff" : "#ffffff",
-            border: `1px solid ${selectionHasFormat("italic") ? "#2e90fa" : "#cbd5e1"}`,
+            width: sheet.sheet_type === null ? 32 : undefined,
+            minWidth: sheet.sheet_type === null ? 32 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            background: selectionHasFormat("italic")
+              ? "#fff3e8"
+              : sheet.sheet_type === null
+                ? "transparent"
+                : "#ffffff",
+            border: `1px solid ${
+              selectionHasFormat("italic")
+                ? sheet.sheet_type === null
+                  ? "#f97316"
+                  : "#2e90fa"
+                : sheet.sheet_type === null
+                  ? "transparent"
+                  : "#cbd5e1"
+            }`,
+              order: sheet.sheet_type === null ? 71 : undefined,
           }}
           title="Italic (Ctrl+I)"
         >
@@ -10949,8 +11608,24 @@ export default function SmartSheetGrid({
           style={{
             ...toolbarButtonStyle,
             textDecoration: "underline",
-            background: selectionHasFormat("underline") ? "#eaf2ff" : "#ffffff",
-            border: `1px solid ${selectionHasFormat("underline") ? "#2e90fa" : "#cbd5e1"}`,
+            width: sheet.sheet_type === null ? 32 : undefined,
+            minWidth: sheet.sheet_type === null ? 32 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            background: selectionHasFormat("underline")
+              ? "#fff3e8"
+              : sheet.sheet_type === null
+                ? "transparent"
+                : "#ffffff",
+            border: `1px solid ${
+              selectionHasFormat("underline")
+                ? sheet.sheet_type === null
+                  ? "#f97316"
+                  : "#2e90fa"
+                : sheet.sheet_type === null
+                  ? "transparent"
+                  : "#cbd5e1"
+            }`,
+              order: sheet.sheet_type === null ? 72 : undefined,
           }}
           title="Underline (Ctrl+U)"
         >
@@ -10965,8 +11640,24 @@ export default function SmartSheetGrid({
           disabled={isFormatting}
           style={{
             ...toolbarButtonStyle,
-            background: selectionHasAlignment("left") ? "#eaf2ff" : "#ffffff",
-            border: `1px solid ${selectionHasAlignment("left") ? "#2e90fa" : "#cbd5e1"}`,
+            width: sheet.sheet_type === null ? 32 : undefined,
+            minWidth: sheet.sheet_type === null ? 32 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            background: selectionHasAlignment("left")
+              ? "#fff3e8"
+              : sheet.sheet_type === null
+                ? "transparent"
+                : "#ffffff",
+            border: `1px solid ${
+              selectionHasAlignment("left")
+                ? sheet.sheet_type === null
+                  ? "#f97316"
+                  : "#2e90fa"
+                : sheet.sheet_type === null
+                  ? "transparent"
+                  : "#cbd5e1"
+            }`,
+              order: sheet.sheet_type === null ? 90 : undefined,
           }}
           title="Align left"
         >
@@ -10978,8 +11669,24 @@ export default function SmartSheetGrid({
           disabled={isFormatting}
           style={{
             ...toolbarButtonStyle,
-            background: selectionHasAlignment("center") ? "#eaf2ff" : "#ffffff",
-            border: `1px solid ${selectionHasAlignment("center") ? "#2e90fa" : "#cbd5e1"}`,
+            width: sheet.sheet_type === null ? 32 : undefined,
+            minWidth: sheet.sheet_type === null ? 32 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            background: selectionHasAlignment("center")
+              ? "#fff3e8"
+              : sheet.sheet_type === null
+                ? "transparent"
+                : "#ffffff",
+            border: `1px solid ${
+              selectionHasAlignment("center")
+                ? sheet.sheet_type === null
+                  ? "#f97316"
+                  : "#2e90fa"
+                : sheet.sheet_type === null
+                  ? "transparent"
+                  : "#cbd5e1"
+            }`,
+              order: sheet.sheet_type === null ? 91 : undefined,
           }}
           title="Align center"
         >
@@ -10991,8 +11698,24 @@ export default function SmartSheetGrid({
           disabled={isFormatting}
           style={{
             ...toolbarButtonStyle,
-            background: selectionHasAlignment("right") ? "#eaf2ff" : "#ffffff",
-            border: `1px solid ${selectionHasAlignment("right") ? "#2e90fa" : "#cbd5e1"}`,
+            width: sheet.sheet_type === null ? 32 : undefined,
+            minWidth: sheet.sheet_type === null ? 32 : undefined,
+            padding: sheet.sheet_type === null ? 0 : toolbarButtonStyle.padding,
+            background: selectionHasAlignment("right")
+              ? "#fff3e8"
+              : sheet.sheet_type === null
+                ? "transparent"
+                : "#ffffff",
+            border: `1px solid ${
+              selectionHasAlignment("right")
+                ? sheet.sheet_type === null
+                  ? "#f97316"
+                  : "#2e90fa"
+                : sheet.sheet_type === null
+                  ? "transparent"
+                  : "#cbd5e1"
+            }`,
+              order: sheet.sheet_type === null ? 92 : undefined,
           }}
           title="Align right"
         >
@@ -11004,13 +11727,13 @@ export default function SmartSheetGrid({
           onClick={() =>
             openFindReplace(false)
           }
-          style={toolbarButtonStyle}
+            style={{ ...toolbarButtonStyle, order: sheet.sheet_type === null ? 120 : undefined }}
           title="Find (Ctrl+F)"
         >
           Find
         </button>
 
-        <div>
+          <div style={{ order: sheet.sheet_type === null ? 130 : undefined, flexShrink: 0 }}>
           <button
             ref={addColumnButtonRef}
             type="button"
@@ -12786,14 +13509,30 @@ export default function SmartSheetGrid({
         </div>
       ) : null}
 
+      {sheet.sheet_type === null ? (
+        <SmartSheetFormulaBar
+          sheetId={sheet.id}
+          generalSheet
+        />
+      ) : null}
+
       <div
         style={{
           display: "flex",
           width: "100%",
           minWidth: 0,
-          height: "calc(100vh - 360px)",
-          minHeight: 330,
-          maxHeight: 620,
+          height:
+            sheet.sheet_type === null
+              ? "calc(100vh - 291px)"
+              : "calc(100vh - 360px)",
+          minHeight:
+            sheet.sheet_type === null
+              ? 480
+              : 330,
+          maxHeight:
+            sheet.sheet_type === null
+              ? "none"
+              : 620,
           background: "#ffffff",
           border: "1px solid #aeb6c2",
           boxSizing: "border-box",
@@ -12893,126 +13632,228 @@ export default function SmartSheetGrid({
                   onRemove={() => removeOptionalColumn(column.key)}
                 />
               ))}
+
+              {sheet.sheet_type === null &&
+              visibleColumns.length < GENERAL_BLANK_COLUMN_COUNT
+                ? Array.from(
+                    {
+                      length:
+                        GENERAL_BLANK_COLUMN_COUNT -
+                        visibleColumns.length,
+                    },
+                    (_, offset) => {
+                      const columnIndex =
+                        visibleColumns.length + offset;
+
+                      return (
+                      <th
+                        key={`general-blank-column-${columnIndex}`}
+                        style={{
+                          position: "sticky",
+                          top: 0,
+                          zIndex: 30,
+                          width: GENERAL_BLANK_COLUMN_WIDTH,
+                          minWidth: GENERAL_BLANK_COLUMN_WIDTH,
+                          maxWidth: GENERAL_BLANK_COLUMN_WIDTH,
+                          height: LETTER_ROW_HEIGHT,
+                          padding: "0 4px",
+                          boxSizing: "border-box",
+                          background: "#f3f4f6",
+                          borderRight: "1px solid #aeb6c2",
+                          borderBottom: "1px solid #aeb6c2",
+                          textAlign: "center",
+                          fontSize: 10,
+                          lineHeight: 1,
+                          fontWeight: 600,
+                          color: "#475467",
+                          userSelect: "none",
+                        }}
+                      >
+                        {columnLetter(columnIndex)}
+                      </th>
+                      );
+                    },
+                  )
+                : null}
             </tr>
 
-            <tr>
-              <RowHeaderSpacer top={LETTER_ROW_HEIGHT} />
-              {groupRuns.map((run) => (
-                <GroupHeader
-                  key={`${run.group}-${run.start}`}
-                  colSpan={run.count}
-                  tone={run.tone}
-                >
-                  {run.label}
-                </GroupHeader>
-              ))}
-            </tr>
+            {sheet.sheet_type !== null ? (
+              <>
+                <tr>
+                  <RowHeaderSpacer top={LETTER_ROW_HEIGHT} />
+                  {groupRuns.map((run) => (
+                    <GroupHeader
+                      key={`${run.group}-${run.start}`}
+                      colSpan={run.count}
+                      tone={run.tone}
+                    >
+                      {run.label}
+                    </GroupHeader>
+                  ))}
+                </tr>
 
-            <tr>
-              <RowNumberHeader />
-              {visibleColumns.map((column, columnIndex) => (
-                <ColumnHeader
-                  key={column.key}
-                  width={
-                    columnWidths[column.key] ??
-                    column.width
-                  }
-                  tone={column.tone}
-                  frozenLeft={
-                    columnIndex < frozenColumnCount
-                      ? frozenColumnOffsets[column.key]
-                      : undefined
-                  }
-                  frozenEdge={
-                    frozenColumnCount > 0 &&
-                    columnIndex === frozenColumnCount - 1
-                  }
-                >
-                  {column.label}
-                  {column.unit ? <HeaderUnit>{column.unit}</HeaderUnit> : null}
-                </ColumnHeader>
-              ))}
-            </tr>
+                <tr>
+                  <RowNumberHeader />
+                  {visibleColumns.map((column, columnIndex) => (
+                    <ColumnHeader
+                      key={column.key}
+                      width={
+                        columnWidths[column.key] ??
+                        column.width
+                      }
+                      tone={column.tone}
+                      frozenLeft={
+                        columnIndex < frozenColumnCount
+                          ? frozenColumnOffsets[column.key]
+                          : undefined
+                      }
+                      frozenEdge={
+                        frozenColumnCount > 0 &&
+                        columnIndex === frozenColumnCount - 1
+                      }
+                    >
+                      {column.label}
+                      {column.unit ? <HeaderUnit>{column.unit}</HeaderUnit> : null}
+                    </ColumnHeader>
+                  ))}
+                </tr>
+              </>
+            ) : null}
           </thead>
 
           <tbody>
-            {rows.length === 0 ? (
-              <tr
-                style={{
-                  height: PRODUCT_ROW_HEIGHT,
-                }}
-              >
-                <RowNumberCell
-                  height={PRODUCT_ROW_HEIGHT}
-                  selected={false}
-                  frozenEdge={false}
-                >
-                  <button
-                    type="button"
-                    disabled={isRowOperation}
-                    onClick={() => {
-                      void insertFirstRow();
-                    }}
-                    title="Add first row"
-                    aria-label="Add first row"
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      padding: 0,
-                      border: 0,
-                      background: "transparent",
-                      color: "#667085",
-                      font: "inherit",
-                      fontWeight: 700,
-                      cursor: isRowOperation
-                        ? "wait"
-                        : "pointer",
-                    }}
-                  >
-                    +
-                  </button>
-                </RowNumberCell>
+            {rows.length === 0 &&
+            sheet.sheet_type === null &&
+            visibleColumns.length === 0
+              ? Array.from(
+                  { length: GENERAL_BLANK_ROW_COUNT },
+                  (_, rowIndex) => (
+                    <tr
+                      key={`general-blank-row-${rowIndex}`}
+                      style={{
+                        height: PRODUCT_ROW_HEIGHT,
+                      }}
+                    >
+                      <RowNumberCell
+                        height={PRODUCT_ROW_HEIGHT}
+                        selected={false}
+                        frozenEdge={false}
+                      >
+                        {rowIndex + 1}
+                      </RowNumberCell>
 
-                <td
-                  colSpan={Math.max(
-                    visibleColumns.length,
-                    1,
-                  )}
-                  style={{
-                    height: PRODUCT_ROW_HEIGHT,
-                    padding: "0 10px",
-                    borderRight: "1px solid #e5e7eb",
-                    borderBottom: "1px solid #e5e7eb",
-                    background: "#ffffff",
-                    color: "#667085",
-                    fontSize: 11,
-                    textAlign: "left",
-                  }}
-                >
-                  <button
-                    type="button"
-                    disabled={isRowOperation}
-                    onClick={() => {
-                      void insertFirstRow();
-                    }}
+                      {Array.from(
+                        { length: GENERAL_BLANK_COLUMN_COUNT },
+                        (_, columnIndex) => (
+                          <td
+                            key={`general-blank-cell-${rowIndex}-${columnIndex}`}
+                            onClick={() => {
+                              void materializeGeneralCell(
+                                rowIndex,
+                                columnIndex,
+                              );
+                            }}
+                            title={`Select ${columnLetter(
+                              columnIndex,
+                            )}${rowIndex + 1}`}
+                            style={{
+                              width: GENERAL_BLANK_COLUMN_WIDTH,
+                              minWidth: GENERAL_BLANK_COLUMN_WIDTH,
+                              maxWidth: GENERAL_BLANK_COLUMN_WIDTH,
+                              height: PRODUCT_ROW_HEIGHT,
+                              padding: 0,
+                              boxSizing: "border-box",
+                              background: "#ffffff",
+                              borderRight: "1px solid #e5e7eb",
+                              borderBottom: "1px solid #e5e7eb",
+                              cursor:
+                                isRowOperation || isCreatingColumn
+                                  ? "wait"
+                                  : "cell",
+                            }}
+                          />
+                        ),
+                      )}
+                    </tr>
+                  ),
+                )
+              : rows.length === 0 ? (
+                  <tr
                     style={{
-                      padding: 0,
-                      border: 0,
-                      background: "transparent",
-                      color: "#667085",
-                      font: "inherit",
-                      cursor: isRowOperation
-                        ? "wait"
-                        : "pointer",
+                      height: PRODUCT_ROW_HEIGHT,
                     }}
                   >
-                    {isRowOperation
-                      ? "Adding row…"
-                      : "Add first row"}
-                  </button>
-                </td>
-              </tr>
-            ) : null}
+                    <RowNumberCell
+                      height={PRODUCT_ROW_HEIGHT}
+                      selected={false}
+                      frozenEdge={false}
+                    >
+                      <button
+                        type="button"
+                        disabled={isRowOperation}
+                        onClick={() => {
+                          void insertFirstRow();
+                        }}
+                        title="Add first row"
+                        aria-label="Add first row"
+                        style={{
+                          width: "100%",
+                          height: "100%",
+                          padding: 0,
+                          border: 0,
+                          background: "transparent",
+                          color: "#667085",
+                          font: "inherit",
+                          fontWeight: 700,
+                          cursor: isRowOperation
+                            ? "wait"
+                            : "pointer",
+                        }}
+                      >
+                        +
+                      </button>
+                    </RowNumberCell>
+
+                    <td
+                      colSpan={Math.max(
+                        visibleColumns.length,
+                        1,
+                      )}
+                      style={{
+                        height: PRODUCT_ROW_HEIGHT,
+                        padding: "0 10px",
+                        borderRight: "1px solid #e5e7eb",
+                        borderBottom: "1px solid #e5e7eb",
+                        background: "#ffffff",
+                        color: "#667085",
+                        fontSize: 11,
+                        textAlign: "left",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        disabled={isRowOperation}
+                        onClick={() => {
+                          void insertFirstRow();
+                        }}
+                        style={{
+                          padding: 0,
+                          border: 0,
+                          background: "transparent",
+                          color: "#667085",
+                          font: "inherit",
+                          cursor: isRowOperation
+                            ? "wait"
+                            : "pointer",
+                        }}
+                      >
+                        {isRowOperation
+                          ? "Adding row…"
+                          : "Add first row"}
+                      </button>
+                    </td>
+                  </tr>
+                ) : null}
 
             {filteredRows.map((row, rowIndex) => (
               <tr
@@ -13732,25 +14573,152 @@ export default function SmartSheetGrid({
                     })}
                   </SelectableGridCell>
                 ))}
+
+                {sheet.sheet_type === null &&
+                visibleColumns.length < GENERAL_BLANK_COLUMN_COUNT
+                  ? Array.from(
+                      {
+                        length:
+                          GENERAL_BLANK_COLUMN_COUNT -
+                          visibleColumns.length,
+                      },
+                      (_, offset) => {
+                        const columnIndex =
+                          visibleColumns.length + offset;
+
+                        return (
+                          <td
+                            key={`general-continuation-cell-${row.id}-${columnIndex}`}
+                            onClick={() => {
+                              void materializeGeneralCell(
+                                rowIndex,
+                                columnIndex,
+                              );
+                            }}
+                            title={`Select ${columnLetter(
+                              columnIndex,
+                            )}${rowIndex + 1}`}
+                            style={{
+                              width: GENERAL_BLANK_COLUMN_WIDTH,
+                              minWidth: GENERAL_BLANK_COLUMN_WIDTH,
+                              maxWidth: GENERAL_BLANK_COLUMN_WIDTH,
+                              height:
+                                rowHeights[row.id] ??
+                                PRODUCT_ROW_HEIGHT,
+                              padding: 0,
+                              boxSizing: "border-box",
+                              background: "#ffffff",
+                              borderRight: "1px solid #e5e7eb",
+                              borderBottom: "1px solid #e5e7eb",
+                              cursor:
+                                isRowOperation || isCreatingColumn
+                                  ? "wait"
+                                  : "cell",
+                            }}
+                          />
+                        );
+                      },
+                    )
+                  : null}
               </tr>
             ))}
+
+            {sheet.sheet_type === null &&
+            rows.length > 0 &&
+            filteredRows.length < GENERAL_BLANK_ROW_COUNT
+              ? Array.from(
+                  {
+                    length:
+                      GENERAL_BLANK_ROW_COUNT -
+                      filteredRows.length,
+                  },
+                  (_, offset) => {
+                    const rowIndex =
+                      filteredRows.length + offset;
+
+                    return (
+                      <tr
+                        key={`general-continuation-row-${rowIndex}`}
+                        style={{
+                          height: PRODUCT_ROW_HEIGHT,
+                        }}
+                      >
+                        <RowNumberCell
+                          height={PRODUCT_ROW_HEIGHT}
+                          selected={false}
+                          frozenEdge={false}
+                        >
+                          {rowIndex + 1}
+                        </RowNumberCell>
+
+                        {Array.from(
+                          {
+                            length: GENERAL_BLANK_COLUMN_COUNT,
+                          },
+                          (_, columnIndex) => {
+                            const width =
+                              columnIndex < visibleColumns.length
+                                ? columnWidths[
+                                    visibleColumns[columnIndex].key
+                                  ] ??
+                                  visibleColumns[columnIndex].width
+                                : GENERAL_BLANK_COLUMN_WIDTH;
+
+                            return (
+                              <td
+                                key={`general-continuation-row-cell-${rowIndex}-${columnIndex}`}
+                                onClick={() => {
+                                  void materializeGeneralCell(
+                                    rowIndex,
+                                    columnIndex,
+                                  );
+                                }}
+                                title={`Select ${columnLetter(
+                                  columnIndex,
+                                )}${rowIndex + 1}`}
+                                style={{
+                                  width,
+                                  minWidth: width,
+                                  maxWidth: width,
+                                  height: PRODUCT_ROW_HEIGHT,
+                                  padding: 0,
+                                  boxSizing: "border-box",
+                                  background: "#ffffff",
+                                  borderRight: "1px solid #e5e7eb",
+                                  borderBottom: "1px solid #e5e7eb",
+                                  cursor:
+                                    isRowOperation || isCreatingColumn
+                                      ? "wait"
+                                      : "cell",
+                                }}
+                              />
+                            );
+                          },
+                        )}
+                      </tr>
+                    );
+                  },
+                )
+              : null}
           </tbody>
 
-          <tfoot>
-            <tr>
-              <RowNumberFooter>
-                {activeFilterCount > 0
-                  ? `${filteredRows.length}/${rows.length}`
-                  : rows.length}
-              </RowNumberFooter>
+          {sheet.sheet_type !== null ? (
+            <tfoot>
+              <tr>
+                <RowNumberFooter>
+                  {activeFilterCount > 0
+                    ? `${filteredRows.length}/${rows.length}`
+                    : rows.length}
+                </RowNumberFooter>
 
-              {visibleColumns.map((column) => (
-                <FooterCell key={column.key} tone={column.tone}>
-                  {footerForColumn(column, totals, rows.length)}
-                </FooterCell>
-              ))}
-            </tr>
-          </tfoot>
+                {visibleColumns.map((column) => (
+                  <FooterCell key={column.key} tone={column.tone}>
+                    {footerForColumn(column, totals, rows.length)}
+                  </FooterCell>
+                ))}
+              </tr>
+            </tfoot>
+          ) : null}
         </table>
         </div>
 
