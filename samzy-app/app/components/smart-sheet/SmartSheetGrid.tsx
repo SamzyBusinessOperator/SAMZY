@@ -16115,6 +16115,9 @@ function SelectableGridCell({
 
   const numberDisplay = formattedNumericDisplay();
 
+  const selectionColor = "#f04400";
+  const selectionRgb = "240,68,0";
+
   const conditionalValue =
     displayOverride !== undefined
       ? displayOverride
@@ -16180,13 +16183,13 @@ function SelectableGridCell({
             ? "2px solid #344054"
             : "1px solid #aeb6c2",
         background: inFillPreview
-          ? `linear-gradient(rgba(46,144,250,.13), rgba(46,144,250,.13)), ${effectiveFillColor ?? toneBackground(tone, false)}`
+          ? `linear-gradient(rgba(${selectionRgb},.13), rgba(${selectionRgb},.13)), ${effectiveFillColor ?? toneBackground(tone, false)}`
           : inRange
-            ? `linear-gradient(rgba(46,144,250,.10), rgba(46,144,250,.10)), ${effectiveFillColor ?? toneBackground(tone, false)}`
+            ? `linear-gradient(rgba(${selectionRgb},.10), rgba(${selectionRgb},.10)), ${effectiveFillColor ?? toneBackground(tone, false)}`
             : rowSelected
-              ? `linear-gradient(rgba(46,144,250,.10), rgba(46,144,250,.10)), ${effectiveFillColor ?? toneBackground(tone, false)}`
+              ? `linear-gradient(rgba(${selectionRgb},.10), rgba(${selectionRgb},.10)), ${effectiveFillColor ?? toneBackground(tone, false)}`
               : columnSelected
-                ? `linear-gradient(rgba(46,144,250,.10), rgba(46,144,250,.10)), ${effectiveFillColor ?? toneBackground(tone, false)}`
+                ? `linear-gradient(rgba(${selectionRgb},.10), rgba(${selectionRgb},.10)), ${effectiveFillColor ?? toneBackground(tone, false)}`
                 : effectiveFillColor ?? toneBackground(tone, false),
         verticalAlign: "middle",
         textAlign: cellFormat?.alignment ?? align,
@@ -16362,8 +16365,8 @@ function SelectableGridCell({
             inset: 0,
             pointerEvents: "none",
             boxSizing: "border-box",
-            borderLeft: "1px solid rgba(46,144,250,.50)",
-            borderRight: "1px solid rgba(46,144,250,.50)",
+            borderLeft: `1px solid rgba(${selectionRgb},.50)`,
+            borderRight: `1px solid rgba(${selectionRgb},.50)`,
             zIndex: 44,
           }}
         />
@@ -16377,8 +16380,8 @@ function SelectableGridCell({
             inset: 0,
             pointerEvents: "none",
             boxSizing: "border-box",
-            borderTop: "1px solid rgba(46,144,250,.50)",
-            borderBottom: "1px solid rgba(46,144,250,.50)",
+            borderTop: `1px solid rgba(${selectionRgb},.50)`,
+            borderBottom: `1px solid rgba(${selectionRgb},.50)`,
             zIndex: 45,
           }}
         />
@@ -16393,8 +16396,8 @@ function SelectableGridCell({
             pointerEvents: "none",
             boxSizing: "border-box",
             border: selected
-              ? "2px solid #2e90fa"
-              : "1px solid rgba(46,144,250,.45)",
+              ? `2px solid ${selectionColor}`
+              : `1px solid rgba(${selectionRgb},.45)`,
             zIndex: 50,
           }}
         />
@@ -16410,7 +16413,7 @@ function SelectableGridCell({
                 inset: 0,
                 pointerEvents: "none",
                 boxSizing: "border-box",
-                border: "2px solid #2e90fa",
+                border: `2px solid ${selectionColor}`,
                 zIndex: 50,
               }}
             />
@@ -16432,7 +16435,7 @@ function SelectableGridCell({
                 height: 8,
                 right: -4,
                 bottom: -4,
-                background: "#2e90fa",
+                background: selectionColor,
                 border: "1px solid #ffffff",
                 boxSizing: "border-box",
                 cursor: "crosshair",
@@ -16460,7 +16463,7 @@ function SelectableGridCell({
             height: 8,
             right: -4,
             bottom: -4,
-            background: "#2e90fa",
+            background: selectionColor,
             border: "1px solid #ffffff",
             boxSizing: "border-box",
             cursor: "crosshair",
@@ -17584,16 +17587,16 @@ function LetterHeader({
         height: LETTER_ROW_HEIGHT,
         padding: "0 4px",
         boxSizing: "border-box",
-        background: selected ? "#eaf2ff" : "#f3f4f6",
+        background: selected ? "#fff3e8" : "#f3f4f6",
         borderRight: frozenEdge
           ? "2px solid #667085"
           : "1px solid #aeb6c2",
-        borderBottom: selected ? "2px solid #2e90fa" : "1px solid #aeb6c2",
+        borderBottom: selected ? "2px solid #f04400" : "1px solid #aeb6c2",
         textAlign: "center",
         fontSize: 10,
         lineHeight: 1,
         fontWeight: selected ? 750 : 600,
-        color: selected ? "#175cd3" : "#475467",
+        color: selected ? "#f04400" : "#475467",
         cursor: "grab",
         userSelect: "none",
       }}
@@ -17820,14 +17823,14 @@ function RowNumberCell({
         height,
         padding: "1px 4px",
         boxSizing: "border-box",
-        background: selected ? "#eaf2ff" : "#f8fafc",
-        borderRight: selected ? "2px solid #2e90fa" : "1px solid #8c97a6",
+        background: selected ? "#fff3e8" : "#f8fafc",
+        borderRight: selected ? "2px solid #f04400" : "1px solid #8c97a6",
         borderBottom: frozenEdge
           ? "2px solid #667085"
           : "1px solid #aeb6c2",
         verticalAlign: "middle",
         textAlign: "center",
-        color: selected ? "#175cd3" : "#64748b",
+        color: selected ? "#f04400" : "#64748b",
         fontSize: 10,
         fontWeight: selected ? 700 : 500,
       }}
