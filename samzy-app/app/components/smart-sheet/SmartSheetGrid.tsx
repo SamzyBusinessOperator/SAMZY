@@ -17173,6 +17173,121 @@ function evaluateArithmeticFormula(
       case "COUNT":
         return values.length;
 
+      case "ABS":
+        if (
+          scalarValues.length !== 1 ||
+          rangeValues.length > 0
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        return Math.abs(
+          scalarValues[0],
+        );
+
+      case "ROUND":
+      case "ROUNDUP":
+      case "ROUNDDOWN": {
+        if (
+          scalarValues.length < 1 ||
+          scalarValues.length > 2 ||
+          rangeValues.length > 0
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const value =
+          scalarValues[0];
+
+        const digits =
+          Math.trunc(
+            scalarValues[1] ?? 0,
+          );
+
+        const factor =
+          10 ** digits;
+
+        if (
+          !Number.isFinite(factor) ||
+          factor === 0
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        if (
+          functionName.toUpperCase() ===
+          "ROUND"
+        ) {
+          return (
+            Math.round(value * factor) /
+            factor
+          );
+        }
+
+        if (
+          functionName.toUpperCase() ===
+          "ROUNDUP"
+        ) {
+          return (
+            (value < 0
+              ? Math.floor(value * factor)
+              : Math.ceil(value * factor)) /
+            factor
+          );
+        }
+
+        return (
+          (value < 0
+            ? Math.ceil(value * factor)
+            : Math.floor(value * factor)) /
+          factor
+        );
+      }
+
+      case "MOD":
+        if (
+          scalarValues.length !== 2 ||
+          rangeValues.length > 0
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        if (scalarValues[1] === 0) {
+          throw new FormulaEngineError(
+            "#DIV/0!",
+          );
+        }
+
+        return (
+          scalarValues[0] -
+          scalarValues[1] *
+            Math.floor(
+              scalarValues[0] /
+                scalarValues[1],
+            )
+        );
+
+      case "POWER":
+        if (
+          scalarValues.length !== 2 ||
+          rangeValues.length > 0
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        return scalarValues[0] **
+          scalarValues[1];
+
       case "IF":
         if (
           scalarValues.length < 2 ||
