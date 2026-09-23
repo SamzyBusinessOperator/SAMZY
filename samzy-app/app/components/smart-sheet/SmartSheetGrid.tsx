@@ -459,7 +459,7 @@ const LETTER_ROW_HEIGHT = 24;
  * separate from runtimeAllColumns, columnOrder, persisted rows, formulas,
  * semantic mappings, history, and server actions.
  */
-const GENERAL_BLANK_COLUMN_COUNT = 12;
+const GENERAL_BLANK_COLUMN_COUNT = 26;
 const GENERAL_BLANK_ROW_COUNT = 500;
 const GENERAL_BLANK_COLUMN_WIDTH = 120;
 const GROUP_ROW_HEIGHT = 22;
