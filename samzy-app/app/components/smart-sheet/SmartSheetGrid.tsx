@@ -3649,6 +3649,80 @@ export default function SmartSheetGrid({
         return referencedStoredValue;
       };
 
+      const resolveRangeValues = (
+        startReference: string,
+        endReference: string,
+      ) => {
+        const start =
+          parseCellReference(
+            startReference,
+          );
+
+        const end =
+          parseCellReference(
+            endReference,
+          );
+
+        if (
+          !start ||
+          !end
+        ) {
+          throw new FormulaEngineError(
+            "#REF!",
+          );
+        }
+
+        const startRow =
+          Math.min(
+            start.rowIndex,
+            end.rowIndex,
+          );
+
+        const endRow =
+          Math.max(
+            start.rowIndex,
+            end.rowIndex,
+          );
+
+        const startColumn =
+          Math.min(
+            start.columnIndex,
+            end.columnIndex,
+          );
+
+        const endColumn =
+          Math.max(
+            start.columnIndex,
+            end.columnIndex,
+          );
+
+        const values: unknown[] =
+          [];
+
+        for (
+          let rangeRow = startRow;
+          rangeRow <= endRow;
+          rangeRow += 1
+        ) {
+          for (
+            let rangeColumn = startColumn;
+            rangeColumn <= endColumn;
+            rangeColumn += 1
+          ) {
+            const reference =
+              `${columnLetter(rangeColumn)}${rangeRow + 1}`;
+
+            values.push(
+              resolveReferenceValue(
+                reference,
+              ),
+            );
+          }
+        }
+
+        return values;
+      };
+
       const result =
         evaluateArithmeticFormula(
           formula,
@@ -3658,79 +3732,7 @@ export default function SmartSheetGrid({
                 reference,
               ),
             ),
-          (
-            startReference,
-            endReference,
-          ) => {
-          const start =
-            parseCellReference(
-              startReference,
-            );
-
-          const end =
-            parseCellReference(
-              endReference,
-            );
-
-          if (
-            !start ||
-            !end
-          ) {
-            throw new FormulaEngineError(
-              "#REF!",
-            );
-          }
-
-          const startRow =
-            Math.min(
-              start.rowIndex,
-              end.rowIndex,
-            );
-
-          const endRow =
-            Math.max(
-              start.rowIndex,
-              end.rowIndex,
-            );
-
-          const startColumn =
-            Math.min(
-              start.columnIndex,
-              end.columnIndex,
-            );
-
-          const endColumn =
-            Math.max(
-              start.columnIndex,
-              end.columnIndex,
-            );
-
-          const values: unknown[] =
-            [];
-
-          for (
-            let rangeRow = startRow;
-            rangeRow <= endRow;
-            rangeRow += 1
-          ) {
-            for (
-              let rangeColumn = startColumn;
-              rangeColumn <= endColumn;
-              rangeColumn += 1
-            ) {
-              const reference =
-                `${columnLetter(rangeColumn)}${rangeRow + 1}`;
-
-              values.push(
-                resolveReferenceValue(
-                  reference,
-                ),
-              );
-            }
-          }
-
-            return values;
-          },
+          resolveRangeValues,
         );
 
       formulaEvaluationCache.set(
