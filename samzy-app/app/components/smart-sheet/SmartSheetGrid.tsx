@@ -16651,6 +16651,45 @@ function columnIndexFromLetters(
   return columnIndex - 1;
 }
 
+/*
+ * Formula Engine V4.7 — quote-aware reference handling.
+ *
+ * Excel-style formulas use doubled quotes ("") to represent a literal quote
+ * inside a quoted string. Cell-looking text inside those strings must remain
+ * literal text: it must not become a dependency or be translated by copy/fill.
+ */
+function formulaIndexIsInsideQuotedString(
+  formula: string,
+  targetIndex: number,
+) {
+  let insideQuotedString = false;
+  let index = 0;
+
+  while (
+    index < targetIndex &&
+    index < formula.length
+  ) {
+    if (formula[index] !== '"') {
+      index += 1;
+      continue;
+    }
+
+    if (
+      insideQuotedString &&
+      formula[index + 1] === '"'
+    ) {
+      index += 2;
+      continue;
+    }
+
+    insideQuotedString =
+      !insideQuotedString;
+    index += 1;
+  }
+
+  return insideQuotedString;
+}
+
 function extractFormulaDependencyAddresses(
   formula: string,
   rowCount: number,
@@ -16671,6 +16710,15 @@ function extractFormulaDependencyAddresses(
         formula,
       )) !== null
   ) {
+    if (
+      formulaIndexIsInsideQuotedString(
+        formula,
+        match.index,
+      )
+    ) {
+      continue;
+    }
+
     const start =
       parseCellReference(
         match[1],
@@ -16800,7 +16848,16 @@ function translateFormulaReferences(
 
   return formula.replace(
     /\$?[A-Za-z]+\$?[1-9][0-9]*/g,
-    (reference) => {
+    (reference, offset: number) => {
+      if (
+        formulaIndexIsInsideQuotedString(
+          formula,
+          offset,
+        )
+      ) {
+        return reference;
+      }
+
       const parsed =
         parseCellReference(
           reference,
