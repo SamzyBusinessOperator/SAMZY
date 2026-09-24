@@ -3728,9 +3728,24 @@ export default function SmartSheetGrid({
           formula,
         );
 
+      const typedFunctionNames =
+        new Set([
+          "CONCAT",
+          "LEFT",
+          "RIGHT",
+          "LEN",
+          "TRIM",
+          "UPPER",
+          "LOWER",
+        ]);
+
       const useTypedEvaluator =
-        typedFunctionMatch?.[1]
-          .toUpperCase() === "CONCAT";
+        typedFunctionMatch
+          ? typedFunctionNames.has(
+              typedFunctionMatch[1]
+                .toUpperCase(),
+            )
+          : false;
 
       const result =
         useTypedEvaluator
@@ -17156,6 +17171,57 @@ function evaluateTypedFormula(
       }
     }
 
+    const scalarValue = (
+      argumentIndex: number,
+    ) => {
+      const value =
+        values[argumentIndex];
+
+      if (
+        value === undefined ||
+        Array.isArray(value)
+      ) {
+        throw new FormulaEngineError(
+          "#VALUE!",
+        );
+      }
+
+      return value;
+    };
+
+    const scalarText = (
+      argumentIndex: number,
+    ) =>
+      formulaTextValue(
+        scalarValue(argumentIndex),
+      );
+
+    const scalarInteger = (
+      argumentIndex: number,
+      fallback?: number,
+    ) => {
+      if (
+        values[argumentIndex] ===
+          undefined &&
+        fallback !== undefined
+      ) {
+        return fallback;
+      }
+
+      const numeric =
+        formulaNumberValue(
+          scalarValue(argumentIndex),
+        );
+
+      if (!Number.isFinite(numeric)) {
+        throw new FormulaEngineError(
+          "#VALUE!",
+        );
+      }
+
+      return Math.trunc(numeric);
+    };
+
     switch (
       functionName.toUpperCase()
     ) {
@@ -17168,6 +17234,105 @@ function evaluateTypedFormula(
           )
           .map(formulaTextValue)
           .join("");
+
+      case "LEFT": {
+        if (
+          values.length < 1 ||
+          values.length > 2
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const text =
+          scalarText(0);
+
+        const characterCount =
+          scalarInteger(1, 1);
+
+        if (characterCount < 0) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        return text.slice(
+          0,
+          characterCount,
+        );
+      }
+
+      case "RIGHT": {
+        if (
+          values.length < 1 ||
+          values.length > 2
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const text =
+          scalarText(0);
+
+        const characterCount =
+          scalarInteger(1, 1);
+
+        if (characterCount < 0) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        if (characterCount === 0) {
+          return "";
+        }
+
+        return text.slice(
+          -characterCount,
+        );
+      }
+
+      case "LEN":
+        if (values.length !== 1) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        return scalarText(0).length;
+
+      case "TRIM":
+        if (values.length !== 1) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        return scalarText(0)
+          .trim()
+          .replace(/\s+/g, " ");
+
+      case "UPPER":
+        if (values.length !== 1) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        return scalarText(0)
+          .toUpperCase();
+
+      case "LOWER":
+        if (values.length !== 1) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        return scalarText(0)
+          .toLowerCase();
 
       default:
         throw new FormulaEngineError(
