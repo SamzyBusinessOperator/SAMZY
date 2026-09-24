@@ -3739,6 +3739,7 @@ export default function SmartSheetGrid({
           "LOWER",
           "IF",
           "XLOOKUP",
+          "MATCH",
         ]);
 
       const useTypedEvaluator =
@@ -17473,6 +17474,70 @@ function evaluateTypedFormula(
           : values.length >= 3
             ? scalarValue(2)
             : 0;
+      }
+
+      case "MATCH": {
+        if (
+          values.length < 2 ||
+          values.length > 3
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const lookupValue =
+          scalarValue(0);
+        const lookupArray = values[1];
+
+        if (!Array.isArray(lookupArray)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const matchType =
+          values.length === 3
+            ? formulaNumberValue(
+                scalarValue(2),
+              )
+            : 1;
+
+        if (matchType !== 0) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const matchIndex =
+          lookupArray.findIndex(
+            (candidate) => {
+              if (
+                typeof lookupValue ===
+                  "string" &&
+                typeof candidate ===
+                  "string"
+              ) {
+                return (
+                  lookupValue.toLocaleLowerCase() ===
+                  candidate.toLocaleLowerCase()
+                );
+              }
+
+              return Object.is(
+                candidate,
+                lookupValue,
+              );
+            },
+          );
+
+        if (matchIndex < 0) {
+          throw new FormulaEngineError(
+            "#N/A",
+          );
+        }
+
+        return matchIndex + 1;
       }
 
       case "XLOOKUP": {
