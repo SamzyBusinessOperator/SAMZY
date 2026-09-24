@@ -130,6 +130,12 @@ type FormulaDisplayValue =
   | number
   | null;
 
+type FormulaRangeValue = {
+  values: unknown[];
+  rowCount: number;
+  columnCount: number;
+};
+
 type ListValidation = {
   type: "list";
   values: string[];
@@ -3723,6 +3729,84 @@ export default function SmartSheetGrid({
         return values;
       };
 
+      const resolveRangeGeometry = (
+        startReference: string,
+        endReference: string,
+      ): FormulaRangeValue => {
+        const start =
+          parseCellReference(
+            startReference,
+          );
+
+        const end =
+          parseCellReference(
+            endReference,
+          );
+
+        if (!start || !end) {
+          throw new FormulaEngineError(
+            "#REF!",
+          );
+        }
+
+        const startRow =
+          Math.min(
+            start.rowIndex,
+            end.rowIndex,
+          );
+
+        const endRow =
+          Math.max(
+            start.rowIndex,
+            end.rowIndex,
+          );
+
+        const startColumn =
+          Math.min(
+            start.columnIndex,
+            end.columnIndex,
+          );
+
+        const endColumn =
+          Math.max(
+            start.columnIndex,
+            end.columnIndex,
+          );
+
+        const values: unknown[] = [];
+
+        for (
+          let rangeRow = startRow;
+          rangeRow <= endRow;
+          rangeRow += 1
+        ) {
+          for (
+            let rangeColumn = startColumn;
+            rangeColumn <= endColumn;
+            rangeColumn += 1
+          ) {
+            const reference =
+              `${columnLetter(rangeColumn)}${rangeRow + 1}`;
+
+            values.push(
+              resolveReferenceValue(
+                reference,
+              ),
+            );
+          }
+        }
+
+        return {
+          values,
+          rowCount:
+            endRow - startRow + 1,
+          columnCount:
+            endColumn -
+            startColumn +
+            1,
+        };
+      };
+
       const typedFunctionMatch =
         /^\s*=\s*([A-Za-z]+)\s*\(/.exec(
           formula,
@@ -3740,6 +3824,7 @@ export default function SmartSheetGrid({
           "IF",
           "XLOOKUP",
           "MATCH",
+          "INDEX",
         ]);
 
       const useTypedEvaluator =
@@ -3756,6 +3841,7 @@ export default function SmartSheetGrid({
               formula,
               resolveReferenceValue,
               resolveRangeValues,
+              resolveRangeGeometry,
             )
           : evaluateArithmeticFormula(
               formula,
@@ -17035,6 +17121,10 @@ function evaluateTypedFormula(
     startReference: string,
     endReference: string,
   ) => unknown[],
+  resolveRangeGeometry: (
+    startReference: string,
+    endReference: string,
+  ) => FormulaRangeValue,
 ): FormulaDisplayValue {
   const source =
     formula.trim().startsWith("=")
@@ -17085,9 +17175,12 @@ function evaluateTypedFormula(
     );
   }
 
-  function parseArgument():
+  function parseArgument(
+    preserveRangeGeometry = false,
+  ):
     | FormulaDisplayValue
-    | unknown[] {
+    | unknown[]
+    | FormulaRangeValue {
     skipWhitespace();
 
     if (source[index] === '"') {
@@ -17104,6 +17197,13 @@ function evaluateTypedFormula(
 
     if (rangeMatch) {
       index += rangeMatch[0].length;
+
+      if (preserveRangeGeometry) {
+        return resolveRangeGeometry(
+          rangeMatch[1],
+          rangeMatch[2],
+        );
+      }
 
       return resolveRange(
         rangeMatch[1],
@@ -17207,6 +17307,7 @@ function evaluateTypedFormula(
       (
         | FormulaDisplayValue
         | unknown[]
+        | FormulaRangeValue
       )[] = [];
 
     skipWhitespace();
@@ -17267,8 +17368,15 @@ function evaluateTypedFormula(
       }
 
       while (true) {
+        const preserveRangeGeometry =
+          functionName.toUpperCase() ===
+            "INDEX" &&
+          values.length === 0;
+
         values.push(
-          parseArgument(),
+          parseArgument(
+            preserveRangeGeometry,
+          ),
         );
 
         skipWhitespace();
@@ -17291,15 +17399,31 @@ function evaluateTypedFormula(
       }
     }
 
+    const isFormulaRangeValue = (
+      value:
+        | FormulaDisplayValue
+        | unknown[]
+        | FormulaRangeValue
+        | undefined,
+    ): value is FormulaRangeValue =>
+      value !== null &&
+      value !== undefined &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      Array.isArray(value.values) &&
+      typeof value.rowCount === "number" &&
+      typeof value.columnCount === "number";
+
     const scalarValue = (
       argumentIndex: number,
-    ) => {
+    ): FormulaDisplayValue => {
       const value =
         values[argumentIndex];
 
       if (
         value === undefined ||
-        Array.isArray(value)
+        Array.isArray(value) ||
+        isFormulaRangeValue(value)
       ) {
         throw new FormulaEngineError(
           "#VALUE!",
@@ -17538,6 +17662,69 @@ function evaluateTypedFormula(
         }
 
         return matchIndex + 1;
+      }
+
+      case "INDEX": {
+        if (
+          values.length < 2 ||
+          values.length > 3
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const array = values[0];
+
+        if (
+          !isFormulaRangeValue(array)
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const rowNumber =
+          scalarInteger(1);
+
+        const columnNumber =
+          values.length === 3
+            ? scalarInteger(2)
+            : 1;
+
+        if (
+          rowNumber < 1 ||
+          columnNumber < 1 ||
+          rowNumber > array.rowCount ||
+          columnNumber >
+            array.columnCount
+        ) {
+          throw new FormulaEngineError(
+            "#REF!",
+          );
+        }
+
+        const valueIndex =
+          (rowNumber - 1) *
+            array.columnCount +
+          (columnNumber - 1);
+
+        const selectedValue =
+          array.values[valueIndex];
+
+        if (
+          selectedValue === null ||
+          typeof selectedValue ===
+            "string" ||
+          typeof selectedValue ===
+            "number"
+        ) {
+          return selectedValue;
+        }
+
+        return formulaTextValue(
+          selectedValue,
+        );
       }
 
       case "XLOOKUP": {
