@@ -3737,6 +3737,7 @@ export default function SmartSheetGrid({
           "TRIM",
           "UPPER",
           "LOWER",
+          "IF",
         ]);
 
       const useTypedEvaluator =
@@ -16722,6 +16723,71 @@ function formulaIndexIsInsideQuotedString(
   return insideQuotedString;
 }
 
+/*
+ * Find the next formula argument separator while respecting quoted strings
+ * and nested function/grouping parentheses.
+ */
+function findFormulaArgumentSeparator(
+  formula: string,
+  startIndex: number,
+) {
+  let insideQuotedString = false;
+  let parenthesisDepth = 0;
+  let index = startIndex;
+
+  while (index < formula.length) {
+    const character = formula[index];
+
+    if (character === '"') {
+      if (
+        insideQuotedString &&
+        formula[index + 1] === '"'
+      ) {
+        index += 2;
+        continue;
+      }
+
+      insideQuotedString =
+        !insideQuotedString;
+      index += 1;
+      continue;
+    }
+
+    if (insideQuotedString) {
+      index += 1;
+      continue;
+    }
+
+    if (character === "(") {
+      parenthesisDepth += 1;
+      index += 1;
+      continue;
+    }
+
+    if (character === ")") {
+      if (parenthesisDepth === 0) {
+        return -1;
+      }
+
+      parenthesisDepth -= 1;
+      index += 1;
+      continue;
+    }
+
+    if (
+      parenthesisDepth === 0 &&
+      (character === "," ||
+        character === ";")
+    ) {
+      return index;
+    }
+
+    index += 1;
+  }
+
+  return -1;
+}
+
 function extractFormulaDependencyAddresses(
   formula: string,
   rowCount: number,
@@ -17146,6 +17212,58 @@ function evaluateTypedFormula(
     if (source[index] === ")") {
       index += 1;
     } else {
+      const isTypedIf =
+        functionName.toUpperCase() ===
+        "IF";
+
+      if (isTypedIf) {
+        const conditionStart =
+          index;
+
+        const separatorIndex =
+          findFormulaArgumentSeparator(
+            source,
+            conditionStart,
+          );
+
+        if (separatorIndex < 0) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const conditionFormula =
+          source
+            .slice(
+              conditionStart,
+              separatorIndex,
+            )
+            .trim();
+
+        if (!conditionFormula) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const conditionValue =
+          evaluateArithmeticFormula(
+            conditionFormula,
+            (reference) =>
+              formulaNumberValue(
+                resolveReference(
+                  reference,
+                ),
+              ),
+            resolveRange,
+          );
+
+        values.push(conditionValue);
+
+        index =
+          separatorIndex + 1;
+      }
+
       while (true) {
         values.push(
           parseArgument(),
@@ -17333,6 +17451,28 @@ function evaluateTypedFormula(
 
         return scalarText(0)
           .toLowerCase();
+
+      case "IF": {
+        if (
+          values.length < 2 ||
+          values.length > 3
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const condition =
+          formulaNumberValue(
+            scalarValue(0),
+          );
+
+        return condition !== 0
+          ? scalarValue(1)
+          : values.length >= 3
+            ? scalarValue(2)
+            : 0;
+      }
 
       default:
         throw new FormulaEngineError(
