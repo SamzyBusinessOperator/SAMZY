@@ -3738,6 +3738,7 @@ export default function SmartSheetGrid({
           "UPPER",
           "LOWER",
           "IF",
+          "XLOOKUP",
         ]);
 
       const useTypedEvaluator =
@@ -17472,6 +17473,89 @@ function evaluateTypedFormula(
           : values.length >= 3
             ? scalarValue(2)
             : 0;
+      }
+
+      case "XLOOKUP": {
+        if (
+          values.length < 3 ||
+          values.length > 4
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const lookupValue =
+          scalarValue(0);
+        const lookupArray = values[1];
+        const returnArray = values[2];
+
+        if (
+          !Array.isArray(lookupArray) ||
+          !Array.isArray(returnArray)
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        if (
+          lookupArray.length !==
+          returnArray.length
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const matchIndex =
+          lookupArray.findIndex(
+            (candidate) => {
+              if (
+                typeof lookupValue ===
+                  "string" &&
+                typeof candidate ===
+                  "string"
+              ) {
+                return (
+                  lookupValue.toLocaleLowerCase() ===
+                  candidate.toLocaleLowerCase()
+                );
+              }
+
+              return Object.is(
+                candidate,
+                lookupValue,
+              );
+            },
+          );
+
+        if (matchIndex >= 0) {
+          const matchedValue =
+            returnArray[matchIndex];
+
+          if (
+            matchedValue === null ||
+            typeof matchedValue ===
+              "string" ||
+            typeof matchedValue ===
+              "number"
+          ) {
+            return matchedValue;
+          }
+
+          return formulaTextValue(
+            matchedValue,
+          );
+        }
+
+        if (values.length === 4) {
+          return scalarValue(3);
+        }
+
+        throw new FormulaEngineError(
+          "#N/A",
+        );
       }
 
       default:
