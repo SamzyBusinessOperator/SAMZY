@@ -17173,6 +17173,88 @@ function evaluateArithmeticFormula(
       case "COUNT":
         return values.length;
 
+      case "PRODUCT":
+        if (values.length === 0) {
+          return 0;
+        }
+
+        return values.reduce(
+          (product, value) =>
+            product * value,
+          1,
+        );
+
+      case "MEDIAN": {
+        if (values.length === 0) {
+          return 0;
+        }
+
+        const sortedValues = [
+          ...values,
+        ].sort(
+          (left, right) =>
+            left - right,
+        );
+
+        const middleIndex =
+          Math.floor(
+            sortedValues.length / 2,
+          );
+
+        if (
+          sortedValues.length % 2 === 1
+        ) {
+          return sortedValues[
+            middleIndex
+          ];
+        }
+
+        return (
+          (
+            sortedValues[
+              middleIndex - 1
+            ] +
+            sortedValues[
+              middleIndex
+            ]
+          ) / 2
+        );
+      }
+
+      case "SQRT":
+        if (
+          scalarValues.length !== 1 ||
+          rangeValues.length > 0
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        if (scalarValues[0] < 0) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        return Math.sqrt(
+          scalarValues[0],
+        );
+
+      case "INT":
+        if (
+          scalarValues.length !== 1 ||
+          rangeValues.length > 0
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        return Math.floor(
+          scalarValues[0],
+        );
+
       case "ABS":
         if (
           scalarValues.length !== 1 ||
