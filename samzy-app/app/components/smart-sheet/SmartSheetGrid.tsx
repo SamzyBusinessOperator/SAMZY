@@ -3827,6 +3827,7 @@ export default function SmartSheetGrid({
           "INDEX",
           "VLOOKUP",
           "HLOOKUP",
+          "COUNTIF",
         ]);
 
       const useTypedEvaluator =
@@ -17482,9 +17483,166 @@ function evaluateTypedFormula(
       return Math.trunc(numeric);
     };
 
+    const matchesFormulaCriterion = (
+      candidate: unknown,
+      criterion: FormulaDisplayValue,
+    ) => {
+      const criterionText =
+        formulaTextValue(criterion);
+
+      const operatorMatch =
+        /^(>=|<=|<>|=|>|<)(.*)$/.exec(
+          criterionText,
+        );
+
+      const operator =
+        operatorMatch?.[1] ?? "=";
+
+      const operandText =
+        (
+          operatorMatch?.[2] ??
+          criterionText
+        ).trim();
+
+      const candidateNumeric = (() => {
+        try {
+          return formulaNumberValue(
+            candidate,
+          );
+        } catch {
+          return null;
+        }
+      })();
+
+      const operandNumeric = (() => {
+        if (operandText === "") {
+          return null;
+        }
+
+        try {
+          return formulaNumberValue(
+            operandText,
+          );
+        } catch {
+          return null;
+        }
+      })();
+
+      if (
+        candidateNumeric !== null &&
+        operandNumeric !== null
+      ) {
+        switch (operator) {
+          case "=":
+            return (
+              candidateNumeric ===
+              operandNumeric
+            );
+          case "<>":
+            return (
+              candidateNumeric !==
+              operandNumeric
+            );
+          case ">":
+            return (
+              candidateNumeric >
+              operandNumeric
+            );
+          case ">=":
+            return (
+              candidateNumeric >=
+              operandNumeric
+            );
+          case "<":
+            return (
+              candidateNumeric <
+              operandNumeric
+            );
+          case "<=":
+            return (
+              candidateNumeric <=
+              operandNumeric
+            );
+        }
+      }
+
+      const candidateText =
+        formulaTextValue(
+          candidate,
+        ).toLocaleLowerCase();
+
+      const normalizedOperand =
+        operandText.toLocaleLowerCase();
+
+      switch (operator) {
+        case "=":
+          return (
+            candidateText ===
+            normalizedOperand
+          );
+        case "<>":
+          return (
+            candidateText !==
+            normalizedOperand
+          );
+        case ">":
+          return (
+            candidateText >
+            normalizedOperand
+          );
+        case ">=":
+          return (
+            candidateText >=
+            normalizedOperand
+          );
+        case "<":
+          return (
+            candidateText <
+            normalizedOperand
+          );
+        case "<=":
+          return (
+            candidateText <=
+            normalizedOperand
+          );
+        default:
+          return false;
+      }
+    };
+
     switch (
       functionName.toUpperCase()
     ) {
+      case "COUNTIF": {
+        if (values.length !== 2) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const range = values[0];
+
+        if (!Array.isArray(range)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const criterion =
+          scalarValue(1);
+
+        return range.reduce<number>(
+          (count, candidate) =>
+            matchesFormulaCriterion(
+              candidate,
+              criterion,
+            )
+              ? count + 1
+              : count,
+          0,
+        );
+      }
+
       case "CONCAT":
         return values
           .flatMap((value) =>
