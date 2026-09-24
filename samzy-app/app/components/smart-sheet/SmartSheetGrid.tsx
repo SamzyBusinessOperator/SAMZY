@@ -3825,6 +3825,7 @@ export default function SmartSheetGrid({
           "XLOOKUP",
           "MATCH",
           "INDEX",
+          "VLOOKUP",
         ]);
 
       const useTypedEvaluator =
@@ -17368,10 +17369,20 @@ function evaluateTypedFormula(
       }
 
       while (true) {
+        const geometryFunction =
+          functionName.toUpperCase();
+
         const preserveRangeGeometry =
-          functionName.toUpperCase() ===
-            "INDEX" &&
-          values.length === 0;
+          (
+            geometryFunction ===
+              "INDEX" &&
+            values.length === 0
+          ) ||
+          (
+            geometryFunction ===
+              "VLOOKUP" &&
+            values.length === 1
+          );
 
         values.push(
           parseArgument(
@@ -17724,6 +17735,113 @@ function evaluateTypedFormula(
 
         return formulaTextValue(
           selectedValue,
+        );
+      }
+
+      case "VLOOKUP": {
+        if (
+          values.length < 3 ||
+          values.length > 4
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const lookupValue =
+          scalarValue(0);
+        const table = values[1];
+
+        if (
+          !isFormulaRangeValue(table)
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const columnNumber =
+          scalarInteger(2);
+
+        if (
+          columnNumber < 1 ||
+          columnNumber >
+            table.columnCount
+        ) {
+          throw new FormulaEngineError(
+            "#REF!",
+          );
+        }
+
+        const rangeLookup =
+          values.length === 4
+            ? formulaNumberValue(
+                scalarValue(3),
+              )
+            : 1;
+
+        if (rangeLookup !== 0) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        let matchedRow = -1;
+
+        for (
+          let rowIndex = 0;
+          rowIndex < table.rowCount;
+          rowIndex += 1
+        ) {
+          const candidate =
+            table.values[
+              rowIndex *
+                table.columnCount
+            ];
+
+          const matches =
+            typeof lookupValue ===
+              "string" &&
+            typeof candidate ===
+              "string"
+              ? lookupValue.toLocaleLowerCase() ===
+                candidate.toLocaleLowerCase()
+              : Object.is(
+                  candidate,
+                  lookupValue,
+                );
+
+          if (matches) {
+            matchedRow = rowIndex;
+            break;
+          }
+        }
+
+        if (matchedRow < 0) {
+          throw new FormulaEngineError(
+            "#N/A",
+          );
+        }
+
+        const matchedValue =
+          table.values[
+            matchedRow *
+              table.columnCount +
+              (columnNumber - 1)
+          ];
+
+        if (
+          matchedValue === null ||
+          typeof matchedValue ===
+            "string" ||
+          typeof matchedValue ===
+            "number"
+        ) {
+          return matchedValue;
+        }
+
+        return formulaTextValue(
+          matchedValue,
         );
       }
 
