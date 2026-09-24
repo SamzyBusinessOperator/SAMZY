@@ -3723,17 +3723,32 @@ export default function SmartSheetGrid({
         return values;
       };
 
-      const result =
-        evaluateArithmeticFormula(
+      const typedFunctionMatch =
+        /^\s*=\s*([A-Za-z]+)\s*\(/.exec(
           formula,
-          (reference) =>
-            formulaNumberValue(
-              resolveReferenceValue(
-                reference,
-              ),
-            ),
-          resolveRangeValues,
         );
+
+      const useTypedEvaluator =
+        typedFunctionMatch?.[1]
+          .toUpperCase() === "CONCAT";
+
+      const result =
+        useTypedEvaluator
+          ? evaluateTypedFormula(
+              formula,
+              resolveReferenceValue,
+              resolveRangeValues,
+            )
+          : evaluateArithmeticFormula(
+              formula,
+              (reference) =>
+                formulaNumberValue(
+                  resolveReferenceValue(
+                    reference,
+                  ),
+                ),
+              resolveRangeValues,
+            );
 
       formulaEvaluationCache.set(
         cacheKey,
@@ -16899,6 +16914,304 @@ function translateFormulaReferences(
       }${nextRowIndex + 1}`;
     },
   );
+}
+
+/*
+ * Formula Engine V5 — typed formula foundation.
+ *
+ * The existing arithmetic evaluator remains the authoritative numeric engine.
+ * Typed formulas use raw spreadsheet values so text functions can coexist with
+ * numeric formulas without weakening the established arithmetic parser.
+ */
+function formulaTextValue(
+  value: unknown,
+) {
+  if (
+    value === null ||
+    value === undefined
+  ) {
+    return "";
+  }
+
+  if (
+    typeof value === "string" ||
+    typeof value === "number"
+  ) {
+    return String(value);
+  }
+
+  return String(value);
+}
+
+function evaluateTypedFormula(
+  formula: string,
+  resolveReference: (
+    reference: string,
+  ) => unknown,
+  resolveRange: (
+    startReference: string,
+    endReference: string,
+  ) => unknown[],
+): FormulaDisplayValue {
+  const source =
+    formula.trim().startsWith("=")
+      ? formula.trim().slice(1)
+      : formula.trim();
+
+  let index = 0;
+
+  function skipWhitespace() {
+    while (
+      index < source.length &&
+      /\s/.test(source[index])
+    ) {
+      index += 1;
+    }
+  }
+
+  function parseQuotedString() {
+    if (source[index] !== '"') {
+      throw new FormulaEngineError(
+        "#ERROR!",
+      );
+    }
+
+    index += 1;
+
+    let value = "";
+
+    while (index < source.length) {
+      if (source[index] !== '"') {
+        value += source[index];
+        index += 1;
+        continue;
+      }
+
+      if (source[index + 1] === '"') {
+        value += '"';
+        index += 2;
+        continue;
+      }
+
+      index += 1;
+      return value;
+    }
+
+    throw new FormulaEngineError(
+      "#ERROR!",
+    );
+  }
+
+  function parseArgument():
+    | FormulaDisplayValue
+    | unknown[] {
+    skipWhitespace();
+
+    if (source[index] === '"') {
+      return parseQuotedString();
+    }
+
+    const remaining =
+      source.slice(index);
+
+    const rangeMatch =
+      /^(\$?[A-Za-z]+\$?[1-9][0-9]*)\s*:\s*(\$?[A-Za-z]+\$?[1-9][0-9]*)/.exec(
+        remaining,
+      );
+
+    if (rangeMatch) {
+      index += rangeMatch[0].length;
+
+      return resolveRange(
+        rangeMatch[1],
+        rangeMatch[2],
+      );
+    }
+
+    const identifierMatch =
+      /^[A-Za-z]+/.exec(
+        remaining,
+      );
+
+    if (identifierMatch) {
+      const identifier =
+        identifierMatch[0];
+
+      const afterIdentifier =
+        source
+          .slice(
+            index +
+              identifier.length,
+          )
+          .trimStart();
+
+      if (
+        afterIdentifier.startsWith("(")
+      ) {
+        index += identifier.length;
+
+        return parseFunctionCall(
+          identifier,
+        );
+      }
+    }
+
+    const referenceMatch =
+      /^\$?[A-Za-z]+\$?[1-9][0-9]*/.exec(
+        remaining,
+      );
+
+    if (referenceMatch) {
+      index +=
+        referenceMatch[0].length;
+
+      const value =
+        resolveReference(
+          referenceMatch[0],
+        );
+
+      if (
+        value === null ||
+        typeof value === "string" ||
+        typeof value === "number"
+      ) {
+        return value;
+      }
+
+      return formulaTextValue(value);
+    }
+
+    const numberMatch =
+      /^(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)/.exec(
+        remaining,
+      );
+
+    if (numberMatch) {
+      index +=
+        numberMatch[0].length;
+
+      const value =
+        Number(numberMatch[0]);
+
+      if (!Number.isFinite(value)) {
+        throw new FormulaEngineError(
+          "#VALUE!",
+        );
+      }
+
+      return value;
+    }
+
+    throw new FormulaEngineError(
+      "#ERROR!",
+    );
+  }
+
+  function parseFunctionCall(
+    functionName: string,
+  ): FormulaDisplayValue {
+    skipWhitespace();
+
+    if (source[index] !== "(") {
+      throw new FormulaEngineError(
+        "#ERROR!",
+      );
+    }
+
+    index += 1;
+
+    const values:
+      (
+        | FormulaDisplayValue
+        | unknown[]
+      )[] = [];
+
+    skipWhitespace();
+
+    if (source[index] === ")") {
+      index += 1;
+    } else {
+      while (true) {
+        values.push(
+          parseArgument(),
+        );
+
+        skipWhitespace();
+
+        if (source[index] === ")") {
+          index += 1;
+          break;
+        }
+
+        if (
+          source[index] !== "," &&
+          source[index] !== ";"
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        index += 1;
+      }
+    }
+
+    switch (
+      functionName.toUpperCase()
+    ) {
+      case "CONCAT":
+        return values
+          .flatMap((value) =>
+            Array.isArray(value)
+              ? value
+              : [value],
+          )
+          .map(formulaTextValue)
+          .join("");
+
+      default:
+        throw new FormulaEngineError(
+          "#NAME?",
+        );
+    }
+  }
+
+  if (!source) {
+    throw new FormulaEngineError(
+      "#ERROR!",
+    );
+  }
+
+  skipWhitespace();
+
+  const identifierMatch =
+    /^[A-Za-z]+/.exec(
+      source.slice(index),
+    );
+
+  if (!identifierMatch) {
+    throw new FormulaEngineError(
+      "#NAME?",
+    );
+  }
+
+  index +=
+    identifierMatch[0].length;
+
+  const result =
+    parseFunctionCall(
+      identifierMatch[0],
+    );
+
+  skipWhitespace();
+
+  if (index !== source.length) {
+    throw new FormulaEngineError(
+      "#ERROR!",
+    );
+  }
+
+  return result;
 }
 
 /*
