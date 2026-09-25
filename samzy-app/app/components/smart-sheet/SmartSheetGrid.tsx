@@ -136,6 +136,32 @@ type FormulaRangeValue = {
   columnCount: number;
 };
 
+/*
+ * Formula Engine V5 — dynamic array foundation.
+ *
+ * FormulaArrayResult represents a calculated rectangular result before it is
+ * projected onto the spreadsheet. FormulaSpillCell represents one derived
+ * visual cell belonging to that result.
+ *
+ * Spill cells are intentionally NOT persisted as SmartSheetCellOverlay rows.
+ * They are derived from the source formula and can therefore recalculate or
+ * disappear when the source formula changes.
+ */
+type FormulaArrayResult = {
+  values: FormulaDisplayValue[];
+  rowCount: number;
+  columnCount: number;
+};
+
+type FormulaSpillCell = {
+  value: FormulaDisplayValue;
+  sourceAddress: string;
+  sourceRowIndex: number;
+  sourceColumnIndex: number;
+  spillRowOffset: number;
+  spillColumnOffset: number;
+};
+
 type ListValidation = {
   type: "list";
   values: string[];
@@ -3486,6 +3512,16 @@ export default function SmartSheetGrid({
   const formulaEvaluationCache =
     new Map<string, FormulaDisplayValue>();
 
+  /*
+   * Formula Engine V5 — dynamic-array spill projection.
+   *
+   * Dynamic-array formulas remain stored only in their anchor cell.
+   * Spill cells are derived for the current render and are never
+   * persisted as independent formulas or values.
+   */
+  const formulaArraySpillCache =
+    new Map<string, FormulaDisplayValue>();
+
   function formulaDisplayValue(
     row: SmartSheetRow,
     columnKey: string,
@@ -3495,16 +3531,6 @@ export default function SmartSheetGrid({
         row,
         columnKey,
       );
-
-    if (
-      !isCustomSpreadsheetColumn(
-        columnKey,
-      ) ||
-      typeof storedValue !== "string" ||
-      !storedValue.trim().startsWith("=")
-    ) {
-      return undefined;
-    }
 
     const rowIndex =
       rows.findIndex(
@@ -3517,6 +3543,36 @@ export default function SmartSheetGrid({
         (column) =>
           column.key === columnKey,
       );
+
+    if (
+      rowIndex >= 0 &&
+      columnIndex >= 0
+    ) {
+      const address =
+        `${columnLetter(columnIndex)}${rowIndex + 1}`;
+
+      if (
+        formulaArraySpillCache.has(
+          address,
+        )
+      ) {
+        return (
+          formulaArraySpillCache.get(
+            address,
+          ) ?? null
+        );
+      }
+    }
+
+    if (
+      !isCustomSpreadsheetColumn(
+        columnKey,
+      ) ||
+      typeof storedValue !== "string" ||
+      !storedValue.trim().startsWith("=")
+    ) {
+      return undefined;
+    }
 
     if (
       rowIndex < 0 ||
@@ -3833,6 +3889,7 @@ export default function SmartSheetGrid({
           "COUNTBLANK",
           "COUNTUNIQUE",
           "ISBLANK",
+          "UNIQUE",
           "COUNTIF",
           "COUNTIFS",
           "SUMIF",
@@ -3870,12 +3927,164 @@ export default function SmartSheetGrid({
               resolveRangeValues,
             );
 
+      let arraySpillBlocked = false;
+
+      if (
+        isFormulaArrayResult(result)
+      ) {
+        /*
+         * Formula Engine V5.1 — #SPILL! collision protection.
+         *
+         * The anchor cell owns the formula. Every other destination
+         * in the projected dynamic-array rectangle must be empty.
+         * Existing user values and formulas are never overwritten.
+         */
+        for (
+          let spillRow = 0;
+          spillRow < result.rowCount;
+          spillRow += 1
+        ) {
+          for (
+            let spillColumn = 0;
+            spillColumn < result.columnCount;
+            spillColumn += 1
+          ) {
+            if (
+              spillRow === 0 &&
+              spillColumn === 0
+            ) {
+              continue;
+            }
+
+            const targetRowIndex =
+              rowIndex + spillRow;
+
+            const targetColumnIndex =
+              columnIndex + spillColumn;
+
+            if (
+              targetRowIndex >= rows.length ||
+              targetColumnIndex >=
+                visibleColumns.length
+            ) {
+              arraySpillBlocked = true;
+              break;
+            }
+
+            const targetRow =
+              rows[targetRowIndex];
+
+            const targetColumn =
+              visibleColumns[
+                targetColumnIndex
+              ];
+
+            if (
+              !targetRow ||
+              !targetColumn
+            ) {
+              arraySpillBlocked = true;
+              break;
+            }
+
+            const targetStoredValue =
+              getSpreadsheetValue(
+                targetRow,
+                targetColumn.key,
+              );
+
+            if (
+              targetStoredValue !== null &&
+              targetStoredValue !==
+                undefined &&
+              targetStoredValue !== ""
+            ) {
+              arraySpillBlocked = true;
+              break;
+            }
+          }
+
+          if (arraySpillBlocked) {
+            break;
+          }
+        }
+
+        if (!arraySpillBlocked) {
+          for (
+            let spillRow = 0;
+            spillRow < result.rowCount;
+            spillRow += 1
+          ) {
+            for (
+              let spillColumn = 0;
+              spillColumn <
+                result.columnCount;
+              spillColumn += 1
+            ) {
+              const targetRowIndex =
+                rowIndex + spillRow;
+
+              const targetColumnIndex =
+                columnIndex +
+                spillColumn;
+
+              if (
+                targetRowIndex >=
+                  rows.length ||
+                targetColumnIndex >=
+                  visibleColumns.length
+              ) {
+                continue;
+              }
+
+              const spillIndex =
+                spillRow *
+                  result.columnCount +
+                spillColumn;
+
+              const spillValue =
+                result.values[
+                  spillIndex
+                ];
+
+              const spillAddress =
+                `${columnLetter(
+                  targetColumnIndex,
+                )}${targetRowIndex + 1}`;
+
+              formulaArraySpillCache.set(
+                spillAddress,
+                spillValue === undefined
+                  ? null
+                  : spillValue === null ||
+                      typeof spillValue ===
+                        "string" ||
+                      typeof spillValue ===
+                        "number"
+                    ? spillValue
+                    : formulaTextValue(
+                        spillValue,
+                      ),
+              );
+            }
+          }
+        }
+      }
+
+      const displayResult:
+        FormulaDisplayValue =
+          isFormulaArrayResult(result)
+            ? arraySpillBlocked
+              ? "#SPILL!"
+              : result.values[0] ?? null
+            : result;
+
       formulaEvaluationCache.set(
         cacheKey,
-        result,
+        displayResult,
       );
 
-      return result;
+      return displayResult;
     } catch (error) {
       const result =
         error instanceof
@@ -17157,6 +17366,10 @@ function isTypedFormulaExpression(
     "VLOOKUP",
     "HLOOKUP",
     "COUNTA",
+    "COUNTBLANK",
+    "COUNTUNIQUE",
+    "ISBLANK",
+    "UNIQUE",
     "COUNTIF",
     "COUNTIFS",
     "SUMIF",
@@ -17167,6 +17380,28 @@ function isTypedFormulaExpression(
     "MAXIFS",
   ]).has(
     typedFunctionMatch[1].toUpperCase(),
+  );
+}
+
+function isFormulaArrayResult(
+  value: unknown,
+): value is FormulaArrayResult {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    "values" in value &&
+    Array.isArray(
+      (value as FormulaArrayResult).values,
+    ) &&
+    "rowCount" in value &&
+    typeof (
+      value as FormulaArrayResult
+    ).rowCount === "number" &&
+    "columnCount" in value &&
+    typeof (
+      value as FormulaArrayResult
+    ).columnCount === "number"
   );
 }
 
@@ -17183,7 +17418,7 @@ function evaluateTypedFormula(
     startReference: string,
     endReference: string,
   ) => FormulaRangeValue,
-): FormulaDisplayValue {
+): FormulaDisplayValue | FormulaArrayResult {
   const source =
     formula.trim().startsWith("=")
       ? formula.trim().slice(1)
@@ -17237,6 +17472,7 @@ function evaluateTypedFormula(
     preserveRangeGeometry = false,
   ):
     | FormulaDisplayValue
+    | FormulaArrayResult
     | unknown[]
     | FormulaRangeValue {
     skipWhitespace();
@@ -17350,7 +17586,7 @@ function evaluateTypedFormula(
 
   function parseFunctionCall(
     functionName: string,
-  ): FormulaDisplayValue {
+  ): FormulaDisplayValue | FormulaArrayResult {
     skipWhitespace();
 
     if (source[index] !== "(") {
@@ -17364,6 +17600,7 @@ function evaluateTypedFormula(
     const values:
       (
         | FormulaDisplayValue
+        | FormulaArrayResult
         | unknown[]
         | FormulaRangeValue
       )[] = [];
@@ -17493,12 +17730,25 @@ function evaluateTypedFormula(
               trimmedFragment,
             )
           ) {
-            return evaluateTypedFormula(
-              trimmedFragment,
-              resolveReference,
-              resolveRange,
-              resolveRangeGeometry,
-            );
+            const typedResult =
+              evaluateTypedFormula(
+                trimmedFragment,
+                resolveReference,
+                resolveRange,
+                resolveRangeGeometry,
+              );
+
+            if (
+              isFormulaArrayResult(
+                typedResult,
+              )
+            ) {
+              throw new FormulaEngineError(
+                "#VALUE!",
+              );
+            }
+
+            return typedResult;
           }
 
           return evaluateArithmeticFormula(
@@ -17605,8 +17855,12 @@ function evaluateTypedFormula(
 
         const preserveRangeGeometry =
           (
-            geometryFunction ===
-              "INDEX" &&
+            (
+              geometryFunction ===
+                "INDEX" ||
+              geometryFunction ===
+                "UNIQUE"
+            ) &&
             values.length === 0
           ) ||
           (
@@ -17648,6 +17902,7 @@ function evaluateTypedFormula(
     const isFormulaRangeValue = (
       value:
         | FormulaDisplayValue
+        | FormulaArrayResult
         | unknown[]
         | FormulaRangeValue
         | undefined,
@@ -17669,7 +17924,14 @@ function evaluateTypedFormula(
       if (
         value === undefined ||
         Array.isArray(value) ||
-        isFormulaRangeValue(value)
+        isFormulaRangeValue(value) ||
+        (
+          typeof value === "object" &&
+          value !== null &&
+          "values" in value &&
+          "rowCount" in value &&
+          "columnCount" in value
+        )
       ) {
         throw new FormulaEngineError(
           "#VALUE!",
@@ -17842,6 +18104,96 @@ function evaluateTypedFormula(
     switch (
       functionName.toUpperCase()
     ) {
+      case "UNIQUE": {
+        if (values.length !== 1) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const range = values[0];
+
+        if (!isFormulaRangeValue(range)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        /*
+         * UNIQUE V1 operates row-wise.
+         *
+         * For a one-column range such as X1:X9 this produces a vertical
+         * dynamic array. Rectangular ranges are deduplicated by complete row,
+         * preserving the first occurrence and original row order.
+         */
+        const uniqueRows:
+          FormulaDisplayValue[][] = [];
+
+        const seen =
+          new Set<string>();
+
+        for (
+          let rowIndex = 0;
+          rowIndex < range.rowCount;
+          rowIndex += 1
+        ) {
+          const row:
+            FormulaDisplayValue[] = [];
+
+          for (
+            let columnIndex = 0;
+            columnIndex <
+            range.columnCount;
+            columnIndex += 1
+          ) {
+            const rawValue =
+              range.values[
+                rowIndex *
+                  range.columnCount +
+                  columnIndex
+              ];
+
+            const value:
+              FormulaDisplayValue =
+                rawValue === null ||
+                typeof rawValue ===
+                  "string" ||
+                typeof rawValue ===
+                  "number"
+                  ? rawValue
+                  : formulaTextValue(
+                      rawValue,
+                    );
+
+            row.push(value);
+          }
+
+          const key =
+            JSON.stringify(
+              row.map((value) => [
+                typeof value,
+                value,
+              ]),
+            );
+
+          if (seen.has(key)) {
+            continue;
+          }
+
+          seen.add(key);
+          uniqueRows.push(row);
+        }
+
+        return {
+          values:
+            uniqueRows.flat(),
+          rowCount:
+            uniqueRows.length,
+          columnCount:
+            range.columnCount,
+        };
+      }
+
       case "COUNTA": {
         let count = 0;
 
