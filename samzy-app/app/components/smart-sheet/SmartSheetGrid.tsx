@@ -3822,6 +3822,7 @@ export default function SmartSheetGrid({
           "UPPER",
           "LOWER",
           "IF",
+          "IFERROR",
           "XLOOKUP",
           "MATCH",
           "INDEX",
@@ -17122,6 +17123,46 @@ function formulaTextValue(
   return String(value);
 }
 
+function isTypedFormulaExpression(
+  formula: string,
+) {
+  const typedFunctionMatch =
+    /^\s*=?\s*([A-Za-z]+)\s*\(/.exec(
+      formula,
+    );
+
+  if (!typedFunctionMatch) {
+    return false;
+  }
+
+  return new Set([
+    "CONCAT",
+    "LEFT",
+    "RIGHT",
+    "LEN",
+    "TRIM",
+    "UPPER",
+    "LOWER",
+    "IF",
+    "IFERROR",
+    "XLOOKUP",
+    "MATCH",
+    "INDEX",
+    "VLOOKUP",
+    "HLOOKUP",
+    "COUNTIF",
+    "COUNTIFS",
+    "SUMIF",
+    "SUMIFS",
+    "AVERAGEIF",
+    "AVERAGEIFS",
+    "MINIFS",
+    "MAXIFS",
+  ]).has(
+    typedFunctionMatch[1].toUpperCase(),
+  );
+}
+
 function evaluateTypedFormula(
   formula: string,
   resolveReference: (
@@ -17325,6 +17366,169 @@ function evaluateTypedFormula(
     if (source[index] === ")") {
       index += 1;
     } else {
+      const isTypedIfError =
+        functionName.toUpperCase() ===
+        "IFERROR";
+
+      if (isTypedIfError) {
+        const firstArgumentStart =
+          index;
+
+        const separatorIndex =
+          findFormulaArgumentSeparator(
+            source,
+            firstArgumentStart,
+          );
+
+        if (separatorIndex < 0) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const firstFormula =
+          source
+            .slice(
+              firstArgumentStart,
+              separatorIndex,
+            )
+            .trim();
+
+        if (!firstFormula) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const fallbackStart =
+          separatorIndex + 1;
+
+        const fallbackEnd =
+          findFormulaArgumentSeparator(
+            source,
+            fallbackStart,
+          );
+
+        if (fallbackEnd >= 0) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        let closingIndex =
+          source.length - 1;
+
+        while (
+          closingIndex >= fallbackStart &&
+          /\s/.test(source[closingIndex])
+        ) {
+          closingIndex -= 1;
+        }
+
+        if (
+          closingIndex < fallbackStart ||
+          source[closingIndex] !== ")"
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const fallbackFormula =
+          source
+            .slice(
+              fallbackStart,
+              closingIndex,
+            )
+            .trim();
+
+        if (!fallbackFormula) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const evaluateFragment = (
+          fragment: string,
+        ): FormulaDisplayValue => {
+          const trimmedFragment =
+            fragment.trim();
+
+          if (
+            trimmedFragment.length >= 2 &&
+            trimmedFragment.startsWith('"') &&
+            trimmedFragment.endsWith('"')
+          ) {
+            const quotedContent =
+              trimmedFragment.slice(1, -1);
+
+            if (
+              /(^|[^"])"([^"]|$)/.test(
+                quotedContent,
+              )
+            ) {
+              throw new FormulaEngineError(
+                "#ERROR!",
+              );
+            }
+
+            return quotedContent.replaceAll(
+              '""',
+              '"',
+            );
+          }
+
+          if (
+            isTypedFormulaExpression(
+              trimmedFragment,
+            )
+          ) {
+            return evaluateTypedFormula(
+              trimmedFragment,
+              resolveReference,
+              resolveRange,
+              resolveRangeGeometry,
+            );
+          }
+
+          return evaluateArithmeticFormula(
+            fragment,
+            (reference) =>
+              formulaNumberValue(
+                resolveReference(
+                  reference,
+                ),
+              ),
+            resolveRange,
+          );
+        };
+
+        let result: FormulaDisplayValue;
+
+        try {
+          result =
+            evaluateFragment(
+              firstFormula,
+            );
+        } catch (error) {
+          if (
+            !(error instanceof FormulaEngineError)
+          ) {
+            throw error;
+          }
+
+          result =
+            evaluateFragment(
+              fallbackFormula,
+            );
+        }
+
+        index =
+          closingIndex + 1;
+
+        return result;
+      }
+
       const isTypedIf =
         functionName.toUpperCase() ===
         "IF";
