@@ -3829,6 +3829,7 @@ export default function SmartSheetGrid({
           "HLOOKUP",
           "COUNTIF",
           "SUMIF",
+          "AVERAGEIF",
         ]);
 
       const useTypedEvaluator =
@@ -17709,6 +17710,85 @@ function evaluateTypedFormula(
           },
           0,
         );
+      }
+
+      case "AVERAGEIF": {
+        if (
+          values.length < 2 ||
+          values.length > 3
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const range = values[0];
+
+        if (!Array.isArray(range)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const criterion =
+          scalarValue(1);
+
+        const averageRange =
+          values.length === 3
+            ? values[2]
+            : range;
+
+        if (!Array.isArray(averageRange)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        if (
+          averageRange.length !==
+          range.length
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        let total = 0;
+        let count = 0;
+
+        range.forEach(
+          (candidate, index) => {
+            if (
+              !matchesFormulaCriterion(
+                candidate,
+                criterion,
+              )
+            ) {
+              return;
+            }
+
+            try {
+              const numeric =
+                formulaNumberValue(
+                  averageRange[index],
+                );
+
+              total += numeric;
+              count += 1;
+            } catch {
+              // Non-numeric matching values
+              // do not contribute to AVERAGEIF.
+            }
+          },
+        );
+
+        if (count === 0) {
+          throw new FormulaEngineError(
+            "#DIV/0!",
+          );
+        }
+
+        return total / count;
       }
 
       case "CONCAT":
