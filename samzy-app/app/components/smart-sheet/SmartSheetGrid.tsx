@@ -3829,6 +3829,7 @@ export default function SmartSheetGrid({
           "INDEX",
           "VLOOKUP",
           "HLOOKUP",
+          "COUNTA",
           "COUNTIF",
           "COUNTIFS",
           "SUMIF",
@@ -17152,6 +17153,7 @@ function isTypedFormulaExpression(
     "INDEX",
     "VLOOKUP",
     "HLOOKUP",
+    "COUNTA",
     "COUNTIF",
     "COUNTIFS",
     "SUMIF",
@@ -17837,6 +17839,29 @@ function evaluateTypedFormula(
     switch (
       functionName.toUpperCase()
     ) {
+      case "COUNTA": {
+        let count = 0;
+
+        for (const value of values) {
+          const candidates =
+            Array.isArray(value)
+              ? value
+              : [value];
+
+          for (const candidate of candidates) {
+            if (
+              candidate !== null &&
+              candidate !== undefined &&
+              candidate !== ""
+            ) {
+              count += 1;
+            }
+          }
+        }
+
+        return count;
+      }
+
       case "COUNTIF": {
         if (values.length !== 2) {
           throw new FormulaEngineError(
