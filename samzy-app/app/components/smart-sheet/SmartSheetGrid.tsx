@@ -3830,6 +3830,7 @@ export default function SmartSheetGrid({
           "COUNTIF",
           "COUNTIFS",
           "SUMIF",
+          "SUMIFS",
           "AVERAGEIF",
         ]);
 
@@ -17793,6 +17794,98 @@ function evaluateTypedFormula(
           },
           0,
         );
+      }
+
+      case "SUMIFS": {
+        if (
+          values.length < 3 ||
+          values.length % 2 !== 1
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const sumRange =
+          values[0];
+
+        if (!Array.isArray(sumRange)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const criteriaPairs: {
+          range: unknown[];
+          criterion: FormulaDisplayValue;
+        }[] = [];
+
+        for (
+          let argumentIndex = 1;
+          argumentIndex < values.length;
+          argumentIndex += 2
+        ) {
+          const range =
+            values[argumentIndex];
+
+          if (!Array.isArray(range)) {
+            throw new FormulaEngineError(
+              "#VALUE!",
+            );
+          }
+
+          if (
+            range.length !==
+            sumRange.length
+          ) {
+            throw new FormulaEngineError(
+              "#VALUE!",
+            );
+          }
+
+          const criterion =
+            scalarValue(
+              argumentIndex + 1,
+            );
+
+          criteriaPairs.push({
+            range,
+            criterion,
+          });
+        }
+
+        let total = 0;
+
+        for (
+          let valueIndex = 0;
+          valueIndex < sumRange.length;
+          valueIndex += 1
+        ) {
+          const matchesAll =
+            criteriaPairs.every(
+              ({ range, criterion }) =>
+                matchesFormulaCriterion(
+                  range[valueIndex],
+                  criterion,
+                ),
+            );
+
+          if (!matchesAll) {
+            continue;
+          }
+
+          try {
+            total +=
+              formulaNumberValue(
+                sumRange[valueIndex],
+              );
+          } catch {
+            // Non-numeric sum values
+            // do not contribute to SUMIFS.
+          }
+        }
+
+        return total;
       }
 
       case "AVERAGEIF": {
