@@ -3828,6 +3828,7 @@ export default function SmartSheetGrid({
           "VLOOKUP",
           "HLOOKUP",
           "COUNTIF",
+          "COUNTIFS",
           "SUMIF",
           "AVERAGEIF",
         ]);
@@ -17643,6 +17644,88 @@ function evaluateTypedFormula(
               : count,
           0,
         );
+      }
+
+      case "COUNTIFS": {
+        if (
+          values.length < 2 ||
+          values.length % 2 !== 0
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const firstRange =
+          values[0];
+
+        if (!Array.isArray(firstRange)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const criteriaPairs: {
+          range: unknown[];
+          criterion: FormulaDisplayValue;
+        }[] = [];
+
+        for (
+          let argumentIndex = 0;
+          argumentIndex < values.length;
+          argumentIndex += 2
+        ) {
+          const range =
+            values[argumentIndex];
+
+          if (!Array.isArray(range)) {
+            throw new FormulaEngineError(
+              "#VALUE!",
+            );
+          }
+
+          if (
+            range.length !==
+            firstRange.length
+          ) {
+            throw new FormulaEngineError(
+              "#VALUE!",
+            );
+          }
+
+          const criterion =
+            scalarValue(
+              argumentIndex + 1,
+            );
+
+          criteriaPairs.push({
+            range,
+            criterion,
+          });
+        }
+
+        let count = 0;
+
+        for (
+          let valueIndex = 0;
+          valueIndex < firstRange.length;
+          valueIndex += 1
+        ) {
+          const matchesAll =
+            criteriaPairs.every(
+              ({ range, criterion }) =>
+                matchesFormulaCriterion(
+                  range[valueIndex],
+                  criterion,
+                ),
+            );
+
+          if (matchesAll) {
+            count += 1;
+          }
+        }
+
+        return count;
       }
 
       case "SUMIF": {
