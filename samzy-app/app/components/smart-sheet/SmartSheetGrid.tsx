@@ -465,7 +465,7 @@ const LETTER_ROW_HEIGHT = 24;
  * separate from runtimeAllColumns, columnOrder, persisted rows, formulas,
  * semantic mappings, history, and server actions.
  */
-const GENERAL_BLANK_COLUMN_COUNT = 26;
+const GENERAL_BLANK_COLUMN_COUNT = 100;
 const GENERAL_BLANK_ROW_COUNT = 500;
 const GENERAL_BLANK_COLUMN_WIDTH = 120;
 const GROUP_ROW_HEIGHT = 22;
@@ -3832,6 +3832,7 @@ export default function SmartSheetGrid({
           "COUNTA",
           "COUNTBLANK",
           "COUNTUNIQUE",
+          "ISBLANK",
           "COUNTIF",
           "COUNTIFS",
           "SUMIF",
@@ -17924,6 +17925,25 @@ function evaluateTypedFormula(
         }
 
         return uniqueValues.size;
+      }
+
+      case "ISBLANK": {
+        if (values.length !== 1) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const value =
+          scalarValue(0);
+
+        return (
+          value === null ||
+          value === undefined ||
+          value === ""
+            ? 1
+            : 0
+        );
       }
 
       case "COUNTIF": {
