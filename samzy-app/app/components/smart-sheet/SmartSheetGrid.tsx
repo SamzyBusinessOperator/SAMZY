@@ -3830,6 +3830,7 @@ export default function SmartSheetGrid({
           "VLOOKUP",
           "HLOOKUP",
           "COUNTA",
+          "COUNTBLANK",
           "COUNTIF",
           "COUNTIFS",
           "SUMIF",
@@ -17860,6 +17861,31 @@ function evaluateTypedFormula(
         }
 
         return count;
+      }
+
+      case "COUNTBLANK": {
+        if (values.length !== 1) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const value = values[0];
+
+        const candidates =
+          Array.isArray(value)
+            ? value
+            : [value];
+
+        return candidates.reduce<number>(
+          (count, candidate) =>
+            candidate === null ||
+            candidate === undefined ||
+            candidate === ""
+              ? count + 1
+              : count,
+          0,
+        );
       }
 
       case "COUNTIF": {
