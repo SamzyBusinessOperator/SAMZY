@@ -3828,6 +3828,7 @@ export default function SmartSheetGrid({
           "VLOOKUP",
           "HLOOKUP",
           "COUNTIF",
+          "SUMIF",
         ]);
 
       const useTypedEvaluator =
@@ -17639,6 +17640,73 @@ function evaluateTypedFormula(
             )
               ? count + 1
               : count,
+          0,
+        );
+      }
+
+      case "SUMIF": {
+        if (
+          values.length < 2 ||
+          values.length > 3
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const range = values[0];
+
+        if (!Array.isArray(range)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const criterion =
+          scalarValue(1);
+
+        const sumRange =
+          values.length === 3
+            ? values[2]
+            : range;
+
+        if (!Array.isArray(sumRange)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        if (
+          sumRange.length !==
+          range.length
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        return range.reduce<number>(
+          (total, candidate, index) => {
+            if (
+              !matchesFormulaCriterion(
+                candidate,
+                criterion,
+              )
+            ) {
+              return total;
+            }
+
+            try {
+              return (
+                total +
+                formulaNumberValue(
+                  sumRange[index],
+                )
+              );
+            } catch {
+              return total;
+            }
+          },
           0,
         );
       }
