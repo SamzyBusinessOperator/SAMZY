@@ -3832,6 +3832,7 @@ export default function SmartSheetGrid({
           "SUMIF",
           "SUMIFS",
           "AVERAGEIF",
+          "AVERAGEIFS",
         ]);
 
       const useTypedEvaluator =
@@ -17886,6 +17887,108 @@ function evaluateTypedFormula(
         }
 
         return total;
+      }
+
+      case "AVERAGEIFS": {
+        if (
+          values.length < 3 ||
+          values.length % 2 !== 1
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const averageRange =
+          values[0];
+
+        if (!Array.isArray(averageRange)) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        const criteriaPairs: {
+          range: unknown[];
+          criterion: FormulaDisplayValue;
+        }[] = [];
+
+        for (
+          let argumentIndex = 1;
+          argumentIndex < values.length;
+          argumentIndex += 2
+        ) {
+          const range =
+            values[argumentIndex];
+
+          if (!Array.isArray(range)) {
+            throw new FormulaEngineError(
+              "#VALUE!",
+            );
+          }
+
+          if (
+            range.length !==
+            averageRange.length
+          ) {
+            throw new FormulaEngineError(
+              "#VALUE!",
+            );
+          }
+
+          const criterion =
+            scalarValue(
+              argumentIndex + 1,
+            );
+
+          criteriaPairs.push({
+            range,
+            criterion,
+          });
+        }
+
+        let total = 0;
+        let count = 0;
+
+        for (
+          let valueIndex = 0;
+          valueIndex < averageRange.length;
+          valueIndex += 1
+        ) {
+          const matchesAll =
+            criteriaPairs.every(
+              ({ range, criterion }) =>
+                matchesFormulaCriterion(
+                  range[valueIndex],
+                  criterion,
+                ),
+            );
+
+          if (!matchesAll) {
+            continue;
+          }
+
+          try {
+            const numeric =
+              formulaNumberValue(
+                averageRange[valueIndex],
+              );
+
+            total += numeric;
+            count += 1;
+          } catch {
+            // Non-numeric average values
+            // do not contribute to AVERAGEIFS.
+          }
+        }
+
+        if (count === 0) {
+          throw new FormulaEngineError(
+            "#DIV/0!",
+          );
+        }
+
+        return total / count;
       }
 
       case "AVERAGEIF": {
