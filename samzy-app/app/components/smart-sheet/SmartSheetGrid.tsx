@@ -3831,6 +3831,7 @@ export default function SmartSheetGrid({
           "HLOOKUP",
           "COUNTA",
           "COUNTBLANK",
+          "COUNTUNIQUE",
           "COUNTIF",
           "COUNTIFS",
           "SUMIF",
@@ -17886,6 +17887,43 @@ function evaluateTypedFormula(
               : count,
           0,
         );
+      }
+
+      case "COUNTUNIQUE": {
+        if (values.length === 0) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const uniqueValues =
+          new Set<string>();
+
+        for (const value of values) {
+          const candidates =
+            Array.isArray(value)
+              ? value
+              : [value];
+
+          for (const candidate of candidates) {
+            if (
+              candidate === null ||
+              candidate === undefined ||
+              candidate === ""
+            ) {
+              continue;
+            }
+
+            const type =
+              typeof candidate;
+
+            uniqueValues.add(
+              `${type}:${String(candidate)}`,
+            );
+          }
+        }
+
+        return uniqueValues.size;
       }
 
       case "COUNTIF": {
