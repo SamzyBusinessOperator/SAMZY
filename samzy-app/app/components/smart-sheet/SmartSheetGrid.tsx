@@ -3823,6 +3823,7 @@ export default function SmartSheetGrid({
           "LOWER",
           "IF",
           "IFERROR",
+          "IFNA",
           "XLOOKUP",
           "MATCH",
           "INDEX",
@@ -17145,6 +17146,7 @@ function isTypedFormulaExpression(
     "LOWER",
     "IF",
     "IFERROR",
+    "IFNA",
     "XLOOKUP",
     "MATCH",
     "INDEX",
@@ -17366,11 +17368,14 @@ function evaluateTypedFormula(
     if (source[index] === ")") {
       index += 1;
     } else {
-      const isTypedIfError =
-        functionName.toUpperCase() ===
-        "IFERROR";
+      const typedErrorHandler =
+        functionName.toUpperCase();
 
-      if (isTypedIfError) {
+      const isTypedErrorHandler =
+        typedErrorHandler === "IFERROR" ||
+        typedErrorHandler === "IFNA";
+
+      if (isTypedErrorHandler) {
         const firstArgumentStart =
           index;
 
@@ -17513,6 +17518,14 @@ function evaluateTypedFormula(
         } catch (error) {
           if (
             !(error instanceof FormulaEngineError)
+          ) {
+            throw error;
+          }
+
+          if (
+            typedErrorHandler === "IFNA" &&
+            error.code.toUpperCase() !==
+              "#N/A"
           ) {
             throw error;
           }
