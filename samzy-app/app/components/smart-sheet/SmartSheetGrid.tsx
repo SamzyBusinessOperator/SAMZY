@@ -1810,6 +1810,23 @@ export default function SmartSheetGrid({
       columnIndex: number;
     } | null>(null);
 
+  /*
+   * Formula Engine V5.3b — dynamic-array canvas expansion.
+   *
+   * Formula evaluation is synchronous and must never perform server mutations
+   * during render. When a dynamic array needs virtual canvas columns, record
+   * the required rightmost column here. An effect materializes the real
+   * spreadsheet structure after render, then router.refresh() causes the
+   * formula to reevaluate against the expanded sheet.
+   */
+  const [
+    pendingFormulaSpillColumnIndex,
+    setPendingFormulaSpillColumnIndex,
+  ] = useState<number | null>(null);
+
+  const formulaSpillMaterializationRef =
+    useRef<number | null>(null);
+
   // V1 row-range selection: click a row number, then Shift+click another.
   // Structural multi-row actions are intentionally not enabled yet.
   const [rowSelectionAnchor, setRowSelectionAnchor] = useState<number | null>(null);
@@ -3520,7 +3537,7 @@ export default function SmartSheetGrid({
    * persisted as independent formulas or values.
    */
   const formulaArraySpillCache =
-    new Map<string, FormulaDisplayValue>();
+    new Map<string, FormulaSpillCell>();
 
   function formulaDisplayValue(
     row: SmartSheetRow,
@@ -3559,7 +3576,7 @@ export default function SmartSheetGrid({
         return (
           formulaArraySpillCache.get(
             address,
-          ) ?? null
+          )?.value ?? null
         );
       }
     }
@@ -3890,6 +3907,7 @@ export default function SmartSheetGrid({
           "COUNTUNIQUE",
           "ISBLANK",
           "UNIQUE",
+          "SEQUENCE",
           "COUNTIF",
           "COUNTIFS",
           "SUMIF",
@@ -3962,11 +3980,66 @@ export default function SmartSheetGrid({
             const targetColumnIndex =
               columnIndex + spillColumn;
 
+            /*
+             * Formula Engine V5.3a — visual blank-row spill support.
+             *
+             * The spreadsheet canvas can display blank rows that do not yet
+             * exist as persisted SmartSheetRow records. Those visual rows are
+             * valid empty spill destinations and must not cause #SPILL!.
+             *
+             * Columns still need to exist in the visible spreadsheet canvas.
+             */
             if (
-              targetRowIndex >= rows.length ||
               targetColumnIndex >=
-                visibleColumns.length
+              visibleColumns.length
             ) {
+              /*
+               * A dynamic array may legitimately extend into SAMZY's virtual
+               * 100-column spreadsheet canvas. This is not a #SPILL!
+               * collision. Request real column materialization after render.
+               *
+               * A result beyond the configured canvas remains a real boundary
+               * error because SAMZY currently exposes only that canvas.
+               */
+              if (
+                sheet.sheet_type === null &&
+                targetColumnIndex <
+                  GENERAL_BLANK_COLUMN_COUNT
+              ) {
+                const requestedColumnIndex =
+                  Math.min(
+                    columnIndex +
+                      result.columnCount -
+                      1,
+                    GENERAL_BLANK_COLUMN_COUNT -
+                      1,
+                  );
+
+                formulaSpillMaterializationRef.current =
+                  Math.max(
+                    formulaSpillMaterializationRef.current ??
+                      -1,
+                    requestedColumnIndex,
+                  );
+
+                /*
+                 * Projection cannot happen until those columns are real.
+                 * Do not classify this as #SPILL!; the anchor temporarily
+                 * displays its first value and will reevaluate after refresh.
+                 */
+                continue;
+              }
+
+              arraySpillBlocked = true;
+              break;
+            }
+
+            const targetColumn =
+              visibleColumns[
+                targetColumnIndex
+              ];
+
+            if (!targetColumn) {
               arraySpillBlocked = true;
               break;
             }
@@ -3974,17 +4047,12 @@ export default function SmartSheetGrid({
             const targetRow =
               rows[targetRowIndex];
 
-            const targetColumn =
-              visibleColumns[
-                targetColumnIndex
-              ];
-
-            if (
-              !targetRow ||
-              !targetColumn
-            ) {
-              arraySpillBlocked = true;
-              break;
+            /*
+             * No persisted row means this is empty visual spreadsheet space.
+             * There is therefore nothing that can collide with the spill.
+             */
+            if (!targetRow) {
+              continue;
             }
 
             const targetStoredValue =
@@ -4054,17 +4122,27 @@ export default function SmartSheetGrid({
 
               formulaArraySpillCache.set(
                 spillAddress,
-                spillValue === undefined
-                  ? null
-                  : spillValue === null ||
-                      typeof spillValue ===
-                        "string" ||
-                      typeof spillValue ===
-                        "number"
-                    ? spillValue
-                    : formulaTextValue(
-                        spillValue,
-                      ),
+                {
+                  value:
+                    spillValue === undefined
+                      ? null
+                      : spillValue === null ||
+                          typeof spillValue ===
+                            "string" ||
+                          typeof spillValue ===
+                            "number"
+                        ? spillValue
+                        : formulaTextValue(
+                            spillValue,
+                          ),
+                  sourceAddress: address,
+                  sourceRowIndex: rowIndex,
+                  sourceColumnIndex:
+                    columnIndex,
+                  spillRowOffset: spillRow,
+                  spillColumnOffset:
+                    spillColumn,
+                },
               );
             }
           }
@@ -4101,6 +4179,49 @@ export default function SmartSheetGrid({
     }
   }
 
+  function formulaSpillCellAt(
+    rowIndex: number,
+    columnIndex: number,
+  ): FormulaSpillCell | undefined {
+    const address =
+      `${columnLetter(columnIndex)}${rowIndex + 1}`;
+
+    const spill =
+      formulaArraySpillCache.get(
+        address,
+      );
+
+    if (!spill) {
+      return undefined;
+    }
+
+    /*
+     * The source/anchor cell owns the formula and remains editable.
+     * Only derived cells in the spill range are protected.
+     */
+    if (
+      spill.sourceRowIndex === rowIndex &&
+      spill.sourceColumnIndex ===
+        columnIndex
+    ) {
+      return undefined;
+    }
+
+    return spill;
+  }
+
+  function isFormulaSpillCell(
+    rowIndex: number,
+    columnIndex: number,
+  ) {
+    return Boolean(
+      formulaSpillCellAt(
+        rowIndex,
+        columnIndex,
+      ),
+    );
+  }
+
   function selectCell(
     row: SmartSheetRow,
     rowIndex: number,
@@ -4119,6 +4240,12 @@ export default function SmartSheetGrid({
       spreadsheetCellOverlayMap.get(`${row.id}:${columnKey}`);
     const rawValue = getSpreadsheetValue(row, columnKey);
 
+    const spillCell =
+      formulaSpillCellAt(
+        rowIndex,
+        columnIndex,
+      );
+
     /*
      * If a visual spreadsheet overlay occupies this slot, the underlying
      * business cell's SAME state no longer controls what the customer sees
@@ -4129,20 +4256,34 @@ export default function SmartSheetGrid({
       state?.mode === "same";
 
     const displayValue =
-      isSame
-        ? "SAME"
-        : formulaBarValue(rawValue, column.type);
+      spillCell
+        ? formulaBarValue(
+            spillCell.value,
+            column.type,
+          )
+        : isSame
+          ? "SAME"
+          : formulaBarValue(
+              rawValue,
+              column.type,
+            );
 
     const editValue =
-      isSame
-        ? "SAME"
-        : column.type === "boolean"
-          ? booleanCellValue(rawValue)
-            ? "TRUE"
-            : "FALSE"
-          : rawValue === null || rawValue === undefined
-            ? ""
-            : String(rawValue);
+      spillCell
+        ? spillCell.value === null ||
+          spillCell.value === undefined
+          ? ""
+          : String(spillCell.value)
+        : isSame
+          ? "SAME"
+          : column.type === "boolean"
+            ? booleanCellValue(rawValue)
+              ? "TRUE"
+              : "FALSE"
+            : rawValue === null ||
+                rawValue === undefined
+              ? ""
+              : String(rawValue);
 
     const driver =
       column.driverKey
@@ -4166,8 +4307,11 @@ export default function SmartSheetGrid({
       displayValue,
       editValue,
       type: column.type,
-      editable: column.editable ?? true,
-      allowSame,
+      editable:
+        !spillCell &&
+        (column.editable ?? true),
+      allowSame:
+        !spillCell && allowSame,
     };
 
     setSelectedCell(nextSelection);
@@ -5692,10 +5836,24 @@ export default function SmartSheetGrid({
   function requestEdit(
     initialValue?: string,
   ) {
-    if (
-      !selectedCell ||
-      !selectedCell.editable
-    ) {
+    if (!selectedCell) {
+      return;
+    }
+
+    const spillCell =
+      formulaSpillCellAt(
+        selectedCell.rowIndex,
+        selectedCell.columnIndex,
+      );
+
+    if (spillCell) {
+      setPasteMessage(
+        `This cell is part of the spilled array from ${spillCell.sourceAddress}. Edit the source formula instead.`,
+      );
+      return;
+    }
+
+    if (!selectedCell.editable) {
       return;
     }
 
@@ -7998,6 +8156,9 @@ export default function SmartSheetGrid({
       columnKey: string;
     }[] = [];
 
+    let protectedSpill:
+      FormulaSpillCell | undefined;
+
     for (
       let rowIndex =
         range.startRow;
@@ -8028,6 +8189,19 @@ export default function SmartSheetGrid({
           continue;
         }
 
+        const spillCell =
+          formulaSpillCellAt(
+            rowIndex,
+            columnIndex,
+          );
+
+        if (spillCell) {
+          protectedSpill =
+            protectedSpill ??
+            spillCell;
+          continue;
+        }
+
         cells.push({
           rowId:
             row.id,
@@ -8035,6 +8209,13 @@ export default function SmartSheetGrid({
             column.key,
         });
       }
+    }
+
+    if (protectedSpill) {
+      setPasteMessage(
+        `The selection contains cells spilled from ${protectedSpill.sourceAddress}. Edit or delete the source formula instead.`,
+      );
+      return;
     }
 
     if (cells.length === 0) {
@@ -8446,6 +8627,207 @@ export default function SmartSheetGrid({
     };
   }, [columnMenu]);
 
+
+  useLayoutEffect(() => {
+    const requestedColumnIndex =
+      formulaSpillMaterializationRef.current;
+
+    formulaSpillMaterializationRef.current =
+      null;
+
+    if (
+      requestedColumnIndex === null ||
+      requestedColumnIndex <
+        visibleColumns.length ||
+      requestedColumnIndex >=
+        GENERAL_BLANK_COLUMN_COUNT
+    ) {
+      return;
+    }
+
+    setPendingFormulaSpillColumnIndex(
+      (current) =>
+        current === null
+          ? requestedColumnIndex
+          : Math.max(
+              current,
+              requestedColumnIndex,
+            ),
+    );
+  });
+
+  /*
+   * Formula Engine V5.3b — persist columns demanded by a dynamic array.
+   *
+   * This intentionally uses the same addSmartSheetColumn action and
+   * pendingCustomColumnKeys lifecycle as manual/lazy canvas materialization.
+   * No virtual column identity enters formulas, clipboard, formatting,
+   * history, or selection.
+   */
+  useEffect(() => {
+    if (
+      pendingFormulaSpillColumnIndex ===
+        null ||
+      sheet.sheet_type !== null ||
+      activeFilterCount > 0 ||
+      isRowOperation ||
+      isCreatingColumn ||
+      isPasting ||
+      isClearing ||
+      isApplyingFill
+    ) {
+      return;
+    }
+
+    if (
+      pendingFormulaSpillColumnIndex <
+      visibleColumns.length
+    ) {
+      setPendingFormulaSpillColumnIndex(
+        null,
+      );
+      return;
+    }
+
+    let cancelled = false;
+
+    async function materializeFormulaSpillColumns() {
+      const requiredColumnCount =
+        pendingFormulaSpillColumnIndex! + 1;
+
+      const missingColumnCount =
+        Math.max(
+          0,
+          requiredColumnCount -
+            visibleColumns.length,
+        );
+
+      if (missingColumnCount === 0) {
+        setPendingFormulaSpillColumnIndex(
+          null,
+        );
+        return;
+      }
+
+      setIsCreatingColumn(true);
+      setPasteMessage(null);
+
+      const createdColumnKeys: string[] =
+        [];
+
+      try {
+        for (
+          let offset = 0;
+          offset < missingColumnCount;
+          offset += 1
+        ) {
+          if (cancelled) {
+            return;
+          }
+
+          const nextColumnIndex =
+            visibleColumns.length +
+            offset;
+
+          const result =
+            await addSmartSheetColumn({
+              sheetId: sheet.id,
+              label: `Column ${columnLetter(
+                nextColumnIndex,
+              )}`,
+              dataType: "text",
+            });
+
+          if (
+            !result.ok ||
+            !result.column
+          ) {
+            if (
+              createdColumnKeys.length > 0
+            ) {
+              setPendingCustomColumnKeys(
+                (current) => [
+                  ...current,
+                  ...createdColumnKeys.filter(
+                    (key) =>
+                      !current.includes(key),
+                  ),
+                ],
+              );
+            }
+
+            setPasteMessage(
+              result.message ??
+                `Unable to create column ${columnLetter(
+                  nextColumnIndex,
+                )}.`,
+            );
+
+            router.refresh();
+            return;
+          }
+
+          createdColumnKeys.push(
+            result.column.column_key,
+          );
+        }
+
+        if (cancelled) {
+          return;
+        }
+
+        if (
+          createdColumnKeys.length > 0
+        ) {
+          setPendingCustomColumnKeys(
+            (current) => [
+              ...current,
+              ...createdColumnKeys.filter(
+                (key) =>
+                  !current.includes(key),
+              ),
+            ],
+          );
+        }
+
+        setPendingFormulaSpillColumnIndex(
+          null,
+        );
+
+        router.refresh();
+      } catch (error) {
+        if (!cancelled) {
+          setPasteMessage(
+            error instanceof Error
+              ? error.message
+              : "Unable to expand the Smart Sheet for the formula result.",
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setIsCreatingColumn(false);
+        }
+      }
+    }
+
+    void materializeFormulaSpillColumns();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    pendingFormulaSpillColumnIndex,
+    sheet.id,
+    sheet.sheet_type,
+    activeFilterCount,
+    isRowOperation,
+    isCreatingColumn,
+    isPasting,
+    isClearing,
+    isApplyingFill,
+    visibleColumns.length,
+    router,
+  ]);
 
   useEffect(() => {
     if (!pendingMaterializedCell) {
@@ -9339,6 +9721,21 @@ export default function SmartSheetGrid({
           break;
         }
 
+        const destinationSpill =
+          formulaSpillCellAt(
+            startRowIndex +
+              pasteRowIndex,
+            destinationColumnIndex,
+          );
+
+        if (destinationSpill) {
+          setPasteMessage(
+            `Cannot paste into the spilled array from ${destinationSpill.sourceAddress}. Edit the source formula instead.`,
+          );
+          setShowPasteSpecial(false);
+          return;
+        }
+
         destinationCells.push({
           rowId:
             destinationRow.id,
@@ -9643,6 +10040,19 @@ export default function SmartSheetGrid({
 
         if (!destinationColumn) {
           break;
+        }
+
+        const destinationSpill =
+          formulaSpillCellAt(
+            destinationRowIndex,
+            destinationColumnIndex,
+          );
+
+        if (destinationSpill) {
+          setPasteMessage(
+            `Cannot paste into the spilled array from ${destinationSpill.sourceAddress}. Edit the source formula instead.`,
+          );
+          return;
         }
 
         cells.push({
@@ -18104,6 +18514,97 @@ function evaluateTypedFormula(
     switch (
       functionName.toUpperCase()
     ) {
+      case "SEQUENCE": {
+        if (
+          values.length < 1 ||
+          values.length > 4
+        ) {
+          throw new FormulaEngineError(
+            "#ERROR!",
+          );
+        }
+
+        const rowCount =
+          scalarInteger(0);
+
+        const columnCount =
+          scalarInteger(1, 1);
+
+        const startValue =
+          values[2] === undefined
+            ? 1
+            : formulaNumberValue(
+                scalarValue(2),
+              );
+
+        const stepValue =
+          values[3] === undefined
+            ? 1
+            : formulaNumberValue(
+                scalarValue(3),
+              );
+
+        if (
+          rowCount < 1 ||
+          columnCount < 1 ||
+          !Number.isFinite(startValue) ||
+          !Number.isFinite(stepValue)
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        /*
+         * Formula Engine V5.3 — SEQUENCE dynamic arrays.
+         *
+         * Results are stored row-major so the existing rectangular
+         * spill projector can map them directly across rows/columns.
+         *
+         * Example:
+         *   =SEQUENCE(3, 4)
+         *
+         *   1   2   3   4
+         *   5   6   7   8
+         *   9  10  11  12
+         */
+        const sequenceValues:
+          FormulaDisplayValue[] = [];
+
+        const cellCount =
+          rowCount * columnCount;
+
+        /*
+         * Protect the browser from accidentally generating an
+         * unreasonable in-memory dynamic array.
+         */
+        if (
+          !Number.isSafeInteger(cellCount) ||
+          cellCount > 100000
+        ) {
+          throw new FormulaEngineError(
+            "#VALUE!",
+          );
+        }
+
+        for (
+          let valueIndex = 0;
+          valueIndex < cellCount;
+          valueIndex += 1
+        ) {
+          sequenceValues.push(
+            startValue +
+              valueIndex * stepValue,
+          );
+        }
+
+        return {
+          values: sequenceValues,
+          rowCount,
+          columnCount,
+        };
+      }
+
       case "UNIQUE": {
         if (values.length !== 1) {
           throw new FormulaEngineError(
